@@ -1,0 +1,22 @@
+{
+  "name": "babylon-ts-simple-game",
+  "private": true,
+  "version": "0.0.0",
+  "type": "module",
+  "imports": {
+    "#vendor/babylon": "./src/vendor/babylon.ts"
+  },
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build && vite build --config vite.babylon.config.ts",
+    "preview": "vite preview",
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@babylonjs/core": "^9.16.1"
+  },
+  "devDependencies": {
+    "typescript": "^7.0.2",
+    "vite": "^8.1.4"
+  }
+}

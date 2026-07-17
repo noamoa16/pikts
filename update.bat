@@ -1,0 +1,1 @@
+git -c user.name="noamoa" -c user.email="noamoa16@gmail.com" commit -m "a" && git push origin main
