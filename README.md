@@ -11,7 +11,8 @@ npm run dev
 
 ## できること
 
-- `WASD` または矢印キーで赤い正方形を移動
+- `WASD` で移動
+- `F` で視点変更
 - `npm run build` で `docs/` に GitHub Pages 用の本番ビルドを生成
 - Babylon.js 本体は `docs/babylon.js` に分離して出力
 
