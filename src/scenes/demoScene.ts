@@ -17,6 +17,7 @@ import { createDemoFloor } from "./demoScene/floor";
 import { createBoundaryWalls, createBounds } from "./demoScene/walls";
 import { RedMinion } from "../objects/minion/redMinion";
 import { FrameTimer } from "../core/frameTimer";
+import { normalizeAngle } from "../core/math";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -60,9 +61,12 @@ export function createDemoScene(engine: Engine): Scene {
     );
 
     // 視点変更
-    window.addEventListener('keydown', (e: KeyboardEvent) => {
-        if(e.code == 'KeyF'){
-            mainCamera.rotation = player.rotation.z;
+    let isCameraRotation = false;
+    let cameraTargetTheta = 0;
+    document.addEventListener("keydown", (event: KeyboardEvent) => {
+        if (event.key.toLowerCase() === "f") {
+            isCameraRotation = true;
+            cameraTargetTheta = player.rotation.z;
         }
     });
 
@@ -78,6 +82,25 @@ export function createDemoScene(engine: Engine): Scene {
             collision.dispatchEvents(objects);
         });
         mainCamera.target = player.position;
+
+        // 視点変更
+        if(isCameraRotation){
+            const currentTheta = mainCamera.rotation;
+            const diffThera = normalizeAngle(
+                cameraTargetTheta - currentTheta,
+                { includePi: (Math.cos(currentTheta) >= 0) },
+            );
+            if(Math.abs(diffThera) <= Math.PI / 96){
+                isCameraRotation = false;
+            }
+            else{
+                const ROTATION_SPEED = 2.5;
+                mainCamera.rotation = currentTheta + Math.sign(diffThera) * Math.min(
+                    Math.PI * (1 / 30) * ROTATION_SPEED,
+                    Math.abs(diffThera),
+                );
+            }
+        }
 
         // デバッグ出力
         if (debugInfo.valid) {

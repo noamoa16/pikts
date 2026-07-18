@@ -6,7 +6,7 @@ import {
     Vector3,
 } from "#vendor/babylon";
 import { Action } from "../actions/action";
-import { normalizeAngle } from "../core/math";
+import { normalizeAngle, rotate2D, toVector3 } from "../core/math";
 import { MainCamera } from "../rendering/camera";
 import { Color } from "../rendering/color";
 import { Entity } from "./entity";
@@ -93,9 +93,9 @@ export class Player extends Entity {
         const horizontalDisplacement =
             moveX === 0 && moveY === 0
                 ? Vector3.Zero()
-                : new Vector3(moveX, moveY, 0)
-                      .normalize()
-                      .scale(this.speed * deltaSeconds);
+                : toVector3(rotate2D(moveX, moveY, this.camera.rotation - Math.PI / 2))
+                    .normalize()
+                    .scale(this.speed * deltaSeconds);
         const gravityDisplacement = this.fall
             ? this.scene.gravity.scale(deltaSeconds)
             : Vector3.Zero();
@@ -103,13 +103,13 @@ export class Player extends Entity {
 
         // 向きを変える
         if(!horizontalDisplacement.equals(Vector3.Zero())){
-            const ROTATION_SPEED = 2.5;
             const currentTheta = this.rotation.z;
             const targetTheta = Math.atan2(horizontalDisplacement.y, horizontalDisplacement.x);
             const diffThera = normalizeAngle(
                 targetTheta - currentTheta,
-                { includePi: (Math.cos(this.rotation.z) >= 0) },
+                { includePi: (Math.cos(currentTheta) >= 0) },
             );
+            const ROTATION_SPEED = 2.5;
             this.rotation.z = currentTheta + Math.sign(diffThera) * Math.min(
                 Math.PI * deltaSeconds * ROTATION_SPEED,
                 Math.abs(diffThera),
