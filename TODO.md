@@ -1,9 +1,10 @@
+- Minion同士がめり込む問題の解消
+  - checkCollisionsは重いの自前判定が必要
 - カメラの回転
   - Player からは scene.activeCamera でカメラの向き取得
 - Minion が Player を follow する際に小ジャンプする
 - プレイヤーのカーソル
 - プレイヤーの笛
-- 処理の重さを分析
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定
   - n(n-1)/2 回の比較を避ける

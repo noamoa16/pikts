@@ -23,6 +23,7 @@ export class Block extends Entity {
         material.backFaceCulling = false;
         Color.set(material, new Color3(0.7, 0.7, 0.7));
         this.mesh.material = material;
+        this.checkCollisions = true;
     }
 
     override update(_: number): void {

@@ -16,6 +16,7 @@ import { Dpad } from "../ui/dpad";
 import { createDemoFloor } from "./demoScene/floor";
 import { createBoundaryWalls, createBounds } from "./demoScene/walls";
 import { RedMinion } from "../objects/minion/redMinion";
+import { FrameTimer } from "../core/frameTimer";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -59,16 +60,25 @@ export function createDemoScene(engine: Engine): Scene {
     );
 
     // 定期実行
+    const frameTimerUpdate = new FrameTimer(30);
+    const frameTimerCollision = new FrameTimer(30);
     scene.onBeforeRenderObservable.add(() => {
         const deltaSeconds = engine.getDeltaTime() / 1000;
-        objects.forEach(o => o.update(deltaSeconds));
-        collision.dispatchEvents(objects);
+        frameTimerUpdate.measure(() => {
+            objects.forEach(o => o.update(deltaSeconds));
+        });
+        frameTimerCollision.measure(() => {
+            collision.dispatchEvents(objects);
+        });
         mainCamera.target = player.position;
 
         // デバッグ出力
         if (debugInfo.valid) {
             const position = player.position;
-            debugInfo.text = `Player: x=${position.x.toFixed(2)} y=${position.y.toFixed(2)} z=${position.z.toFixed(2)}`;
+            const playerInfo = `Player: x=${position.x.toFixed(2)} y=${position.y.toFixed(2)} z=${position.z.toFixed(2)}`;
+            const fpsInfoUpdate = `Update: ${frameTimerUpdate.averageTime.toFixed(2)} ms`;
+            const fpsInfoCollision = `Collision: ${frameTimerCollision.averageTime.toFixed(2)} ms`;
+            debugInfo.text = `${playerInfo}, ${fpsInfoUpdate}, ${fpsInfoCollision}`;
         }
     });
 

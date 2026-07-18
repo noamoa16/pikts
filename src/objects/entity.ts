@@ -45,8 +45,14 @@ export abstract class Entity {
     }
     protected set mesh(value: Mesh) {
         this._mesh = value;
-        this._mesh.checkCollisions = true; // 衝突判定を有効にする
         this._mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く
+    }
+
+    public get checkCollisions(): boolean {
+        return this.mesh.checkCollisions;
+    }
+    protected set checkCollisions(value: boolean) {
+        this.mesh.checkCollisions = value;
     }
 
     // 位置
