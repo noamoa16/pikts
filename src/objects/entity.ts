@@ -26,6 +26,16 @@ export abstract class Entity {
         this._size = value;
     }
 
+    // Collisionイベントを発生させるか
+    private _collisionEventsEnabled: boolean = false;
+    public get collisionEventsEnabled(): boolean {
+        return this._collisionEventsEnabled;
+    }
+    protected set collisionEventsEnabled(value: boolean) {
+        this._collisionEventsEnabled = value;
+    }
+
+
     protected readonly fall: boolean;
 
     // 移動スピード

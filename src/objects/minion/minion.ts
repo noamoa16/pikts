@@ -33,6 +33,7 @@ export abstract class Minion extends Entity {
             this.size / 2,
             this.size / 2,
         );
+        this.collisionEventsEnabled = true;
 
         const material = new StandardMaterial(`${this.name}.material`, scene);
         material.backFaceCulling = false;

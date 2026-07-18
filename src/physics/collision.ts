@@ -4,6 +4,7 @@ export class Collision {
     private activeCollisionPairs = new Set<string>();
     public dispatchEvents(objects: Entity[]): void {
         const nextCollisionPairs = new Set<string>();
+        objects = objects.filter(o => o.collisionEventsEnabled);
         objects.forEach(o => o.mesh.computeWorldMatrix(true));
         const idToObjects = new Map(objects.map(o => [o.id, o]));
 
