@@ -1,3 +1,4 @@
+- オブジェクトをEntityとして統一化する
 - MinionのmoveWithCollisionsは重いので自前実装にする
 - カメラの回転
   - Player からは scene.activeCamera でカメラの向き取得

@@ -61,7 +61,7 @@ export abstract class Entity {
     
     // 基本はtrue
     // 他の物体をすり抜けるように設定したい場合はfalse
-    // Entityをさらにクラス分けする手もあるが未実施
+    // ON/OFFを切り替えられるようにしたいので、Entityのクラス分けはしない
     public get checkCollisions(): boolean {
         return this.mesh.checkCollisions;
     }
