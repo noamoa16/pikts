@@ -35802,4 +35802,4 @@ function $M() {
 //#region node_modules/@babylonjs/core/Collisions/collisionCoordinator.js
 $M();
 //#endregion
-export { Cv as ArcRotateCamera, kh as Camera, Yr as Color3, Xr as Color4, fw as CreateBox, qT as CreateLines, QT as CreatePlane, nE as CreateSphere, Ov as DirectionalLight, qM as DynamicTexture, P as Engine, jv as HemisphericLight, I as Quaternion, Z as Scene, uw as ShadowGenerator, HM as StandardMaterial, wa as Texture, F as Vector3 };
+export { Cv as ArcRotateCamera, kh as Camera, Yr as Color3, Xr as Color4, fw as CreateBox, qT as CreateLines, QT as CreatePlane, nE as CreateSphere, Ov as DirectionalLight, qM as DynamicTexture, P as Engine, jv as HemisphericLight, Z as Scene, uw as ShadowGenerator, HM as StandardMaterial, wa as Texture, Ir as Vector2, F as Vector3 };

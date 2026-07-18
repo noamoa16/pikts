@@ -1,5 +1,4 @@
-import { Vector3 } from "#vendor/babylon";
-import { Vector2 } from "@babylonjs/core";
+import { Vector2, Vector3 } from "#vendor/babylon";
 
 export function normalizeAngle(angle: number, { includePi = false } = {}): number {
     const twoPi = 2 * Math.PI;

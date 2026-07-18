@@ -2,7 +2,7 @@ export { Engine } from "@babylonjs/core/Engines/engine";
 export { ArcRotateCamera } from "@babylonjs/core/Cameras/arcRotateCamera";
 export { Camera } from "@babylonjs/core/Cameras/camera";
 export { Color3, Color4 } from "@babylonjs/core/Maths/math.color";
-export { Vector3, Quaternion } from "@babylonjs/core/Maths/math.vector";
+export { Vector2, Vector3 } from "@babylonjs/core/Maths/math.vector";
 export { DirectionalLight } from "@babylonjs/core/Lights/directionalLight";
 export { HemisphericLight } from "@babylonjs/core/Lights/hemisphericLight";
 export { ShadowGenerator } from "@babylonjs/core/Lights/Shadows/shadowGenerator";
