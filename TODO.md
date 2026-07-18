@@ -1,3 +1,4 @@
+- カメラ回転ボタンのUIを追加
 - オブジェクトをEntityとして統一化する
 - MinionのmoveWithCollisionsは重いので自前実装にする
 - Minion が Player を follow する際に小ジャンプする
