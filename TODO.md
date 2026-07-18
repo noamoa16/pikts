@@ -1,7 +1,9 @@
 - オブジェクトをEntityとして統一化する
 - MinionのmoveWithCollisionsは重いので自前実装にする
-- カメラの回転
-  - Player からは scene.activeCamera でカメラの向き取得
+- カメラの回転：
+  - カメラの回転を滑らかにする
+  - カメラの角度に合わせてプレイヤーの操作ベクトルを変える
+    - Gameクラスを作って、その中にmainCameraを入れるのが良さそうか
 - Minion が Player を follow する際に小ジャンプする
 - プレイヤーのカーソル
 - プレイヤーの笛

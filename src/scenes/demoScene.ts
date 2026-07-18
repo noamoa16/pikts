@@ -59,6 +59,13 @@ export function createDemoScene(engine: Engine): Scene {
         (action, pressed) => player.setVirtualInput(action, pressed)
     );
 
+    // 視点変更
+    window.addEventListener('keydown', (e: KeyboardEvent) => {
+        if(e.code == 'KeyF'){
+            mainCamera.rotation = player.rotation.z;
+        }
+    });
+
     // 定期実行
     const frameTimerUpdate = new FrameTimer(30);
     const frameTimerCollision = new FrameTimer(30);

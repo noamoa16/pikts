@@ -44,4 +44,10 @@ export class MainCamera {
     set target(value: Vector3) {
         this.camera.target = value;
     }
+    get rotation(): number {
+        return -this.camera.alpha + Math.PI;
+    }
+    set rotation(value: number) {
+        this.camera.alpha = Math.PI - value;
+    }
 }
