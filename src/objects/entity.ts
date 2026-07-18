@@ -58,7 +58,10 @@ export abstract class Entity {
         this._mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く
         this._mesh.checkCollisions = true;
     }
-
+    
+    // 基本はtrue
+    // 他の物体をすり抜けるように設定したい場合はfalse
+    // Entityをさらにクラス分けする手もあるが未実施
     public get checkCollisions(): boolean {
         return this.mesh.checkCollisions;
     }
