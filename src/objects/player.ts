@@ -115,9 +115,6 @@ export class Player extends Entity {
                 Math.abs(diffThera),
             );
         }
-
-        // カメラのアングルも計算に入れる予定
-        this.camera;
     }
 
     public setVirtualInput(direction: Action, pressed: boolean): void {
