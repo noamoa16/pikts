@@ -51,7 +51,6 @@ export class Player extends Entity {
             this.size / 2,
             this.size / 2,
         );
-        this.checkCollisions = true;
         this.collisionEventsEnabled = true;
 
         const material = new StandardMaterial(`${this.name}.material`, scene);

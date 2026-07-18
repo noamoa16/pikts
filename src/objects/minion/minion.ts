@@ -89,7 +89,7 @@ export abstract class Minion extends Entity {
                 .normalize()
                 .scale(Math.min(this.speed * deltaSeconds, distance - MAX_DISTANCE));
         }
-        //距離が遠すぎる場合は離れようとする
+        //距離が近すぎる場合は離れようとする
         if (distance < MIN_DISTANCE) {
             return this.groundingPosition
                 .subtract(playerPosition)

@@ -1,5 +1,4 @@
-- Minion同士がめり込む問題の解消
-  - checkCollisionsは重いの自前判定が必要
+- MinionのmoveWithCollisionsは重いので自前実装にする
 - カメラの回転
   - Player からは scene.activeCamera でカメラの向き取得
 - Minion が Player を follow する際に小ジャンプする
