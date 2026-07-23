@@ -1,10 +1,10 @@
 import {
     Color3,
-    CreateSphere,
-    Scene,
     StandardMaterial,
     Vector3,
 } from "#vendor/babylon";
+import { Shape } from "../../core/figure";
+import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Player } from "../player";
@@ -15,27 +15,17 @@ enum State {
 }
 
 export abstract class Minion extends Entity {
-    private readonly scene: Scene;
     protected readonly baseColor: Color3 = new Color3(0, 0.95, 0);
     protected readonly freeColor: Color3 = new Color3(0.5, 0.95, 0.5);
     public state: State = State.free;
     public follower: Player | undefined = undefined;
 
-    constructor(scene: Scene, position: Vector3) {
-        super("minion", { fall: true });
-        this.scene = scene;
-        this.size = 0.25;
+    constructor(game: Game, position: Vector3) {
+        super(game, "minion", Shape.Sphere, 0.25, position, { fall: true });
         this.speed = 3;
-        this.mesh = CreateSphere(this.name, { diameter: this.size }, scene);
-        this.groundingPosition = position.clone();
-        this.mesh.ellipsoid = new Vector3(
-            this.size / 2,
-            this.size / 2,
-            this.size / 2,
-        );
         this.collisionEventsEnabled = true;
 
-        const material = new StandardMaterial(`${this.name}.material`, scene);
+        const material = new StandardMaterial(`${this.name}.material`, this.scene);
         material.backFaceCulling = false;
         this.mesh.material = material;
     }
@@ -48,7 +38,7 @@ export abstract class Minion extends Entity {
         const gravityDisplacement = this.fall
             ? this.scene.gravity.scale(deltaSeconds)
             : Vector3.Zero();
-        this.mesh.moveWithCollisions(horizontalDisplacement.add(gravityDisplacement));
+        this.moveTo(horizontalDisplacement.add(gravityDisplacement));
 
         // 色
         const material = this.mesh.material;

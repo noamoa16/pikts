@@ -1,13 +1,13 @@
 import {
     Color3,
     CreateSphere,
-    type Scene,
     StandardMaterial,
     Vector3,
 } from "#vendor/babylon";
 import { Action } from "../actions/action";
 import { normalizeAngle, rotate2D, toVector3 } from "../core/math";
-import { MainCamera } from "../rendering/camera";
+import { Shape } from "../core/figure";
+import { Game } from "../game";
 import { Color } from "../rendering/color";
 import { Entity } from "./entity";
 
@@ -19,8 +19,6 @@ type PlayerInputState = {
 };
 
 export class Player extends Entity {
-    private readonly scene: Scene;
-    private readonly camera: MainCamera;
     private readonly inputState: PlayerInputState = {
         keyboard: {
             up: false,
@@ -38,22 +36,12 @@ export class Player extends Entity {
     private readonly onKeyDown: (event: KeyboardEvent) => void;
     private readonly onKeyUp: (event: KeyboardEvent) => void;
 
-    constructor(scene: Scene, position: Vector3, camera: MainCamera) {
-        super("player", { fall: true });
-        this.scene = scene;
-        this.camera = camera;
-        this.size = 0.5;
+    constructor(game: Game, position: Vector3) {
+        super(game, "player", Shape.Sphere, 0.5, position, { fall: true });
         this.speed = 4;
-        this.mesh = CreateSphere(this.name, { diameter: this.size }, scene);
-        this.groundingPosition = position.clone();
-        this.mesh.ellipsoid = new Vector3(
-            this.size / 2,
-            this.size / 2,
-            this.size / 2,
-        );
         this.collisionEventsEnabled = true;
 
-        const material = new StandardMaterial(`${this.name}.material`, scene);
+        const material = new StandardMaterial(`${this.name}.material`, this.scene);
         material.backFaceCulling = false;
         Color.set(material, new Color3(0.95, 0.8, 0.7), {
             metalicity: 0.1,
@@ -62,10 +50,10 @@ export class Player extends Entity {
         this.mesh.material = material;
 
         // 鼻パーツ
-        const nose = CreateSphere(`${this.name}.nose`, { diameter: this.size / 4 }, scene);
+        const nose = CreateSphere(`${this.name}.nose`, { diameter: this.size / 4 }, this.scene);
         nose.parent = this.mesh;
         nose.position = new Vector3(this.size / 2, 0, 0);
-        const noseMaterial = new StandardMaterial(`${this.name}.nose.material`, scene);
+        const noseMaterial = new StandardMaterial(`${this.name}.nose.material`, this.scene);
         noseMaterial.backFaceCulling = false;
         Color.set(noseMaterial, new Color3(0.5, 0.2, 0.2), {
             metalicity: 0.1,
@@ -78,7 +66,7 @@ export class Player extends Entity {
         this.onKeyUp = this.createKeyHandler(false);
         window.addEventListener("keydown", this.onKeyDown);
         window.addEventListener("keyup", this.onKeyUp);
-        scene.onDisposeObservable.add(() => {
+        this.scene.onDisposeObservable.add(() => {
             window.removeEventListener("keydown", this.onKeyDown);
             window.removeEventListener("keyup", this.onKeyUp);
         });
@@ -93,7 +81,7 @@ export class Player extends Entity {
         const horizontalDisplacement =
             moveX === 0 && moveY === 0
                 ? Vector3.Zero()
-                : toVector3(rotate2D(moveX, moveY, this.camera.rotation - Math.PI / 2))
+                : toVector3(rotate2D(moveX, moveY, this.game.camera.rotation - Math.PI / 2))
                     .normalize()
                     .scale(this.speed * deltaSeconds);
         const gravityDisplacement = this.fall

@@ -1,5 +1,9 @@
 import { Vector2, Vector3 } from "#vendor/babylon";
 
+export function clamp(value: number, min: number, max: number): number {
+    return Math.max(min, Math.min(value, max));
+}
+
 export function normalizeAngle(angle: number, { includePi = false } = {}): number {
     const twoPi = 2 * Math.PI;
     let a = ((angle + Math.PI) % twoPi + twoPi) % twoPi - Math.PI;

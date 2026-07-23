@@ -1,9 +1,6 @@
 export class FrameTimer {
     private times: number[] = [];
-    public readonly num: number;
-    constructor(num: number){
-        this.num = num;
-    }
+    constructor(public readonly num: number){}
     public add(time: number){
         this.times.push(time);
         if(this.times.length > this.num){

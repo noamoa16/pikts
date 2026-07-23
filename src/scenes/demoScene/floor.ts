@@ -1,24 +1,25 @@
 import {
     Color3,
-    CreateBox,
     CreatePlane,
     DynamicTexture,
     type Mesh,
     Scene,
     StandardMaterial,
     Texture,
+    Vector3,
 } from "#vendor/babylon";
+import { Game } from "../../game";
+import { Block } from "../../objects/block";
 
-const FLOOR_COLLIDER_THICKNESS = 0.2;
-
-export function createDemoFloor(scene: Scene, playArea: number): Mesh {
-    const floor = createGrassFloor(scene, playArea);
-    createFloorCollider(scene, playArea);
-    return floor;
+export function createDemoFloor(game: Game, playArea: number): Block {
+    createGrassFloor(game.scene, playArea);
+    const block = new Block(game, new Vector3(0, 0, -playArea * 2), playArea * 2);
+    block.isVisible = false;
+    return block;
 }
 
 function createGrassFloor(scene: Scene, playArea: number): Mesh {
-    const size = playArea * 2 + 2;
+    const size = playArea * 2;
     const floor = CreatePlane(
         "floor",
         {
@@ -29,7 +30,6 @@ function createGrassFloor(scene: Scene, playArea: number): Mesh {
     );
     floor.receiveShadows = true;
     floor.isPickable = false;
-
     const texture = new DynamicTexture(
         "grassTexture",
         { width: 512, height: 512 },
@@ -50,24 +50,6 @@ function createGrassFloor(scene: Scene, playArea: number): Mesh {
     floor.material = material;
 
     return floor;
-}
-
-function createFloorCollider(scene: Scene, playArea: number): Mesh {
-    const size = playArea * 2 + 2;
-    const collider = CreateBox(
-        "floorCollider",
-        {
-            width: size,
-            height: size,
-            depth: FLOOR_COLLIDER_THICKNESS,
-        },
-        scene,
-    );
-    collider.position.z = -FLOOR_COLLIDER_THICKNESS / 2;
-    collider.isVisible = false;
-    collider.isPickable = false;
-    collider.checkCollisions = true;
-    return collider;
 }
 
 function drawGrassTexture(texture: DynamicTexture): void {
