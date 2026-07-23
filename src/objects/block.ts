@@ -3,7 +3,7 @@ import {
     StandardMaterial,
     Vector3,
 } from "#vendor/babylon";
-import { Shape } from "../core/figure";
+import { Shape } from "../physics/figure";
 import { Game } from "../game";
 import { Color } from "../rendering/color";
 import { Entity } from "./entity";

@@ -6,7 +6,7 @@ import {
 } from "#vendor/babylon";
 import { Action } from "../actions/action";
 import { normalizeAngle, rotate2D, toVector3 } from "../core/math";
-import { Shape } from "../core/figure";
+import { Shape } from "../physics/figure";
 import { Game } from "../game";
 import { Color } from "../rendering/color";
 import { Entity } from "./entity";

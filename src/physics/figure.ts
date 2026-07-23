@@ -1,5 +1,5 @@
 import { Vector3 } from "#vendor/babylon"
-import { clamp } from "./math";
+import { clamp } from "../core/math";
 
 export enum Shape {
     Sphere,
@@ -20,7 +20,9 @@ export abstract class Figure {
 
         if(this instanceof Sphere && other instanceof Sphere){
             const distanceSq = Vector3.DistanceSquared(this.center, other.center);
-            return distanceSq < (this.radius + other.radius) * (this.radius + other.radius);
+            return distanceSq <
+                (this.radius + other.radius - Number.EPSILON) *
+                (this.radius + other.radius - Number.EPSILON);
         }
         else if(this instanceof Sphere && other instanceof Cube){
             // 立方体の半辺長
@@ -44,27 +46,27 @@ export abstract class Figure {
             const distanceSq = d.lengthSquared();
 
             // 球の半径平方と比較して交差判定
-            return distanceSq < this.radius * this.radius;
+            return distanceSq <
+                (this.radius - Number.EPSILON) *
+                (this.radius - Number.EPSILON);
         }
         else if(this instanceof Cube && other instanceof Cube){
             const dx = Math.abs(this.center.x - other.center.x) - this.edgeLength / 2 - other.edgeLength / 2;
             const dy = Math.abs(this.center.y - other.center.y) - this.edgeLength / 2 - other.edgeLength / 2;
             const dz = Math.abs(this.center.z - other.center.z) - this.edgeLength / 2 - other.edgeLength / 2;
-            return dx < 0 && dy < 0 && dz < 0;
+            return dx < -Number.EPSILON && dy < -Number.EPSILON && dz < -Number.EPSILON;
         }
         throw new Error(`intersects() not implemented for ${this.shape} vs ${other.shape}`);
     }
 
     /** この図形は、other に衝突することなく dir の方向にどれだけ移動可能か */
-    public space(other: Figure, dir: Vector3): number {
-        // すでに衝突している場合は0
-        if (this.intersects(other)) return 0;
+    public space(other: Figure, _dir: Vector3): number {
     
         // dir がゼロなら無限に移動できる
-        if (dir.lengthSquared() === 0) return Infinity;
+        if (_dir.lengthSquared() === 0) return Infinity;
     
         // 移動方向を正規化
-        dir = dir.normalize();
+        const dir = _dir.clone().normalize();
     
         /* ---------- Sphere – Sphere ---------- */
         if (this instanceof Sphere && other instanceof Sphere) {
@@ -86,7 +88,14 @@ export abstract class Figure {
             const t2 = (-b + sqrtDisc) / (2 * a); // 遅い解
     
             if (t1 >= 0) return t1;
-            if (t2 >= 0) return t2; // ここに来るのはほぼあり得ない
+            if (t2 >= -Number.EPSILON){
+                if(Math.abs(t1) > Math.abs(t2)){ 
+                    return Infinity;// 動くべき側
+                }
+                else{
+                    return 0; //　制止するべき側
+                }
+            }
             return Infinity;
         }
     
@@ -100,41 +109,55 @@ export abstract class Figure {
             const minZ = other.center.z - half - this.radius;
             const maxZ = other.center.z + half + this.radius;
     
+            const d = dir.clone();
+            for(const dim of ['x', 'y', 'z'] as const){
+                if(d[dim] > 0) d[dim] = 1;
+                if(d[dim] < 0) d[dim] = -1;
+            }
             let tmin = -Infinity;
             let tmax = Infinity;
     
             // X軸
-            if (dir.x !== 0) {
-                const t1 = (minX - this.center.x) / dir.x;
-                const t2 = (maxX - this.center.x) / dir.x;
+            if (d.x !== 0) {
+                const t1 = (minX - this.center.x) / d.x;
+                const t2 = (maxX - this.center.x) / d.x;
                 tmin = Math.max(tmin, Math.min(t1, t2));
                 tmax = Math.min(tmax, Math.max(t1, t2));
             } else {
-                if (this.center.x < minX || this.center.x > maxX) return Infinity;
+                if (
+                    this.center.x < minX + Number.EPSILON ||
+                    this.center.x > maxX - Number.EPSILON
+                ) return Infinity;
             }
     
             // Y軸
-            if (dir.y !== 0) {
-                const t1 = (minY - this.center.y) / dir.y;
-                const t2 = (maxY - this.center.y) / dir.y;
+            if (d.y !== 0) {
+                const t1 = (minY - this.center.y) / d.y;
+                const t2 = (maxY - this.center.y) / d.y;
                 tmin = Math.max(tmin, Math.min(t1, t2));
                 tmax = Math.min(tmax, Math.max(t1, t2));
             } else {
-                if (this.center.y < minY || this.center.y > maxY) return Infinity;
+                if (
+                    this.center.y < minY + Number.EPSILON ||
+                    this.center.y > maxY - Number.EPSILON
+                ) return Infinity;
             }
     
             // Z軸
-            if (dir.z !== 0) {
-                const t1 = (minZ - this.center.z) / dir.z;
-                const t2 = (maxZ - this.center.z) / dir.z;
+            if (d.z !== 0) {
+                const t1 = (minZ - this.center.z) / d.z;
+                const t2 = (maxZ - this.center.z) / d.z;
                 tmin = Math.max(tmin, Math.min(t1, t2));
                 tmax = Math.min(tmax, Math.max(t1, t2));
             } else {
-                if (this.center.z < minZ || this.center.z > maxZ) return Infinity;
+                if (
+                    this.center.z < minZ + Number.EPSILON ||
+                    this.center.z > maxZ - Number.EPSILON
+                ) return Infinity;
             }
     
             // 交差しない場合
-            if (tmax < 0 || tmin > tmax) return Infinity;
+            if (tmax < Number.EPSILON || tmin > tmax) return Infinity;
     
             // 交差が起こる距離
             const t = Math.max(tmin, 0);

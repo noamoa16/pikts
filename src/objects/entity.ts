@@ -2,7 +2,7 @@ import {
     Mesh, Scene, Vector3,
     CreateSphere, CreateBox,
 } from "#vendor/babylon";
-import { Cube, Figure, Shape, Sphere } from "../core/figure";
+import { Cube, Figure, Shape, Sphere } from "../physics/figure";
 import { Game } from "../game";
 
 /** 実体を持つオブジェクト */
@@ -126,26 +126,27 @@ export abstract class Entity {
 
     // 移動
     protected moveTo(dir: Vector3) {
-        const dir1 = new Vector3(dir.x, dir.y, 0);
-        const dir2 = new Vector3(0, 0, dir.z);
-        for(const dir of [dir1, dir2]){
+        const dir1 = new Vector3(dir.x, 0, 0);
+        const dir2 = new Vector3(0, dir.y, 0);
+        const dir3 = new Vector3(0, 0, dir.z);
+        for(const dir of [dir1, dir2, dir3]){
 
             if(dir.lengthSquared() == 0) continue;
             
             let space = Infinity;
             for(const entity of this.game.objects){
                 if(!entity.checkCollisions){ // 衝突判定を行わないオブジェクトは無視
-                    return;
+                    continue;
                 }
                 if(this.id === entity.id){ // 自分自身とは衝突判定しない
-                    return;
+                    continue;
                 }
                 space = Math.min(this.figure.space(entity.figure, dir), space);
             }
-            if(space <= 0){ // 移動不可
-                return;
+            if(space <= 3 * Number.EPSILON){ // 移動不可
+                continue;
             }
-            let moveVec = dir.normalize();
+            let moveVec = dir.clone().normalize();
             moveVec = moveVec.scale(Math.min(dir.length(), space));
             this.position.addInPlace(moveVec);
         }
