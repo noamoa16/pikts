@@ -10,13 +10,15 @@
     "dev": "vite",
     "build": "tsc --noEmit && vite build && vite build --config vite.babylon.config.ts",
     "preview": "vite preview",
-    "check": "tsc --noEmit"
+    "check": "tsc --noEmit",
+    "test": "vitest run"
   },
   "dependencies": {
     "@babylonjs/core": "^9.16.1"
   },
   "devDependencies": {
     "typescript": "^7.0.2",
-    "vite": "^8.1.4"
+    "vite": "^8.1.4",
+    "vitest": "^4.1.10"
   }
 }
