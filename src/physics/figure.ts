@@ -42,8 +42,10 @@ export abstract class Figure {
             const closestZ = clamp(this.center.z, minZ, maxZ);
 
             // 球の中心とその最短点間距離（平方）
-            const d = this.center.subtract(new Vector3(closestX, closestY, closestZ));
-            const distanceSq = d.lengthSquared();
+            const dx = this.center.x - closestX;
+            const dy = this.center.y - closestY;
+            const dz = this.center.z - closestZ;
+            const distanceSq = dx * dx + dy * dy + dz * dz;
 
             // 球の半径平方と比較して交差判定
             return distanceSq <
@@ -70,22 +72,28 @@ export abstract class Figure {
     
         /* ---------- Sphere – Sphere ---------- */
         if (this instanceof Sphere && other instanceof Sphere) {
-            const d0 = other.center.subtract(this.center);
-            const R  = this.radius + other.radius;
+            const dx = other.center.x - this.center.x;
+            const dy = other.center.y - this.center.y;
+            const dz = other.center.z - this.center.z;
+
+            const ux = dir.x;
+            const uy = dir.y;
+            const uz = dir.z;
+
+            const R = this.radius + other.radius;
     
             // ||t * u - d0|| = R となる t が答え
             // 解方程式: t^2 - 2(d0·u)t + (|d0|^2 - R^2) = 0
             // u は移動方向のベクトル
-            const a = 1; // |u|^2 == 1
-            const b = -2 * d0.dot(dir);
-            const c = d0.lengthSquared() - R * R;
+            const b = dx * ux + dy * uy + dz * uz;
+            const c = dx * dx + dy * dy + dz * dz - R * R;
     
-            const disc = b * b - 4 * a * c;
+            const disc = b * b - c;
             if (disc <= 0) return Infinity; // 接触しない
     
             const sqrtDisc = Math.sqrt(disc);
-            const t1 = (-b - sqrtDisc) / (2 * a); // 早い解
-            const t2 = (-b + sqrtDisc) / (2 * a); // 遅い解
+            const t1 = b - sqrtDisc; // 早い解
+            const t2 = b + sqrtDisc; // 遅い解
     
             if (t1 >= 0) return t1;
             if (t2 >= -Number.EPSILON){
@@ -102,66 +110,79 @@ export abstract class Figure {
         /* ---------- Sphere – Cube ---------- */
         if (this instanceof Sphere && other instanceof Cube) {
             const half = other.edgeLength / 2;
-            const minX = other.center.x - half - this.radius;
-            const maxX = other.center.x + half + this.radius;
-            const minY = other.center.y - half - this.radius;
-            const maxY = other.center.y + half + this.radius;
-            const minZ = other.center.z - half - this.radius;
-            const maxZ = other.center.z + half + this.radius;
-    
-            const d = dir.clone();
-            for(const dim of ['x', 'y', 'z'] as const){
-                if(d[dim] > 0) d[dim] = 1;
-                if(d[dim] < 0) d[dim] = -1;
+            const min = [
+                other.center.x - half,
+                other.center.y - half,
+                other.center.z - half,
+            ];
+            const max = [
+                other.center.x + half,
+                other.center.y + half,
+                other.center.z + half,
+            ];
+            const p = [this.center.x, this.center.y, this.center.z];
+            const u = [dir.x, dir.y, dir.z];
+            const r = this.radius;
+
+            // 中心が既に球の衝突領域内なら 0
+            let distanceSq = 0;
+            for (let i = 0; i < 3; i++) {
+                const d = p[i] < min[i] ? min[i] - p[i] :
+                        p[i] > max[i] ? p[i] - max[i] : 0;
+                distanceSq += d * d;
             }
-            let tmin = -Infinity;
-            let tmax = Infinity;
-    
-            // X軸
-            if (d.x !== 0) {
-                const t1 = (minX - this.center.x) / d.x;
-                const t2 = (maxX - this.center.x) / d.x;
-                tmin = Math.max(tmin, Math.min(t1, t2));
-                tmax = Math.min(tmax, Math.max(t1, t2));
-            } else {
-                if (
-                    this.center.x < minX + Number.EPSILON ||
-                    this.center.x > maxX - Number.EPSILON
-                ) return Infinity;
+            if (distanceSq <= r * r) return 0;
+
+            // 各軸の min/max を通過する時刻で区間を分割する
+            const ts = [0];
+            for (let i = 0; i < 3; i++) {
+                if (u[i] !== 0) {
+                    for (const x of [min[i], max[i]]) {
+                        const t = (x - p[i]) / u[i];
+                        if (t > 0) ts.push(t);
+                    }
+                }
             }
-    
-            // Y軸
-            if (d.y !== 0) {
-                const t1 = (minY - this.center.y) / d.y;
-                const t2 = (maxY - this.center.y) / d.y;
-                tmin = Math.max(tmin, Math.min(t1, t2));
-                tmax = Math.min(tmax, Math.max(t1, t2));
-            } else {
-                if (
-                    this.center.y < minY + Number.EPSILON ||
-                    this.center.y > maxY - Number.EPSILON
-                ) return Infinity;
+            ts.sort((a, b) => a - b);
+            ts.push(Infinity);
+
+            // 各区間では AABB までの距離^2 が二次関数になる
+            for (let j = 0; j < ts.length - 1; j++) {
+                const a = ts[j];
+                const b = ts[j + 1];
+                const mid = Number.isFinite(b) ? (a + b) / 2 : a + 1;
+
+                let A = 0, B = 0, C = -r * r;
+
+                for (let i = 0; i < 3; i++) {
+                    const x = p[i] + u[i] * mid;
+                    if (x < min[i]) {
+                        const q = p[i] - min[i];
+                        A += u[i] * u[i];
+                        B += 2 * q * u[i];
+                        C += q * q;
+                    } else if (x > max[i]) {
+                        const q = p[i] - max[i];
+                        A += u[i] * u[i];
+                        B += 2 * q * u[i];
+                        C += q * q;
+                    }
+                }
+
+                if (A === 0) continue;
+
+                const disc = B * B - 4 * A * C;
+                if (disc <= 0) continue;
+
+                const sqrtDisc = Math.sqrt(disc);
+                const t0 = (-B - sqrtDisc) / (2 * A);
+                const t1 = (-B + sqrtDisc) / (2 * A);
+                const t = Math.max(a, t0);
+
+                if (t <= Math.min(b, t1)) return t;
             }
-    
-            // Z軸
-            if (d.z !== 0) {
-                const t1 = (minZ - this.center.z) / d.z;
-                const t2 = (maxZ - this.center.z) / d.z;
-                tmin = Math.max(tmin, Math.min(t1, t2));
-                tmax = Math.min(tmax, Math.max(t1, t2));
-            } else {
-                if (
-                    this.center.z < minZ + Number.EPSILON ||
-                    this.center.z > maxZ - Number.EPSILON
-                ) return Infinity;
-            }
-    
-            // 交差しない場合
-            if (tmax < Number.EPSILON || tmin > tmax) return Infinity;
-    
-            // 交差が起こる距離
-            const t = Math.max(tmin, 0);
-            return t;
+
+            return Infinity;
         }
     
         /* ---------- Cube – Sphere (対称) ---------- */
@@ -177,8 +198,8 @@ export abstract class Figure {
             let tmin = -Infinity;
             let tmax = Infinity;
     
-            const c1 = this.center.clone(); // moving
-            const c2 = other.center.clone(); // stationary
+            const c1 = this.center; // moving
+            const c2 = other.center; // stationary
     
             for (const axis of ['x', 'y', 'z'] as const) {
                 const v = dir[axis];
