@@ -8,7 +8,82 @@ import { Game } from "../game";
 /** 実体を持つオブジェクト */
 export abstract class Entity {
     
+    // 固有ID
     private static count = 0;
+    public readonly id: number;
+
+    // 主要オブジェクト
+    public readonly mesh: Mesh;
+    protected get scene(): Scene {
+        return this.game.scene;
+    }
+    
+    // 位置
+    public get position(): Vector3 {
+        return this.mesh.position;
+    }
+    protected set position(value: Vector3) {
+        this.mesh.position = value;
+    }
+    public get groundingPosition(): Vector3 {
+        return this.mesh.position.subtract(new Vector3(0, 0, this.size / 2));
+    }
+    protected set groundingPosition(value: Vector3) {
+        this.mesh.position = value.add(new Vector3(0, 0, this.size / 2));
+    }
+
+    // 回転
+    public get rotation(): Vector3 {
+        return this.mesh.rotation;
+    }
+    protected set rotation(value: Vector3) {
+        this.mesh.rotation = value;
+    }    
+
+    // サイズ
+    private _size: number = 1;
+    public get size(): number {
+        return this._size;
+    }
+    protected set size(value: number) {
+        this._size = value;
+    }
+
+    // 移動スピード
+    private _speed: number = 0;
+    public get speed(): number {
+        return this._speed;
+    }
+    protected set speed(value: number) {
+        this._speed = value;
+    }
+
+    // 形状
+    public get figure(): Figure {
+        switch(this.shape){
+            case Shape.Sphere:
+                return new Sphere(this.position, this.size / 2);
+            case Shape.Cube:
+                return new Cube(this.position, this.size);
+        }
+    }
+
+    // 衝突判定
+    public get checkCollisions(): boolean {
+        return this.mesh.checkCollisions;
+    }
+    protected set checkCollisions(value: boolean) {
+        this.mesh.checkCollisions = value;
+    }
+
+    // 性質
+    protected readonly fall: boolean;
+    public get isVisible(): boolean {
+        return this.mesh.isVisible;
+    }
+    public set isVisible(value: boolean) {
+        this.mesh.isVisible = value;
+    }
 
     constructor(
         protected readonly game: Game,
@@ -45,85 +120,6 @@ export abstract class Entity {
         this.groundingPosition = position.clone();
     }
 
-    public readonly mesh: Mesh;
-
-    protected get scene(): Scene {
-        return this.game.scene;
-    }
-
-    // 固有ID
-    public readonly id: number;
-
-    // サイズ
-    private _size: number = 1;
-    public get size(): number {
-        return this._size;
-    }
-    protected set size(value: number) {
-        this._size = value;
-    }
-
-    public get figure(): Figure {
-        switch(this.shape){
-            case Shape.Sphere:
-                return new Sphere(this.position, this.size / 2);
-            case Shape.Cube:
-                return new Cube(this.position, this.size);
-        }
-    }
-
-    // Collisionイベントを発生させるか
-    private _collisionEventsEnabled: boolean = false;
-    public get collisionEventsEnabled(): boolean {
-        return this._collisionEventsEnabled;
-    }
-    protected set collisionEventsEnabled(value: boolean) {
-        this._collisionEventsEnabled = value;
-    }
-
-
-    protected readonly fall: boolean;
-
-    // 移動スピード
-    private _speed: number = 0;
-    public get speed(): number {
-        return this._speed;
-    }
-    protected set speed(value: number) {
-        this._speed = value;
-    }
-    
-    // 基本はtrue
-    // 他の物体をすり抜けるように設定したい場合はfalse
-    // ON/OFFを切り替えられるようにしたいので、Entityのクラス分けはしない
-    public get checkCollisions(): boolean {
-        return this.mesh.checkCollisions;
-    }
-    protected set checkCollisions(value: boolean) {
-        this.mesh.checkCollisions = value;
-    }
-
-    public get isVisible(): boolean {
-        return this.mesh.isVisible;
-    }
-    public set isVisible(value: boolean) {
-        this.mesh.isVisible = value;
-    }
-
-    // 位置
-    public get position(): Vector3 {
-        return this.mesh.position;
-    }
-    protected set position(value: Vector3) {
-        this.mesh.position = value;
-    }
-    public get groundingPosition(): Vector3 {
-        return this.mesh.position.subtract(new Vector3(0, 0, this.size / 2));
-    }
-    protected set groundingPosition(value: Vector3) {
-        this.mesh.position = value.add(new Vector3(0, 0, this.size / 2));
-    }
-
     // 移動
     protected moveTo(dir: Vector3) {
         const dir1 = new Vector3(dir.x, 0, 0);
@@ -152,15 +148,16 @@ export abstract class Entity {
         }
     }
 
-    // 回転
-    public get rotation(): Vector3 {
-        return this.mesh.rotation;
-    }
-    protected set rotation(value: Vector3) {
-        this.mesh.rotation = value;
-    }
-
     public abstract update(deltaSeconds: number): void;
+
+    // Collisionイベントを発生させるか
+    private _collisionEventsEnabled: boolean = false;
+    public get collisionEventsEnabled(): boolean {
+        return this._collisionEventsEnabled;
+    }
+    protected set collisionEventsEnabled(value: boolean) {
+        this._collisionEventsEnabled = value;
+    }
 
     /**
      * 他の Entity と衝突し始めたときに呼ばれる
