@@ -81,7 +81,7 @@ export abstract class Figure {
             const c = d0.lengthSquared() - R * R;
     
             const disc = b * b - 4 * a * c;
-            if (disc < 0) return Infinity; // 接触しない
+            if (disc <= 0) return Infinity; // 接触しない
     
             const sqrtDisc = Math.sqrt(disc);
             const t1 = (-b - sqrtDisc) / (2 * a); // 早い解
