@@ -189,7 +189,9 @@ export abstract class Figure {
     
                 if (v === 0) {
                     // 静止している軸
-                    if (left1 > right2 || left2 > right1) return Infinity; // 別々で衝突しない
+                    if (left1 >= right2 || left2 >= right1) {
+                        return Infinity; // 別々で衝突しない
+                    }
                     continue;
                 }
     
