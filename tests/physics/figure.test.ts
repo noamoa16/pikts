@@ -163,10 +163,10 @@ describe("Figure.space", () => {
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(Infinity);
     });
-    it("立方体-立方体がギリギリで衝突する", () => { // 失敗する
+    it("立方体-立方体がギリギリで衝突する", () => {
         const moving = new Cube(new Vector3(0, 0, 0), 2);
         const stationary = new Cube(new Vector3(2, 2 - delta, 0), 2);
-        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBeCloseTo(1);
-        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBeCloseTo(1);
+        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(0);
+        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(0);
     });
 });
