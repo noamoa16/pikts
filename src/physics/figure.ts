@@ -131,7 +131,9 @@ export abstract class Figure {
                         p[i] > max[i] ? p[i] - max[i] : 0;
                 distanceSq += d * d;
             }
-            if (distanceSq <= r * r) return 0;
+            if (distanceSq < (r - Number.EPSILON) * (r - Number.EPSILON)){
+                return 0;
+            }
 
             // 各軸の min/max を通過する時刻で区間を分割する
             const ts = [0];

@@ -112,7 +112,7 @@ describe("Figure.space", () => {
         expect(stationary.space(moving, new Vector3(1, 0, 0))).toBe(Infinity);
     });
 
-    it("球が別の球とギリギリですれ違うときに Infinity を返す", () => { // 失敗する
+    it("球が別の球とギリギリですれ違うときに Infinity を返す", () => {
         const moving = new Sphere(new Vector3(0, 0, 0), 1);
         const stationary = new Sphere(new Vector3(2, 2, 0), 1);
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
@@ -133,23 +133,17 @@ describe("Figure.space", () => {
     });
 
     it("球-立方体がギリギリですれ違うときに Infinity を返す", () => {
-        const moving = new Sphere(new Vector3(0, 0, 0), 1);
-        const stationary = new Cube(new Vector3(2, 2, 0), 2);
+        const moving = new Sphere(new Vector3(-1, -1, 0.125), 0.125);
+        const stationary = new Cube(new Vector3(0, 0, -5), 10);
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(Infinity);
     });
-    it("球-立方体がギリギリで衝突する", () => { // 失敗する
+    it("球-立方体がギリギリで衝突する", () => {
         const moving = new Sphere(new Vector3(0, 0, 0), 1);
         const stationary = new Cube(new Vector3(2, 2 - delta, 0), 2);
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBeCloseTo(1 - Math.sqrt(2 * delta));
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBeCloseTo(1 - Math.sqrt(2 * delta));
     });
-    // D動いたときに衝突するとする
-    // (D, 0), (2, 2 - d)
-    // 半径1の円 (D, 0) と 点 (1, 1 - d) が 重なる
-    // (1 - D)^2 + (1 - d)^2 = 1
-    // (D - 1)^2 = -d^2 + 2d
-    // D = 1 - sqrt(2d)
 
     it("立方体-立方体の移動時に最初の接触距離を返す", () => {
         const moving = new Cube(new Vector3(0, 0, 0), 2);
@@ -157,7 +151,7 @@ describe("Figure.space", () => {
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBeCloseTo(3);
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBeCloseTo(3);
     });
-    it("立方体-立方体がギリギリですれ違うときに Infinity を返す", () => { // 失敗する
+    it("立方体-立方体がギリギリですれ違うときに Infinity を返す", () => {
         const moving = new Cube(new Vector3(0, 0, 0), 2);
         const stationary = new Cube(new Vector3(2, 2, 0), 2);
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
