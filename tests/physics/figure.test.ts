@@ -132,6 +132,13 @@ describe("Figure.space", () => {
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBeCloseTo(3);
     });
 
+    it("球が立方体から遠ざかる方向に移動したときに Infinity を返す", () => {
+        const moving = new Sphere(new Vector3(1 + Math.SQRT2 / 2, 1 + Math.SQRT2 / 2, 0), 1);
+        const stationary = new Cube(new Vector3(0, 0, 0), 2);
+        expect(moving.space(stationary, new Vector3(1, 1, 0))).toBe(Infinity);
+        expect(stationary.space(moving, new Vector3(-1, -1, 0))).toBe(Infinity);
+    });
+
     it("球-立方体がギリギリですれ違うときに Infinity を返す", () => {
         const moving = new Sphere(new Vector3(-1, -1, 0.125), 0.125);
         const stationary = new Cube(new Vector3(0, 0, -5), 10);
