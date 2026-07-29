@@ -19,12 +19,8 @@ export abstract class Entity {
     }
     
     // 位置
-    public get position(): Vector3 {
-        return this.mesh.position;
-    }
-    protected set position(value: Vector3) {
-        this.mesh.position = value;
-    }
+    public get position(): Vector3 { return this.mesh.position; }
+    protected set position(value: Vector3) { this.mesh.position = value; }
     public get groundingPosition(): Vector3 {
         return this.mesh.position.subtract(new Vector3(0, 0, this.size / 2));
     }
@@ -33,30 +29,18 @@ export abstract class Entity {
     }
 
     // 回転
-    public get rotation(): Vector3 {
-        return this.mesh.rotation;
-    }
-    protected set rotation(value: Vector3) {
-        this.mesh.rotation = value;
-    }    
+    public get rotation(): Vector3 { return this.mesh.rotation; }
+    protected set rotation(value: Vector3) { this.mesh.rotation = value; }    
 
     // サイズ
     private _size: number = 1;
-    public get size(): number {
-        return this._size;
-    }
-    protected set size(value: number) {
-        this._size = value;
-    }
+    public get size(): number { return this._size; }
+    protected set size(value: number) { this._size = value; }
 
     // 移動スピード
     private _speed: number = 0;
-    public get speed(): number {
-        return this._speed;
-    }
-    protected set speed(value: number) {
-        this._speed = value;
-    }
+    public get speed(): number { return this._speed; }
+    protected set speed(value: number) { this._speed = value; }
 
     // 形状
     public get figure(): Figure {
@@ -69,21 +53,13 @@ export abstract class Entity {
     }
 
     // 衝突判定
-    public get checkCollisions(): boolean {
-        return this.mesh.checkCollisions;
-    }
-    protected set checkCollisions(value: boolean) {
-        this.mesh.checkCollisions = value;
-    }
+    public get checkCollisions(): boolean { return this.mesh.checkCollisions; }
+    protected set checkCollisions(value: boolean) { this.mesh.checkCollisions = value; }
 
     // 性質
     protected readonly fall: boolean;
-    public get isVisible(): boolean {
-        return this.mesh.isVisible;
-    }
-    public set isVisible(value: boolean) {
-        this.mesh.isVisible = value;
-    }
+    public get isVisible(): boolean { return this.mesh.isVisible; }
+    public set isVisible(value: boolean) { this.mesh.isVisible = value; }
 
     constructor(
         protected readonly game: Game,
@@ -152,12 +128,8 @@ export abstract class Entity {
 
     // Collisionイベントを発生させるか
     private _collisionEventsEnabled: boolean = false;
-    public get collisionEventsEnabled(): boolean {
-        return this._collisionEventsEnabled;
-    }
-    protected set collisionEventsEnabled(value: boolean) {
-        this._collisionEventsEnabled = value;
-    }
+    public get collisionEventsEnabled(): boolean { return this._collisionEventsEnabled; }
+    protected set collisionEventsEnabled(value: boolean) { this._collisionEventsEnabled = value; }
 
     /**
      * 他の Entity と衝突し始めたときに呼ばれる
