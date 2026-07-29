@@ -44,7 +44,7 @@ export class Player extends Entity {
         const material = new StandardMaterial(`${this.name}.material`, this.scene);
         material.backFaceCulling = false;
         Color.set(material, new Color3(0.95, 0.8, 0.7), {
-            metalicity: 0.1,
+            metallicity: 0.1,
             luminance: 0.3,
         });
         this.mesh.material = material;
@@ -56,7 +56,7 @@ export class Player extends Entity {
         const noseMaterial = new StandardMaterial(`${this.name}.nose.material`, this.scene);
         noseMaterial.backFaceCulling = false;
         Color.set(noseMaterial, new Color3(0.5, 0.2, 0.2), {
-            metalicity: 0.1,
+            metallicity: 0.1,
             luminance: 0.2,
         });
         nose.material = noseMaterial;

@@ -46,7 +46,7 @@ export abstract class Minion extends Entity {
             Color.set(
                 material as StandardMaterial, 
                 this.getColor(), 
-                { metalicity: 0.1, luminance: 0.3 },
+                { metallicity: 0.1, luminance: 0.3 },
             );
         }
     }
