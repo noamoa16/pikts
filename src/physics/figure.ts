@@ -135,7 +135,7 @@ export abstract class Figure {
                 return 0;
             }
 
-            // 各軸の min/max を通過する時刻で区間を分割する
+            // 球の中心が、各軸の min/max を通過する時刻で区間を分割する
             const ts = [0];
             for (let i = 0; i < 3; i++) {
                 if (u[i] !== 0) {
@@ -180,6 +180,9 @@ export abstract class Figure {
                 const t0 = (-B - sqrtDisc) / (2 * A);
                 const t1 = (-B + sqrtDisc) / (2 * A);
                 const t = Math.max(a, t0);
+                if(t1 <= 1e-12){
+                    continue;
+                }
 
                 if (t <= Math.min(b, t1)) return t;
             }
