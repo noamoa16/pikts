@@ -30,17 +30,22 @@ export abstract class Entity {
 
     // 回転
     public get rotation(): Vector3 { return this.mesh.rotation; }
-    protected set rotation(value: Vector3) { this.mesh.rotation = value; }    
+    protected set rotation(value: Vector3) { this.mesh.rotation = value; }
 
     // サイズ
     private _size: number = 1;
     public get size(): number { return this._size; }
     protected set size(value: number) { this._size = value; }
 
-    // 移動スピード
+    // 基本移動スピード
     private _speed: number = 0;
     public get speed(): number { return this._speed; }
     protected set speed(value: number) { this._speed = value; }
+
+    // 速度
+    private _velocity: Vector3 = Vector3.Zero();
+    public get velocity(): Vector3 { return this._velocity; }
+    protected set velocity(value: Vector3) { this._velocity = value; }
 
     // 形状
     public get figure(): Figure {
@@ -97,10 +102,11 @@ export abstract class Entity {
     }
 
     // 移動
-    protected moveTo(dir: Vector3) {
+    protected moveFor(dir: Vector3): Vector3 {
         const dir1 = new Vector3(dir.x, 0, 0);
         const dir2 = new Vector3(0, dir.y, 0);
         const dir3 = new Vector3(0, 0, dir.z);
+        const prevPosition = this.position.clone();
         for(const dir of [dir1, dir2, dir3]){
 
             if(dir.lengthSquared() == 0) continue;
@@ -122,9 +128,26 @@ export abstract class Entity {
             moveVec = moveVec.scale(Math.min(dir.length(), space));
             this.position.addInPlace(moveVec);
         }
+        return this.position.subtract(prevPosition);
     }
 
-    public abstract update(deltaSeconds: number): void;
+    public update(deltaSeconds: number): void {
+
+        /* 重力 */
+
+        if(!this.fall) return;
+
+        // dv = a * dt
+        this.velocity.addInPlace(this.scene.gravity.scale(deltaSeconds))
+
+        // dx = v * dt
+        const moved = this.moveFor(this.velocity.scale(deltaSeconds));
+
+        // 移動できなかった場合は速度0にする
+        if(Math.abs(moved.x) < Number.EPSILON) this.velocity.x = 0;
+        if(Math.abs(moved.y) < Number.EPSILON) this.velocity.y = 0;
+        if(Math.abs(moved.z) < Number.EPSILON) this.velocity.z = 0;
+    }
 
     // Collisionイベントを発生させるか
     private _collisionEventsEnabled: boolean = false;

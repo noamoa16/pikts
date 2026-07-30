@@ -31,14 +31,13 @@ export abstract class Minion extends Entity {
     }
 
     override update(deltaSeconds: number): void {
+        super.update(deltaSeconds);
+
         const horizontalDisplacement =
             this.state === State.following && this.follower
                 ? this.calcMoveVector(this.follower.groundingPosition, deltaSeconds)
                 : Vector3.Zero();
-        const gravityDisplacement = this.fall
-            ? this.scene.gravity.scale(deltaSeconds)
-            : Vector3.Zero();
-        this.moveTo(horizontalDisplacement.add(gravityDisplacement));
+        this.moveFor(horizontalDisplacement);
 
         // 色
         const material = this.mesh.material;
@@ -97,5 +96,6 @@ export abstract class Minion extends Entity {
     private startFollowing(player: Player){
         this.state = State.following;
         this.follower = player;
+        this.velocity.z = 1;
     }
 }

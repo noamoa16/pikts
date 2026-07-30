@@ -1,6 +1,7 @@
 import {
     Color3,
     CreateSphere,
+    CreateTorus,
     StandardMaterial,
     Vector3,
 } from "#vendor/babylon";
@@ -61,6 +62,44 @@ export class Player extends Entity {
         });
         nose.material = noseMaterial;
 
+        // カーソル
+        const cursor = CreateTorus(
+            `${this.name}.cursor`,
+            {
+                diameter: this.size,
+                thickness: this.size / 12,
+                tessellation: 16,
+            }
+        );
+        cursor.parent = this.mesh;
+        cursor.position = new Vector3(this.size * 4, 0, 0);
+        cursor.rotation = new Vector3(Math.PI / 2, 0, 0);
+        const cursorMaterial = new StandardMaterial(`${this.name}.cursor.material`, this.scene);
+        cursorMaterial.backFaceCulling = false;
+        Color.set(cursorMaterial, new Color3(0.9, 0.4, 0.7), {
+            metallicity: 0.1,
+            luminance: 0.25,
+        });
+        cursor.material = cursorMaterial;
+
+        // 笛
+        // const whistle = CreateTorus(
+        //     `${this.name}.whistle`,
+        //     {
+        //         diameter: this.size * 4,
+        //         thickness: this.size / 12,
+        //         tessellation: 32,
+        //     }
+        // );
+        // whistle.parent = cursor;
+        // const whistleMaterial = new StandardMaterial(`${this.name}.whistle.material`, this.scene);
+        // whistleMaterial.backFaceCulling = false;
+        // Color.set(whistleMaterial, new Color3(0.9, 0.4, 0.7), {
+        //     metallicity: 0.1,
+        //     luminance: 0.25,
+        // });
+        // whistle.material = whistleMaterial;
+
         // キー入力
         this.onKeyDown = this.createKeyHandler(true);
         this.onKeyUp = this.createKeyHandler(false);
@@ -73,6 +112,8 @@ export class Player extends Entity {
     }
 
     override update(deltaSeconds: number): void {
+        super.update(deltaSeconds);
+
         // 移動
         const moveX =
             Number(this.isDirectionActive("right")) - Number(this.isDirectionActive("left"));
@@ -84,10 +125,7 @@ export class Player extends Entity {
                 : toVector3(rotate2D(moveX, moveY, this.game.camera.rotation - Math.PI / 2))
                     .normalize()
                     .scale(this.speed * deltaSeconds);
-        const gravityDisplacement = this.fall
-            ? this.scene.gravity.scale(deltaSeconds)
-            : Vector3.Zero();
-        this.mesh.moveWithCollisions(horizontalDisplacement.add(gravityDisplacement));
+        this.mesh.moveWithCollisions(horizontalDisplacement);
 
         // 向きを変える
         if(!horizontalDisplacement.equals(Vector3.Zero())){
