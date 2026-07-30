@@ -17,6 +17,7 @@ import { RedMinion } from "../objects/minion/redMinion";
 import { FrameTimer } from "../core/frameTimer";
 import { normalizeAngle } from "../core/math";
 import { Game } from "../game";
+import { isMoveAction } from "../actions/action";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -36,6 +37,10 @@ export function createDemoScene(engine: Engine): Scene {
     createDemoFloor(game, PLAY_AREA);
     createBoundaryWalls(game, PLAY_AREA, BOUNDS_Z);
 
+    // 視点変更
+    let isCameraRotation = false;
+    let cameraTargetTheta = 0;
+
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));
     new Block(game, new Vector3(2, 1, 0))
@@ -50,12 +55,16 @@ export function createDemoScene(engine: Engine): Scene {
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);
     const dpad = new Dpad(
         engine,
-        (action, pressed) => player.setVirtualInput(action, pressed)
+       (action, pressed) => {
+            if(isMoveAction(action)){
+                player.setVirtualInput(action, pressed);
+            }
+            else if(action === 'rotate'){
+                isCameraRotation = true;
+                cameraTargetTheta = player.rotation.z;
+            }
+        }
     );
-
-    // 視点変更
-    let isCameraRotation = false;
-    let cameraTargetTheta = 0;
     document.addEventListener("keydown", (event: KeyboardEvent) => {
         if (event.key.toLowerCase() === "f") {
             isCameraRotation = true;

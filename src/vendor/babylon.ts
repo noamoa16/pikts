@@ -11,6 +11,7 @@ export { CreateLines } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 export { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 export { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 export { CreateTorus } from "@babylonjs/core/Meshes/Builders/torusBuilder";
+export { CreateTube } from "@babylonjs/core/Meshes/Builders/tubeBuilder";
 export type { Mesh } from "@babylonjs/core/Meshes/mesh";
 export { Scene } from "@babylonjs/core/scene";
 export { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";

@@ -2,10 +2,11 @@ import {
     Color3,
     CreateSphere,
     CreateTorus,
+    CreateTube,
     StandardMaterial,
     Vector3,
 } from "#vendor/babylon";
-import { Action } from "../actions/action";
+import { MoveAction } from "../actions/action";
 import { normalizeAngle, rotate2D, toVector3 } from "../core/math";
 import { Shape } from "../physics/figure";
 import { Game } from "../game";
@@ -15,8 +16,8 @@ import { Entity } from "./entity";
 type InputSource = "keyboard" | "virtual";
 
 type PlayerInputState = {
-    keyboard: Record<Action, boolean>;
-    virtual: Record<Action, boolean>;
+    keyboard: Record<MoveAction, boolean>;
+    virtual: Record<MoveAction, boolean>;
 };
 
 export class Player extends Entity {
@@ -83,22 +84,21 @@ export class Player extends Entity {
         cursor.material = cursorMaterial;
 
         // 笛
-        // const whistle = CreateTorus(
-        //     `${this.name}.whistle`,
-        //     {
-        //         diameter: this.size * 4,
-        //         thickness: this.size / 12,
-        //         tessellation: 32,
-        //     }
-        // );
-        // whistle.parent = cursor;
-        // const whistleMaterial = new StandardMaterial(`${this.name}.whistle.material`, this.scene);
-        // whistleMaterial.backFaceCulling = false;
-        // Color.set(whistleMaterial, new Color3(0.9, 0.4, 0.7), {
-        //     metallicity: 0.1,
-        //     luminance: 0.25,
-        // });
-        // whistle.material = whistleMaterial;
+        const NUM_WHISTLE_PARTS = 24;
+        let path = [];
+        for(let i = 0; i < NUM_WHISTLE_PARTS; i++){
+            const theta = i / NUM_WHISTLE_PARTS * 2 * Math.PI;
+            path.push(new Vector3(Math.cos(theta), 0, Math.sin(theta)));
+        }
+        path.push(new Vector3(1, 0, 0))
+        const pipe = CreateTube(
+            `${this.name}.whistle`,
+            {
+                path,
+                radius: this.size / 12,
+            }
+        )
+        pipe.parent = cursor;
 
         // キー入力
         this.onKeyDown = this.createKeyHandler(true);
@@ -143,7 +143,7 @@ export class Player extends Entity {
         }
     }
 
-    public setVirtualInput(direction: Action, pressed: boolean): void {
+    public setVirtualInput(direction: MoveAction, pressed: boolean): void {
         this.setInput("virtual", direction, pressed);
     }
 
@@ -168,13 +168,13 @@ export class Player extends Entity {
 
     private setInput(
         source: InputSource,
-        direction: Action,
+        direction: MoveAction,
         pressed: boolean,
     ): void {
         this.inputState[source][direction] = pressed;
     }
 
-    private isDirectionActive(direction: Action): boolean {
+    private isDirectionActive(direction: MoveAction): boolean {
         return this.inputState.keyboard[direction] || this.inputState.virtual[direction];
     }
 
