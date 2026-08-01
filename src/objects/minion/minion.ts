@@ -7,17 +7,18 @@ import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
-import { Player } from "../player";
+import { Player } from "../player/player";
 
-enum State {
+export enum MinionState {
     free,
     following,
+    held,
 }
 
 export abstract class Minion extends Entity {
     protected readonly baseColor: Color3 = new Color3(0, 0.95, 0);
     protected readonly freeColor: Color3 = new Color3(0.5, 0.95, 0.5);
-    public state: State = State.free;
+    public state: MinionState = MinionState.free;
     public follower: Player | undefined = undefined;
 
     constructor(game: Game, position: Vector3) {
@@ -33,11 +34,24 @@ export abstract class Minion extends Entity {
     override update(deltaSeconds: number): void {
         super.update(deltaSeconds);
 
-        const horizontalDisplacement =
-            this.state === State.following && this.follower
-                ? this.calcMoveVector(this.follower.groundingPosition, deltaSeconds)
-                : Vector3.Zero();
-        this.moveFor(horizontalDisplacement);
+        if(this.state === MinionState.following && this.follower){
+            const moveVector = this.calcMoveVector(this.follower.groundingPosition, deltaSeconds)
+            this.moveFor(moveVector);
+            this.checkCollisions = true;
+        }
+        else if(this.state === MinionState.held && this.follower){
+            const playerPos = this.follower.position;
+            const playerRot = this.follower.rotation.z;
+            this.position = playerPos.add(new Vector3(
+                this.follower.size / 2 * Math.cos(playerRot),
+                this.follower.size / 2 * Math.sin(playerRot),
+                this.follower.size / 4,
+            ));
+            this.checkCollisions = false;
+        }
+        else{
+            this.checkCollisions = true;
+        }
 
         // 色
         const material = this.mesh.material;
@@ -60,8 +74,9 @@ export abstract class Minion extends Entity {
 
     private getColor(): Color3{
         return {
-            [State.following]: this.baseColor,
-            [State.free]: this.freeColor,
+            [MinionState.following]: this.baseColor,
+            [MinionState.held]: this.baseColor,
+            [MinionState.free]: this.freeColor,
         }[this.state];
     }
 
@@ -90,12 +105,18 @@ export abstract class Minion extends Entity {
     }
 
     public get isFree(): boolean{
-        return this.state == State.free;
+        return this.state == MinionState.free;
     }
 
-    private startFollowing(player: Player){
-        this.state = State.following;
+    public startFollowing(player: Player){
+        if(this.state == MinionState.free){
+            this.state = MinionState.following;
+            this.follower = player;
+            this.velocity.z = 1;
+        }
+    }
+    public startHeld(player: Player){
+        this.state = MinionState.held;
         this.follower = player;
-        this.velocity.z = 1;
     }
 }

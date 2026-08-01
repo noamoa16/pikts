@@ -8,14 +8,13 @@ import {
 import { DebugInfo } from "../ui/debug/debugInfo";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
-import { Player } from "../objects/player";
+import { Player } from "../objects/player/player";
 import { Collision } from "../physics/collision";
 import { Dpad } from "../ui/dpad";
 import { createDemoFloor } from "./demoScene/floor";
 import { createBoundaryWalls } from "./demoScene/walls";
 import { RedMinion } from "../objects/minion/redMinion";
 import { FrameTimer } from "../core/frameTimer";
-import { normalizeAngle } from "../core/math";
 import { Game } from "../game";
 import { isMoveAction } from "../actions/action";
 
@@ -37,10 +36,6 @@ export function createDemoScene(engine: Engine): Scene {
     createDemoFloor(game, PLAY_AREA);
     createBoundaryWalls(game, PLAY_AREA, BOUNDS_Z);
 
-    // 視点変更
-    let isCameraRotation = false;
-    let cameraTargetTheta = 0;
-
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));
     new Block(game, new Vector3(2, 1, 0))
@@ -60,15 +55,36 @@ export function createDemoScene(engine: Engine): Scene {
                 player.setVirtualInput(action, pressed);
             }
             else if(action === 'rotate'){
-                isCameraRotation = true;
-                cameraTargetTheta = player.rotation.z;
+                if(pressed){
+                    game.camera.startRotate(player.rotation.z);
+                }
+            }
+            else if(action === 'whistle'){
+                player.whistle.active = pressed;
+            }
+            else if(action === 'hold'){
+                if(pressed) player.tryHoldMinion();
+                else player.tryReleaseMinion();
             }
         }
     );
     document.addEventListener("keydown", (event: KeyboardEvent) => {
-        if (event.key.toLowerCase() === "f") {
-            isCameraRotation = true;
-            cameraTargetTheta = player.rotation.z;
+        if (event.key.toLowerCase() === 'f') {
+            game.camera.startRotate(player.rotation.z);
+        }
+        else if(event.key.toLowerCase() === '[') {
+            player.whistle.active = true;
+        }
+        else if(event.key.toLowerCase() === 'enter') {
+            player.tryHoldMinion();
+        }
+    });
+    document.addEventListener("keyup", (event: KeyboardEvent) => {
+        if (event.key.toLowerCase() === '[') {
+            player.whistle.active = false;
+        }
+        else if(event.key.toLowerCase() === 'enter') {
+            player.tryReleaseMinion();
         }
     });
 
@@ -84,25 +100,8 @@ export function createDemoScene(engine: Engine): Scene {
             collision.dispatchEvents(game.objects);
         });
         game.camera.target = player.position;
-
-        // 視点変更
-        if(isCameraRotation){
-            const currentTheta = game.camera.rotation;
-            const diffThera = normalizeAngle(
-                cameraTargetTheta - currentTheta,
-                { includePi: (Math.cos(currentTheta) >= 0) },
-            );
-            if(Math.abs(diffThera) <= Math.PI / 96){
-                isCameraRotation = false;
-            }
-            else{
-                const ROTATION_SPEED = 2.5;
-                game.camera.rotation = currentTheta + Math.sign(diffThera) * Math.min(
-                    Math.PI * (1 / 30) * ROTATION_SPEED,
-                    Math.abs(diffThera),
-                );
-            }
-        }
+        game.camera.update(deltaSeconds);
+        player.whistle.update(deltaSeconds, game.objects);
 
         // デバッグ出力
         if (debugInfo.valid) {

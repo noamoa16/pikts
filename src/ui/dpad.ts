@@ -1,17 +1,20 @@
 import type { Engine } from "#vendor/babylon";
 import { Action } from "../actions/action";
+import { clamp } from "../core/math";
 
 type OnPressed = (action: Action, pressed: boolean) => void;
 
 export class Dpad {
-    private container: HTMLDivElement | null = null;
+    private readonly container: HTMLDivElement;
     constructor(engine: Engine, onPressed: OnPressed) {
         const parent = engine.getRenderingCanvas()?.parentElement;
         if (!(parent instanceof HTMLDivElement)) {
-            return;
+            throw new Error('parent is not HTMLDivElement');
         }
         this.container = document.createElement("div");
-        Object.assign(this.container.style, {
+
+        const leftContainer = document.createElement("div");
+        Object.assign(leftContainer.style, {
             position: "absolute",
             left: "var(--dpad-offset)",
             bottom: "var(--dpad-offset)",
@@ -26,14 +29,36 @@ export class Dpad {
             userSelect: "none",
             zIndex: "10",
         } satisfies Partial<CSSStyleDeclaration>);
-
-        this.container.append(
+        leftContainer.append(
             Dpad.createButton("up", "Move up", onPressed, 2, 2),
             Dpad.createButton("left", "Move left", onPressed, 1, 3),
             Dpad.createButton("right", "Move right", onPressed, 3, 3),
             Dpad.createButton("down", "Move down", onPressed, 2, 4),
             Dpad.createButton("rotate", "Rotate", onPressed, 3, 1),
         );
+        this.container.append(leftContainer);
+
+        const rightContainer = document.createElement("div");
+        Object.assign(rightContainer.style, {
+            position: "absolute",
+            right: "var(--dpad-offset)",
+            bottom: "var(--dpad-offset)",
+            width: "calc(var(--dpad-button-size) * 3)",
+            height: "calc(var(--dpad-button-size) * 4)",
+            display: "grid",
+            gridTemplateColumns: "repeat(3, 1fr)",
+            gridTemplateRows: "repeat(4, 1fr)",
+            placeItems: "center",
+            pointerEvents: "auto",
+            touchAction: "none",
+            userSelect: "none",
+            zIndex: "10",
+        } satisfies Partial<CSSStyleDeclaration>);
+        rightContainer.append(
+            Dpad.createButton("hold", "Hold", onPressed, {start: 2, end: 3}, {start: 2, end: 4}),
+            Dpad.createButton("whistle", "Whistle", onPressed, 1, 1),
+        );
+        this.container.append(rightContainer);
 
         parent.append(this.container);
         this.adjustLayout();
@@ -43,17 +68,26 @@ export class Dpad {
         action: Action,
         label: string,
         onPressed: OnPressed,
-        gridColumn: number | string,
-        gridRow: number | string,
+        gridColumn: number | string | {start: number, end: number},
+        gridRow: number | string | {start: number, end: number},
     ): HTMLButtonElement {
+        let width = 1, height = 1;
+        if(typeof gridColumn === 'object'){
+            width = gridColumn.end - gridColumn.start + 1;
+            gridColumn = `${gridColumn.start} / ${gridColumn.end}`;
+        }
+        if(typeof gridRow === 'object'){
+            height = gridRow.end - gridRow.start + 1;
+            gridRow = `${gridRow.start} / ${gridRow.end}`;
+        }
         const button = document.createElement("button");
         button.type = "button";
         button.setAttribute("aria-label", label);
         Object.assign(button.style, {
             gridColumn: gridColumn.toString(),
             gridRow: gridRow.toString(),
-            width: "var(--dpad-button-size)",
-            height: "var(--dpad-button-size)",
+            width: `calc(var(--dpad-button-size) * ${width})`,
+            height: `calc(var(--dpad-button-size) * ${height})`,
             padding: "0",
             border: "3px solid #111",
             background: "rgba(238, 246, 255, 0.92)",
@@ -73,7 +107,16 @@ export class Dpad {
         if (action === "rotate") {
             const content = Dpad.createButtonText("F", "(rotate)");
             button.append(content);
-        } else {
+        }
+        else if(action === "whistle") {
+            const content = Dpad.createButtonText("[", "(whistle)");
+            button.append(content);
+        }
+        else if(action === "hold") {
+            const content = Dpad.createButtonText("Enter", "(hold)");
+            button.append(content);
+        }
+        else {
             const arrow = document.createElement("span");
             Object.assign(arrow.style, {
                 position: "absolute",
@@ -201,9 +244,10 @@ export class Dpad {
         const descriptionElement = document.createElement("span");
         descriptionElement.textContent = description;
 
+        const fontSizeCoeff = Math.min(2.0 / Math.max(description.length, 1), 0.25)
         Object.assign(descriptionElement.style, {
             display: "block",
-            fontSize: "calc(var(--dpad-button-size) * 0.24)",
+            fontSize: `calc(var(--dpad-button-size) * ${fontSizeCoeff})`,
             fontWeight: "400",
             lineHeight: "1.2",
             marginTop: "2px",
@@ -215,26 +259,21 @@ export class Dpad {
     }
 
     public adjustLayout() {
-        if (this.container) {
-            const shortestSide = Math.min(window.innerWidth, window.innerHeight);
-            const buttonSize = Math.max(
-                48,
-                Math.min(96, Math.round(shortestSide * 0.12)),
-            );
-            const offset = Math.max(16, Math.round(buttonSize * 0.4));
+        const shortestSide = Math.min(window.innerWidth, window.innerHeight);
+        const buttonSize = clamp(Math.round(shortestSide * 0.12), 48, 96);
+        const offset = Math.max(16, Math.round(buttonSize * 0.4));
 
-            this.container.style.setProperty(
-                "--dpad-button-size",
-                `${buttonSize}px`,
-            );
-            this.container.style.setProperty(
-                "--dpad-offset",
-                `${offset}px`,
-            );
-        }
+        this.container.style.setProperty(
+            "--dpad-button-size",
+            `${buttonSize}px`,
+        );
+        this.container.style.setProperty(
+            "--dpad-offset",
+            `${offset}px`,
+        );
     }
 
     public remove() {
-        this.container?.remove();
+        this.container.remove();
     }
 }

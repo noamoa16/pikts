@@ -1,4 +1,5 @@
 import { ArcRotateCamera, Scene, Vector3 } from "#vendor/babylon";
+import { normalizeAngle } from "../core/math";
 
 const CAMERA_RADIUS = 9;
 const CAMERA_FOV = Math.PI / 3;
@@ -8,6 +9,10 @@ export class MainCamera {
     private readonly canvas: HTMLCanvasElement | null;
     private readonly previousTransform: string;
     private readonly previousTransformOrigin: string;
+
+    public rotates: boolean = false;
+    private targetTheta: number = 0;
+    private static readonly ROTATION_SPEED = 5.0;
 
     constructor(scene: Scene) {
         this.canvas = scene.getEngine().getRenderingCanvas();
@@ -49,5 +54,28 @@ export class MainCamera {
     }
     set rotation(value: number) {
         this.camera.alpha = Math.PI - value;
+    }
+
+    public startRotate(targetTheta: number) {
+        this.rotates = true;
+        this.targetTheta = targetTheta;
+    }
+    public update(deltaSeconds: number) {
+        if(this.rotates){
+            const currentTheta = this.rotation;
+            const diffThera = normalizeAngle(
+                this.targetTheta - currentTheta,
+                { includePi: (Math.cos(currentTheta) >= 0) },
+            );
+            if(Math.abs(diffThera) <= Math.PI / 96){
+                this.rotates = false;
+            }
+            else{
+                this.rotation = currentTheta + Math.sign(diffThera) * Math.min(
+                    Math.PI * deltaSeconds * MainCamera.ROTATION_SPEED,
+                    Math.abs(diffThera),
+                );
+            }
+        }
     }
 }

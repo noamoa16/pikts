@@ -16,6 +16,7 @@ export type { Mesh } from "@babylonjs/core/Meshes/mesh";
 export { Scene } from "@babylonjs/core/scene";
 export { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
 export { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
+export { VertexBuffer } from "@babylonjs/core";
 export { Texture } from "@babylonjs/core/Materials/Textures/texture";
 import "@babylonjs/core/Collisions/collisionCoordinator";
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";
