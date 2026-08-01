@@ -69,6 +69,10 @@ export function createDemoScene(engine: Engine): Scene {
         }
     );
     const updateKeyboardState = (event: KeyboardEvent, pressed: boolean) => {
+        if (event.key === "[") {
+            dpad.setKeyboardPressed("whistle", pressed);
+            player.whistle.active = pressed;
+        }
         switch (event.code) {
             case "KeyW":
                 dpad.setKeyboardPressed("up", pressed);
@@ -87,10 +91,6 @@ export function createDemoScene(engine: Engine): Scene {
                 if (pressed) {
                     game.camera.startRotate(player.rotation.z);
                 }
-                break;
-            case "BracketLeft":
-                dpad.setKeyboardPressed("whistle", pressed);
-                player.whistle.active = pressed;
                 break;
             case "Enter":
                 dpad.setKeyboardPressed("hold", pressed);
