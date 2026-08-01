@@ -5,7 +5,7 @@ import { Player } from "./player";
 export class Cursor {
     public readonly mesh;
     constructor(scene: Scene, player: Player){
-        const CURSOR_DISTANCE = 4;
+        const CURSOR_DISTANCE = 5;
         const cursor = CreateTorus(
             `${player.name}.cursor`,
             {

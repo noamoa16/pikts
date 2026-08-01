@@ -1,4 +1,4 @@
-import { Color3, CreateTube, Mesh, Scene, StandardMaterial, Vector3, VertexBuffer } from "#vendor/babylon";
+import { Color3, CreateTube, Mesh, Scene, StandardMaterial, Vector3 } from "#vendor/babylon";
 import { Sphere } from "../../physics/figure";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
@@ -14,29 +14,34 @@ export class Whistle {
     public active: boolean = false;
     private activeSeconds: number = 0;
 
-    private static readonly MAX_RADIUS = 3.0;
-    private static readonly EXPANDING_SECONDS = 1.0;
-    private static readonly KEEPING_SECONDS = 1.0;
+    private static readonly MAX_RADIUS = 2.0;
+    private static readonly EXPANDING_SECONDS = 0.5;
+    private static readonly KEEPING_SECONDS = 0.5;
+
+    private createPath(radius: number, tubeIndex: number): Vector3[] {
+        const path: Vector3[] = [];
+        for(let i = 0; i < Whistle.NUM_WHISTLE_PARTS + 1; i++){
+            const theta = i / Whistle.NUM_WHISTLE_PARTS * 2 * Math.PI;
+            const y = (this.player.size / 48) * (i % 3 == tubeIndex ? -1 : 1);
+            path.push(new Vector3(
+                radius * Math.cos(theta),
+                y,
+                radius * Math.sin(theta),
+            ));
+        }
+        return path;
+    }
 
     constructor(scene: Scene, player: Player, cursor: Cursor){
         this.player = player;
         this.cursor = cursor;
         for(let c = 0; c < 3; c++){
-            let path = [];
-            for(let i = 0; i < Whistle.NUM_WHISTLE_PARTS + 1; i++){
-                const theta = i / Whistle.NUM_WHISTLE_PARTS * 2 * Math.PI;
-                const y = (player.size / 48) * (i % 3 == c ? -1 : 1);
-                path.push(new Vector3(
-                    this.radius * Math.cos(theta),
-                    y,
-                    this.radius * Math.sin(theta),
-                ));
-            }
             const tube = CreateTube(
                 `${player.name}.whistle.part${c + 1}`,
                 {
-                    path,
+                    path: this.createPath(this.radius, c),
                     radius: player.size / 18,
+                    updatable: true,
                 }
             )
             tube.parent = cursor.mesh;
@@ -71,16 +76,11 @@ export class Whistle {
         this.tubes.forEach(tube => tube.isVisible = true);
 
         for(let c = 0; c < 3; c++){
-            const positions = this.tubes[c].getVerticesData(VertexBuffer.PositionKind);
-            if(!positions) continue;
-            for (let i = 0; i < positions.length; i += 3) {
-                const theta = i / Whistle.NUM_WHISTLE_PARTS * 2 * Math.PI;
-                const y = (this.player.size / 48) * ((i / 3) % 3 == c ? -1 : 1);
-                positions[i] = radius * Math.cos(theta);
-                positions[i + 1] = y;
-                positions[i + 2] = radius * Math.sin(theta);
-            }
-            this.tubes[c].updateVerticesData(VertexBuffer.PositionKind, positions);
+            CreateTube(this.tubes[c].name, {
+                path: this.createPath(radius, c),
+                radius: this.player.size / 18,
+                instance: this.tubes[c],
+            });
             this.tubes[c].refreshBoundingInfo();
         }
     }
