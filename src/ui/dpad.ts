@@ -3,9 +3,18 @@ import { Action } from "../actions/action";
 import { clamp } from "../core/math";
 
 type OnPressed = (action: Action, pressed: boolean) => void;
+type PressSource = "pointer" | "keyboard";
+
+type ButtonState = {
+    pointer: boolean;
+    keyboard: boolean;
+};
 
 export class Dpad {
     private readonly container: HTMLDivElement;
+    private readonly buttons = new Map<Action, HTMLButtonElement>();
+    private readonly buttonStates = new Map<Action, ButtonState>();
+
     constructor(engine: Engine, onPressed: OnPressed) {
         const parent = engine.getRenderingCanvas()?.parentElement;
         if (!(parent instanceof HTMLDivElement)) {
@@ -30,11 +39,11 @@ export class Dpad {
             zIndex: "10",
         } satisfies Partial<CSSStyleDeclaration>);
         leftContainer.append(
-            Dpad.createButton("up", "Move up", onPressed, 2, 2),
-            Dpad.createButton("left", "Move left", onPressed, 1, 3),
-            Dpad.createButton("right", "Move right", onPressed, 3, 3),
-            Dpad.createButton("down", "Move down", onPressed, 2, 4),
-            Dpad.createButton("rotate", "Rotate", onPressed, 3, 1),
+            this.createButton("up", "Move up", onPressed, 2, 2),
+            this.createButton("left", "Move left", onPressed, 1, 3),
+            this.createButton("right", "Move right", onPressed, 3, 3),
+            this.createButton("down", "Move down", onPressed, 2, 4),
+            this.createButton("rotate", "Rotate", onPressed, 3, 1),
         );
         this.container.append(leftContainer);
 
@@ -55,8 +64,8 @@ export class Dpad {
             zIndex: "10",
         } satisfies Partial<CSSStyleDeclaration>);
         rightContainer.append(
-            Dpad.createButton("hold", "Hold", onPressed, {start: 2, end: 3}, {start: 2, end: 4}),
-            Dpad.createButton("whistle", "Whistle", onPressed, 1, 1),
+            this.createButton("hold", "Hold", onPressed, {start: 2, end: 3}, {start: 2, end: 4}),
+            this.createButton("whistle", "Whistle", onPressed, 1, 1),
         );
         this.container.append(rightContainer);
 
@@ -64,7 +73,11 @@ export class Dpad {
         this.adjustLayout();
     }
 
-    private static createButton(
+    public setKeyboardPressed(action: Action, pressed: boolean): void {
+        this.setButtonPressed(action, "keyboard", pressed);
+    }
+
+    private createButton(
         action: Action,
         label: string,
         onPressed: OnPressed,
@@ -156,28 +169,32 @@ export class Dpad {
                 'down': 'S',
                 'left': 'A',
                 'right': 'D',
-            }[action])
+            }[action]);
             button.append(content);
         }
 
-        const setPressed = (pressed: boolean) => {
-            button.style.background = pressed
-                ? "rgba(214, 226, 242, 0.98)"
-                : "rgba(238, 246, 255, 0.92)";
-            button.style.transform = pressed
-                ? "translateY(1px)"
-                : "translateY(0)";
-            onPressed(action, pressed);
+        this.buttons.set(action, button);
+        this.buttonStates.set(action, {
+            pointer: false,
+            keyboard: false,
+        });
+        this.syncButtonState(action);
+
+        const setPressed = (source: PressSource, pressed: boolean) => {
+            this.setButtonPressed(action, source, pressed);
+            if (source === "pointer") {
+                onPressed(action, pressed);
+            }
         };
 
         const release = () => {
-            setPressed(false);
+            setPressed("pointer", false);
         };
 
         button.addEventListener("pointerdown", event => {
             event.preventDefault();
             button.setPointerCapture(event.pointerId);
-            setPressed(true);
+            setPressed("pointer", true);
         });
         button.addEventListener("pointerup", release);
         button.addEventListener("pointercancel", release);
@@ -185,6 +202,30 @@ export class Dpad {
         button.addEventListener("contextmenu", event => event.preventDefault());
 
         return button;
+    }
+
+    private setButtonPressed(action: Action, source: PressSource, pressed: boolean): void {
+        const state = this.buttonStates.get(action);
+        if (!state) {
+            return;
+        }
+        state[source] = pressed;
+        this.syncButtonState(action);
+    }
+
+    private syncButtonState(action: Action): void {
+        const button = this.buttons.get(action);
+        const state = this.buttonStates.get(action);
+        if (!button || !state) {
+            return;
+        }
+        const pressed = state.pointer || state.keyboard;
+        button.style.background = pressed
+            ? "rgba(214, 226, 242, 0.98)"
+            : "rgba(238, 246, 255, 0.92)";
+        button.style.transform = pressed
+            ? "translateY(1px)"
+            : "translateY(0)";
     }
 
     private static createButtonTextBase(color: string): HTMLSpanElement{

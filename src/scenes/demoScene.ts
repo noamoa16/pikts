@@ -68,24 +68,46 @@ export function createDemoScene(engine: Engine): Scene {
             }
         }
     );
+    const updateKeyboardState = (event: KeyboardEvent, pressed: boolean) => {
+        switch (event.code) {
+            case "KeyW":
+                dpad.setKeyboardPressed("up", pressed);
+                break;
+            case "KeyA":
+                dpad.setKeyboardPressed("left", pressed);
+                break;
+            case "KeyS":
+                dpad.setKeyboardPressed("down", pressed);
+                break;
+            case "KeyD":
+                dpad.setKeyboardPressed("right", pressed);
+                break;
+            case "KeyF":
+                dpad.setKeyboardPressed("rotate", pressed);
+                if (pressed) {
+                    game.camera.startRotate(player.rotation.z);
+                }
+                break;
+            case "BracketLeft":
+                dpad.setKeyboardPressed("whistle", pressed);
+                player.whistle.active = pressed;
+                break;
+            case "Enter":
+                dpad.setKeyboardPressed("hold", pressed);
+                if (pressed) {
+                    player.tryHoldMinion();
+                }
+                else {
+                    player.tryReleaseMinion();
+                }
+                break;
+        }
+    };
     document.addEventListener("keydown", (event: KeyboardEvent) => {
-        if (event.key.toLowerCase() === 'f') {
-            game.camera.startRotate(player.rotation.z);
-        }
-        else if(event.key.toLowerCase() === '[') {
-            player.whistle.active = true;
-        }
-        else if(event.key.toLowerCase() === 'enter') {
-            player.tryHoldMinion();
-        }
+        updateKeyboardState(event, true);
     });
     document.addEventListener("keyup", (event: KeyboardEvent) => {
-        if (event.key.toLowerCase() === '[') {
-            player.whistle.active = false;
-        }
-        else if(event.key.toLowerCase() === 'enter') {
-            player.tryReleaseMinion();
-        }
+        updateKeyboardState(event, false);
     });
 
     // 定期実行
