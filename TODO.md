@@ -4,6 +4,8 @@
       - frameTimerUpdate.measure の部分は Game.updateObjects
       - frameTimerCollision.measure の部分は Game.dispatchCollisionEvents
       - のようにできるはずです。
+- 壁に接してMinionを投げるとMinionが壁にめり込む問題の解消
+  - Minionのavoidを立方体にも適用すれば良さそう
 - カーソルの距離を固定するのをやめる
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定
