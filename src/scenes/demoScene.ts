@@ -9,12 +9,10 @@ import { DebugInfo } from "../ui/debug/debugInfo";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
-import { Collision } from "../physics/collision";
 import { Dpad } from "../ui/dpad";
 import { createDemoFloor } from "./demoScene/floor";
 import { createBoundaryWalls } from "./demoScene/walls";
 import { RedMinion } from "../objects/minion/redMinion";
-import { FrameTimer } from "../core/frameTimer";
 import { Game } from "../game";
 import { isMoveAction } from "../actions/action";
 
@@ -44,7 +42,6 @@ export function createDemoScene(engine: Engine): Scene {
             new RedMinion(game, new Vector3(i, j, 0));
         }
     }
-    const collision = new Collision();
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);
@@ -111,17 +108,10 @@ export function createDemoScene(engine: Engine): Scene {
     });
 
     // 定期実行
-    const frameTimerUpdate = new FrameTimer(30);
-    const frameTimerCollision = new FrameTimer(30);
     game.scene.onBeforeRenderObservable.add(() => {
         const deltaSeconds = engine.getDeltaTime() / 1000;
-        game.cacheCharacterPos();
-        frameTimerUpdate.measure(() => {
-            game.objects.forEach(o => o.update(deltaSeconds));
-        });
-        frameTimerCollision.measure(() => {
-            collision.dispatchEvents(game.objects);
-        });
+        game.updateObjects(deltaSeconds);
+        game.dispatchCollisionEvents();
         game.camera.update(deltaSeconds, player.position);
         player.whistle.update(deltaSeconds, game.objects);
 
@@ -129,8 +119,8 @@ export function createDemoScene(engine: Engine): Scene {
         if (debugInfo.valid) {
             const position = player.groundingPosition;
             const playerInfo = `Player: x=${position.x.toFixed(2)} y=${position.y.toFixed(2)} z=${position.z.toFixed(2)}`;
-            const fpsInfoUpdate = `Update: ${frameTimerUpdate.averageTime.toFixed(2)} ms`;
-            const fpsInfoCollision = `Collision: ${frameTimerCollision.averageTime.toFixed(2)} ms`;
+            const fpsInfoUpdate = `Update: ${game.frameTimerUpdate.averageTime.toFixed(2)} ms`;
+            const fpsInfoCollision = `Collision: ${game.frameTimerCollision.averageTime.toFixed(2)} ms`;
             debugInfo.text = `${playerInfo}, ${fpsInfoUpdate}, ${fpsInfoCollision}`;
         }
     });
