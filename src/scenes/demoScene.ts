@@ -27,7 +27,7 @@ const IS_DEV = import.meta.env.DEV;
 export function createDemoScene(engine: Engine): Scene {
     const game = new Game(new Scene(engine));
     game.scene.collisionsEnabled = true; // 物体同士の衝突を有効化
-    game.scene.gravity = new Vector3(0, 0, -5);
+    game.scene.gravity = new Vector3(0, 0, -15);
     game.scene.clearColor = new Color4(0.79, 0.9, 0.98, 1); // 背景色 (水色)
     game.scene.ambientColor = new Color3(0.4, 0.4, 0.4); // 均一光 (白色)
 
@@ -115,14 +115,14 @@ export function createDemoScene(engine: Engine): Scene {
     const frameTimerCollision = new FrameTimer(30);
     game.scene.onBeforeRenderObservable.add(() => {
         const deltaSeconds = engine.getDeltaTime() / 1000;
+        game.cacheCharacterPos();
         frameTimerUpdate.measure(() => {
             game.objects.forEach(o => o.update(deltaSeconds));
         });
         frameTimerCollision.measure(() => {
             collision.dispatchEvents(game.objects);
         });
-        game.camera.target = player.position;
-        game.camera.update(deltaSeconds);
+        game.camera.update(deltaSeconds, player.position);
         player.whistle.update(deltaSeconds, game.objects);
 
         // デバッグ出力

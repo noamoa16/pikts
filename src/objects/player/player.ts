@@ -114,7 +114,7 @@ export class Player extends Entity {
     }
 
     public getHoldableMinion(): Minion | null{
-        const HOLDABLE_DISTANCE = this.size * 2.0;
+        const HOLDABLE_DISTANCE = 1.5;
         let candidate: Minion | null = null;
         let minDistanceSq = HOLDABLE_DISTANCE * HOLDABLE_DISTANCE;
         for(const object of this.game.objects){
@@ -132,11 +132,12 @@ export class Player extends Entity {
         if(this.holdingMinion) return;
         this.holdingMinion = this.getHoldableMinion();
         if(!this.holdingMinion) return;
-        this.holdingMinion.startHeld(this);
+        this.holdingMinion.becomeHeld(this);
     }
     public tryReleaseMinion(){
-        // 未実装
-        console.log('tryReleaseMinion is not implemented');
+        if(!this.holdingMinion) return;
+        this.holdingMinion.becomeThrown();
+        this.holdingMinion = null;
     }
 
     public setVirtualInput(action: PlayerAction, pressed: boolean): void {

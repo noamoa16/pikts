@@ -4,8 +4,8 @@ import { Player } from "./player";
 
 export class Cursor {
     public readonly mesh;
+    public static readonly CURSOR_DISTANCE = 2.5;
     constructor(scene: Scene, player: Player){
-        const CURSOR_DISTANCE = 5;
         const cursor = CreateTorus(
             `${player.name}.cursor`,
             {
@@ -15,7 +15,7 @@ export class Cursor {
             }
         );
         cursor.parent = player.mesh;
-        cursor.position = new Vector3(player.size * CURSOR_DISTANCE, 0, 0);
+        cursor.position = new Vector3(Cursor.CURSOR_DISTANCE, 0, 0);
         cursor.rotation = new Vector3(Math.PI / 2, 0, 0);
         const cursorMaterial = new StandardMaterial(`${player.name}.cursor.material`, scene);
         cursorMaterial.backFaceCulling = false;

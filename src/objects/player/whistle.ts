@@ -101,11 +101,15 @@ export class Whistle {
         }
 
         // ピクミンを呼ぶ
-        const whistleFigure = new Sphere(this.getAbsolutePosition(), this.radius);
-        for(const object of objects){
-            if(object instanceof Minion){
-                if(object.figure.intersects(whistleFigure)){
-                    object.startFollowing(this.player);
+        if(this.radius > 0){
+            const whistleFigure = new Sphere(this.getAbsolutePosition(), this.radius);
+            for(const object of objects){
+                if(object instanceof Minion){
+                    if(object.figure.intersects(whistleFigure)){
+                        if(object.isFree){
+                            object.becomeFollowing(this.player, '笛で呼ばれた');
+                        }
+                    }
                 }
             }
         }

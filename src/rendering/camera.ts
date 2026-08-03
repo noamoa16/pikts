@@ -46,13 +46,13 @@ export class MainCamera {
         });
     }
 
-    set target(value: Vector3) {
+    private set target(value: Vector3) {
         this.camera.target = value;
     }
-    get rotation(): number {
+    public get rotation(): number {
         return -this.camera.alpha + Math.PI;
     }
-    set rotation(value: number) {
+    private set rotation(value: number) {
         this.camera.alpha = Math.PI - value;
     }
 
@@ -60,7 +60,8 @@ export class MainCamera {
         this.rotates = true;
         this.targetTheta = targetTheta;
     }
-    public update(deltaSeconds: number) {
+    public update(deltaSeconds: number, target: Vector3) {
+        this.target = target;
         if(this.rotates){
             const currentTheta = this.rotation;
             const diffThera = normalizeAngle(

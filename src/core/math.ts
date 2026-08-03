@@ -13,12 +13,26 @@ export function normalizeAngle(angle: number, { includePi = false } = {}): numbe
     return a;
 }
 
-export function rotate2D(x: number, y: number, angle: number) {
-    const c = Math.cos(angle);
-    const s = Math.sin(angle);
+export function rotate2D(x: number, y: number, angle: number): Vector2;
+export function rotate2D(v: Vector2, angle: number): Vector2;
+
+export function rotate2D(a: any, b: any, c?: any): Vector2 {
+    const angle: number = typeof c === 'number' ? c : b;
+
+    let x: number, y: number;
+    if (a instanceof Vector2) {
+        x = a.x;
+        y = a.y;
+    } else {
+        x = a;
+        y = b as number;
+    }
+
+    const cVal = Math.cos(angle);
+    const sVal = Math.sin(angle);
     return new Vector2(
-        x * c - y * s,
-        x * s + y * c,
+        x * cVal - y * sVal,
+        x * sVal + y * cVal,
     );
 }
 
