@@ -1,9 +1,4 @@
 - update系の処理をGameに集約する
-  - 「update系の処理をGameクラスに集約していきたいと考えています。」
-    - frameTimerUpdate と frameTimerCollision を Gameクラスのreadonlyフィールドにしてください。
-      - frameTimerUpdate.measure の部分は Game.updateObjects
-      - frameTimerCollision.measure の部分は Game.dispatchCollisionEvents
-      - のようにできるはずです。
 - 壁に接してMinionを投げるとMinionが壁にめり込む問題の解消
   - Minionのavoidを立方体にも適用すれば良さそう
 - Minionを投げる際にPlayerの手元にいることを保証するようにする
