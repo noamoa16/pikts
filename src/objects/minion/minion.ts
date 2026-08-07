@@ -4,12 +4,13 @@ import {
     Vector2,
     Vector3,
 } from "#vendor/babylon";
-import { Shape } from "../../physics/figure";
+import { Shape, Sphere } from "../../physics/figure";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Player } from "../player/player";
 import { atan, rotate2D, toVector2, toVector3 } from "../../core/math";
+import { Cursor } from "../player/cursor";
 
 export enum MinionState {
     free,
@@ -199,22 +200,69 @@ export abstract class Minion extends Entity {
             Minion.HELD_DIFF_VERTICAL,
         ));
     }
-    private updateThrownPosition(){
-        if(!this.follower) return;
+    private calcThrownLaunchDirection(): Vector3{
+        if(!this.follower){
+            throw new Error("Player is null");
+        }
+
+        const g = Math.abs(this.scene.gravity.z);
+        const p0 = new Vector2(Minion.HELD_DIFF_HORIZONTAL, Minion.HELD_DIFF_VERTICAL);
+        const xMax = this.follower.cursor.unrotatedPosition.length();
+        const yMax = this.thrownMaxHeight;
+        const verticalVelocity = Math.sqrt(2 * g * (yMax - p0.y));
+        const horizontalVelocity =
+            g * (xMax - p0.x) / (verticalVelocity + Math.sqrt(2 * g * yMax));
+        const rot = atan(this.follower.cursor.unrotatedPosition);
+
+        return new Vector3(
+            horizontalVelocity * Math.cos(rot),
+            horizontalVelocity * Math.sin(rot),
+            verticalVelocity,
+        ).normalize();
+    }
+    private isSpawnBlocked(position: Vector3): boolean{
+        const candidate = new Sphere(position, this.size / 2);
+        return this.game.objects.some(object => {
+            if(object === this || object === this.follower) return false;
+            if(object instanceof Player) return false;
+            if(!object.checkCollisions) return false;
+            return candidate.intersects(object.figure);
+        });
+    }
+    private calcSafeThrownPosition(): Vector3{
+        if(!this.follower){
+            throw new Error("Player should not be null");
+        }
+
         const playerPos = this.follower.position;
         const playerRot = this.follower.rotation.z;
-        this.position = playerPos.add(new Vector3(
+        const launchDirection = this.calcThrownLaunchDirection();
+        let candidate = playerPos.add(new Vector3(
             Minion.THROWN_DIFF_HORIZONTAL * Math.cos(playerRot),
             Minion.THROWN_DIFF_HORIZONTAL * Math.sin(playerRot),
             Minion.THROWN_DIFF_VERTICAL,
         ));
+
+        if(!this.isSpawnBlocked(candidate)){
+            return candidate;
+        }
+
+        const STEP = 1 / 64;
+        const MAX_TRAVEL = Cursor.CURSOR_DISTANCE + this.size;
+        let traveled = 0;
+        while(traveled < MAX_TRAVEL && this.isSpawnBlocked(candidate)){
+            candidate = candidate.subtract(launchDirection.scale(STEP));
+            traveled += STEP;
+        }
+
+        return candidate;
     }
     public becomeThrown(){
         this.state = MinionState.thrown;
         if(!this.follower){
             throw new Error("Player should not be null");
         }
-        this.updateThrownPosition();
+        this.position = this.calcSafeThrownPosition();
 
         // 重力加速度 g
         // 初期位置　　　　　　　　　　: p0      = (p0.x, p0.y)
