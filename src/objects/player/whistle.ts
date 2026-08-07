@@ -32,9 +32,12 @@ export class Whistle {
                     radius: player.size / 18,
                     updatable: true,
                 }
-            )
+            );
             tube.parent = cursor.mesh;
-            const tubeMaterial = new StandardMaterial(`${player.name}.whistle.part${c + 1}.material`, game.scene);
+            const tubeMaterial = new StandardMaterial(
+                `${player.name}.whistle.part${c + 1}.material`,
+                game.scene,
+            );
             tubeMaterial.backFaceCulling = false;
             const baseColor = new Color3(
                 c == 0 ? 0.9 : 0.3,
@@ -95,7 +98,7 @@ export class Whistle {
         else{
             this.activeSeconds = 0;
         }
-        
+
         if(this.activeSeconds > Whistle.EXPANDING_SECONDS + Whistle.KEEPING_SECONDS){
             this.radius = 0;
         }
@@ -105,11 +108,11 @@ export class Whistle {
 
         if(this.radius > 0){
             // エフェクトを回転させる
-            this.tubes.forEach(
-                t => {
-                    t.rotation.y = this.game.time * 2/3 * Math.PI;
-                }
-            );
+            const absoluteRotation = this.game.time * 2 / 3 * Math.PI;
+            const playerRotation = this.player.rotation.z;
+            this.tubes.forEach(tube => {
+                tube.rotation.y = absoluteRotation - playerRotation;
+            });
 
             // ピクミンを呼ぶ
             const whistleFigure = new Sphere(this.getAbsolutePosition(), this.radius);
