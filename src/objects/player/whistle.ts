@@ -1,4 +1,4 @@
-import { Color3, CreateTube, Mesh, Scene, StandardMaterial, Vector3 } from "#vendor/babylon";
+import { Color3, CreateTube, Mesh, StandardMaterial, Vector3 } from "#vendor/babylon";
 import { Game } from "../../game";
 import { Sphere } from "../../physics/figure";
 import { Color } from "../../rendering/color";
