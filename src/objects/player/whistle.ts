@@ -1,4 +1,5 @@
 import { Color3, CreateTube, Mesh, Scene, StandardMaterial, Vector3 } from "#vendor/babylon";
+import { Game } from "../../game";
 import { Sphere } from "../../physics/figure";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
@@ -8,9 +9,7 @@ import { Player } from "./player";
 
 export class Whistle {
     private static readonly NUM_WHISTLE_PARTS = 24;
-    private readonly cursor: Cursor;
     private readonly tubes: Mesh[] = [];
-    private readonly player: Player;
     public active: boolean = false;
     private activeSeconds: number = 0;
 
@@ -18,21 +17,11 @@ export class Whistle {
     private static readonly EXPANDING_SECONDS = 0.5;
     private static readonly KEEPING_SECONDS = 0.5;
 
-    private createPath(radius: number, tubeIndex: number): Vector3[] {
-        const path: Vector3[] = [];
-        for(let i = 0; i < Whistle.NUM_WHISTLE_PARTS + 1; i++){
-            const theta = i / Whistle.NUM_WHISTLE_PARTS * 2 * Math.PI;
-            const y = (this.player.size / 48) * (i % 3 == tubeIndex ? -1 : 1);
-            path.push(new Vector3(
-                radius * Math.cos(theta),
-                y,
-                radius * Math.sin(theta),
-            ));
-        }
-        return path;
-    }
-
-    constructor(scene: Scene, player: Player, cursor: Cursor){
+    constructor(
+        private readonly game: Game,
+        private readonly player: Player,
+        private readonly cursor: Cursor,
+    ){
         this.player = player;
         this.cursor = cursor;
         for(let c = 0; c < 3; c++){
@@ -45,7 +34,7 @@ export class Whistle {
                 }
             )
             tube.parent = cursor.mesh;
-            const tubeMaterial = new StandardMaterial(`${player.name}.whistle.part${c + 1}.material`, scene);
+            const tubeMaterial = new StandardMaterial(`${player.name}.whistle.part${c + 1}.material`, game.scene);
             tubeMaterial.backFaceCulling = false;
             const baseColor = new Color3(
                 c == 0 ? 0.9 : 0.3,
@@ -60,6 +49,20 @@ export class Whistle {
             this.tubes.push(tube);
         }
         this.radius = 0;
+    }
+
+    private createPath(radius: number, tubeIndex: number): Vector3[] {
+        const path: Vector3[] = [];
+        for(let i = 0; i < Whistle.NUM_WHISTLE_PARTS + 1; i++){
+            const theta = i / Whistle.NUM_WHISTLE_PARTS * 2 * Math.PI;
+            const y = (this.player.size / 48) * (i % 3 == tubeIndex ? -1 : 1);
+            path.push(new Vector3(
+                radius * Math.cos(theta),
+                y,
+                radius * Math.sin(theta),
+            ));
+        }
+        return path;
     }
 
     private _radius: number = 1;
@@ -100,8 +103,15 @@ export class Whistle {
             this.radius = Whistle.MAX_RADIUS * Math.min(this.activeSeconds / Whistle.EXPANDING_SECONDS, 1);
         }
 
-        // ピクミンを呼ぶ
         if(this.radius > 0){
+            // エフェクトを回転させる
+            this.tubes.forEach(
+                t => {
+                    t.rotation.y = this.game.time * 2/3 * Math.PI;
+                }
+            );
+
+            // ピクミンを呼ぶ
             const whistleFigure = new Sphere(this.getAbsolutePosition(), this.radius);
             for(const object of objects){
                 if(object instanceof Minion){

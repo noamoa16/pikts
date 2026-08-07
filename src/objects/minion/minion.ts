@@ -9,8 +9,7 @@ import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Player } from "../player/player";
-import { Cursor } from "../player/cursor";
-import { rotate2D, toVector2, toVector3 } from "../../core/math";
+import { atan, rotate2D, toVector2, toVector3 } from "../../core/math";
 
 export enum MinionState {
     free,
@@ -30,6 +29,8 @@ export abstract class Minion extends Entity {
     // 掴み/投げ
     private static readonly HELD_DIFF_HORIZONTAL = 1 / 4;
     private static readonly HELD_DIFF_VERTICAL = 1 / 8;
+    private static readonly THROWN_DIFF_HORIZONTAL = 1 / 4;
+    private static readonly THROWN_DIFF_VERTICAL = 1 / 2;
     protected static readonly _THROWN_MAX_HEIGHT = 2.25;
     private get thrownMaxHeight(){ return (this.constructor as typeof Minion)._THROWN_MAX_HEIGHT; }
 
@@ -55,13 +56,7 @@ export abstract class Minion extends Entity {
             this.checkCollisions = true;
         }
         else if(this.state === MinionState.held && this.follower){
-            const playerPos = this.follower.position;
-            const playerRot = this.follower.rotation.z;
-            this.position = playerPos.add(new Vector3(
-                Minion.HELD_DIFF_HORIZONTAL * Math.cos(playerRot),
-                Minion.HELD_DIFF_HORIZONTAL * Math.sin(playerRot),
-                Minion.HELD_DIFF_VERTICAL,
-            ));
+            this.updateHeldPosition();
             this.checkCollisions = false;
         }
         else if(this.state === MinionState.thrown){
@@ -136,21 +131,19 @@ export abstract class Minion extends Entity {
         return Vector3.Zero();
     }
 
-    /** 他のキャラクターと (x, y) 座標が重複するのを避けるように動く */
+    /** 他の Figure と (x, y) 座標が重複するのを避けるように動く */
     private avoidDuplication(deltaSeconds: number){
         const VELOCITY = 0.5;
         const DISTANCE_DELTA = 0.01;
         const MAX_ANGLE = Math.PI / 8;
         const ANGLE_NUM = 16;
         let dir = new Vector2();
-        for(const p of this.game.cachedCharacterPos){
-            const diff = this.position.subtract(p)
+        for(const figure of this.game.cachedFigure){
+            const extendedFigure = this.figure.scaled(1 + DISTANCE_DELTA);
+            const diff = this.position.subtract(figure.center);
             const distanceSq = diff.lengthSquared();
-            // 距離がある程度近い
-            if(
-                Number.EPSILON * Number.EPSILON < distanceSq && distanceSq
-                < (this.size * (1 + DISTANCE_DELTA)) * (this.size * (1 + DISTANCE_DELTA))
-            ){
+            // 衝突 or 衝突寸前
+            if(Number.EPSILON * Number.EPSILON < distanceSq && extendedFigure.intersects(figure)){
                 const diff2d = toVector2(diff);
                 const distanceSq2d = diff2d.lengthSquared();
                 dir.addInPlace(diff2d.scale(Math.pow(distanceSq2d, -3 / 2)));
@@ -196,11 +189,32 @@ export abstract class Minion extends Entity {
             id: this.id,
         });
     }
+    private updateHeldPosition(){
+        if(!this.follower) return;
+        const playerPos = this.follower.position;
+        const playerRot = this.follower.rotation.z;
+        this.position = playerPos.add(new Vector3(
+            Minion.HELD_DIFF_HORIZONTAL * Math.cos(playerRot),
+            Minion.HELD_DIFF_HORIZONTAL * Math.sin(playerRot),
+            Minion.HELD_DIFF_VERTICAL,
+        ));
+    }
+    private updateThrownPosition(){
+        if(!this.follower) return;
+        const playerPos = this.follower.position;
+        const playerRot = this.follower.rotation.z;
+        this.position = playerPos.add(new Vector3(
+            Minion.THROWN_DIFF_HORIZONTAL * Math.cos(playerRot),
+            Minion.THROWN_DIFF_HORIZONTAL * Math.sin(playerRot),
+            Minion.THROWN_DIFF_VERTICAL,
+        ));
+    }
     public becomeThrown(){
         this.state = MinionState.thrown;
         if(!this.follower){
             throw new Error("Player should not be null");
         }
+        this.updateThrownPosition();
 
         // 重力加速度 g
         // 初期位置　　　　　　　　　　: p0      = (p0.x, p0.y)
@@ -216,22 +230,31 @@ export abstract class Minion extends Entity {
 
         const g = Math.abs(this.scene.gravity.z);
         const p0 = new Vector2(Minion.HELD_DIFF_HORIZONTAL, Minion.HELD_DIFF_VERTICAL);
-        const xMax = Cursor.CURSOR_DISTANCE;
+ 
+        // 加速投げ (未実装)
+        // 実装にはPlayerの速度取得が必要
+        // const xMaxBase = Cursor.CURSOR_DISTANCE;
+        // const xMaxAccelerated = Cursor.CURSOR_DISTANCE * 1.5;
+        // const accelerationRate = toVector2(this.follower.velocity).length() / Player.SPEED;
+        // const xMax = xMaxBase * (1 - accelerationRate) + xMaxAccelerated * accelerationRate;
+
+        const xMax = this.follower.cursor.unrotatedPosition.length();
         const yMax = this.thrownMaxHeight;
         const VERTICAL_VELOCITY = Math.sqrt(2 * g * (yMax - p0.y));
         const HOLIZONTAL_VELOCITY = g * (xMax - p0.x) / (VERTICAL_VELOCITY + Math.sqrt(2 * g * yMax));
 
+        const rot = atan(this.follower.cursor.unrotatedPosition);
         const velocity = new Vector3(
-            HOLIZONTAL_VELOCITY * Math.cos(this.follower.rotation.z),
-            HOLIZONTAL_VELOCITY * Math.sin(this.follower.rotation.z),
+            HOLIZONTAL_VELOCITY * Math.cos(rot),
+            HOLIZONTAL_VELOCITY * Math.sin(rot),
             VERTICAL_VELOCITY,
         );
         this.velocity = velocity.clone();
-        this.follower = null;
-
         console.log('Minion.becomeThrown', {
             id: this.id,
             velocity,
+            cursorVector: this.follower.cursor.unrotatedPosition,
         });
+        this.follower = null;
     }
 }

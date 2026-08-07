@@ -1,9 +1,15 @@
 - update系の処理をGameに集約する
+- 笛の回転について、ゲームの空間に対して「絶対回転」で回転させるようにする
+  - 「Whistleは、ゲーム内時間に応じてエフェクトが少しずつ回転するようになっています。しかい、Whistleの親であるPlayerが回転した際に、Whistleの回転にPlayerの回転が上乗せされてしまいます。Playerに対して相対的に回転するのではなく、ゲームの空間に対して絶対的に回転するように変更したいです。解決策を考えてください。」
 - 壁に接してMinionを投げるとMinionが壁にめり込む問題の解消
-  - Minionのavoidを立方体にも適用すれば良さそう
-- Minionを投げる際にPlayerの手元にいることを保証するようにする
-- 笛のエフェクトを回転させる
-- カーソルの距離を固定するのをやめる
+  - MinionのavoidをBlockにも適用するのが1つの案
+   　- Blockの上にMinionを乗せた際にも反発力が働いてしまう課題がある
+  - 「Blockに接してBlockの方向を向いてMinionを投げた際に、Blockの中にMinionがめり込んでしまう問題があります。解決策を考えてください。」
+- Minionの加速投げを実装する
+  - Playerのvelocity取得が必要
+    - 「Playerの移動速度をPlayer.velocityによって取得できるようにしたいのですが、どうするのが良いと思いますか？解決策を考えてください。Minionの場合はvelocityをセットして移動していますが、Playerはmesh.moveWithCollisionsを実行して移動しているため、Playerの速度を取得するのが容易ではないのが現状です。」
+  - PlayerのvelocityがX,Y方向にあるとき、それの一部をMinionの投げ初速に上乗せする
+- 「src/scenes/demoScene.tsのupdateKeyboardStateについて、event.codeでの判定をやめ、event.keyで判定するよう統一してください。」
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定
   - n(n-1)/2 回の比較を避ける

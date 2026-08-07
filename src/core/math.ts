@@ -4,6 +4,10 @@ export function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(value, max));
 }
 
+/**
+ * 角度を [-π, π) の範囲に正規化する
+ * includePi が true ならば、(-π, π]
+ */
 export function normalizeAngle(angle: number, { includePi = false } = {}): number {
     const twoPi = 2 * Math.PI;
     let a = ((angle + Math.PI) % twoPi + twoPi) % twoPi - Math.PI;
@@ -13,9 +17,12 @@ export function normalizeAngle(angle: number, { includePi = false } = {}): numbe
     return a;
 }
 
+export function atan(v: Vector2): number {
+    return Math.atan2(v.y, v.x);
+}
+
 export function rotate2D(x: number, y: number, angle: number): Vector2;
 export function rotate2D(v: Vector2, angle: number): Vector2;
-
 export function rotate2D(a: any, b: any, c?: any): Vector2 {
     const angle: number = typeof c === 'number' ? c : b;
 

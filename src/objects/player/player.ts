@@ -4,7 +4,7 @@ import {
     Vector3,
 } from "#vendor/babylon";
 import { PlayerAction } from "../../actions/action";
-import { normalizeAngle, rotate2D, toVector3 } from "../../core/math";
+import { atan, normalizeAngle, rotate2D, toVector2, toVector3 } from "../../core/math";
 import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
@@ -22,6 +22,7 @@ type PlayerInputState = {
 };
 
 export class Player extends Entity {
+    public static readonly SPEED = 4.0;
     private readonly inputState: PlayerInputState = {
         keyboard: {
             up: false,
@@ -50,7 +51,7 @@ export class Player extends Entity {
 
     constructor(game: Game, position: Vector3) {
         super(game, "player", Shape.Sphere, 0.5, position, { fall: true });
-        this.speed = 4;
+        this.speed = Player.SPEED;
         this.collisionEventsEnabled = true;
 
         const material = new StandardMaterial(`${this.name}.material`, this.scene);
@@ -68,7 +69,7 @@ export class Player extends Entity {
         this.cursor = new Cursor(this.scene, this);
 
         // 笛
-        this.whistle = new Whistle(this.scene, this, this.cursor);
+        this.whistle = new Whistle(this.game, this, this.cursor);
 
         // キー入力
         this.onKeyDown = this.createKeyHandler(true);
@@ -100,7 +101,7 @@ export class Player extends Entity {
         // 向きを変える
         if(!horizontalDisplacement.equals(Vector3.Zero())){
             const currentTheta = this.rotation.z;
-            const targetTheta = Math.atan2(horizontalDisplacement.y, horizontalDisplacement.x);
+            const targetTheta = atan(toVector2(horizontalDisplacement));
             const diffThera = normalizeAngle(
                 targetTheta - currentTheta,
                 { includePi: (Math.cos(currentTheta) >= 0) },
@@ -111,6 +112,9 @@ export class Player extends Entity {
                 Math.abs(diffThera),
             );
         }
+
+        this.cursor.update();
+        this.cursor.moveFor(toVector2(horizontalDisplacement), deltaSeconds);
     }
 
     public getHoldableMinion(): Minion | null{

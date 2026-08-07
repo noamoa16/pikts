@@ -1,10 +1,11 @@
-import { Scene, Vector3 } from "#vendor/babylon";
+import { Scene } from "#vendor/babylon";
 import { FrameTimer } from "./core/frameTimer";
 import { Entity } from "./objects/entity";
 import { Collision } from "./physics/collision";
 import { Minion, MinionState } from "./objects/minion/minion";
 import { Player } from "./objects/player/player";
 import { MainCamera } from "./rendering/camera";
+import { Figure } from "./physics/figure";
 
 export class Game {
     public readonly objects: Entity[] = [];
@@ -12,40 +13,51 @@ export class Game {
     public readonly frameTimerUpdate = new FrameTimer(30);
     public readonly frameTimerCollision = new FrameTimer(30);
 
-    private _cachedCharacterPos: Vector3[] = [];
-    public get cachedCharacterPos() { return this._cachedCharacterPos; }
-    private set cachedCharacterPos(value: Vector3[]) { this._cachedCharacterPos = value; }
+    private _cachedFigure: Figure[] = [];
+    public get cachedFigure() { return this._cachedFigure; }
+    private set cachedFigure(value: Figure[]) { this._cachedFigure = value; }
     private readonly collision = new Collision();
+
+    private _time = 0;
+    /** ゲーム内時間 */
+    public get time(){ return this._time; }
+    private set time(value: number){ this._time = value; }
 
     constructor(public readonly scene: Scene){
         this.camera = new MainCamera(this.scene);
     }
 
-    private cacheCharacterPos(){
-        this.cachedCharacterPos = [];
+    private cacheFigure(){
+        this.cachedFigure = [];
         for(const object of this.objects){
             if(object instanceof Player){
-                this.cachedCharacterPos.push(object.position);
+                this.cachedFigure.push(object.figure);
             }
             if(object instanceof Minion){
                 if(![MinionState.following, MinionState.free].includes(object.state)){
                     continue;
                 }
-                this.cachedCharacterPos.push(object.position);
+                this.cachedFigure.push(object.figure);
             }
         }
     }
 
-    public updateObjects(deltaSeconds: number): void {
-        this.cacheCharacterPos();
+    private updateObjects(deltaSeconds: number): void {
+        this.cacheFigure();
         this.frameTimerUpdate.measure(() => {
             this.objects.forEach(object => object.update(deltaSeconds));
         });
     }
 
-    public dispatchCollisionEvents(): void {
+    private dispatchCollisionEvents(): void {
         this.frameTimerCollision.measure(() => {
             this.collision.dispatchEvents(this.objects);
         });
+    }
+
+    public update(deltaSeconds: number): void {
+        this.time += deltaSeconds;
+        this.updateObjects(deltaSeconds);
+        this.dispatchCollisionEvents();
     }
 }

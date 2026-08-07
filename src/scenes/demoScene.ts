@@ -110,8 +110,7 @@ export function createDemoScene(engine: Engine): Scene {
     // 定期実行
     game.scene.onBeforeRenderObservable.add(() => {
         const deltaSeconds = engine.getDeltaTime() / 1000;
-        game.updateObjects(deltaSeconds);
-        game.dispatchCollisionEvents();
+        game.update(deltaSeconds);
         game.camera.update(deltaSeconds, player.position);
         player.whistle.update(deltaSeconds, game.objects);
 

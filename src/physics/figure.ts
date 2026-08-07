@@ -245,18 +245,36 @@ export abstract class Figure {
         }
         throw new Error(`space() not implemented for ${this.shape} vs ${other.shape}`);
     }
+
+    public abstract scaled(_: number): Figure;
 }
 
 export class Sphere extends Figure {
     public readonly shape: Shape = Shape.Sphere;
-    constructor(center: Vector3, public readonly radius: number){
+    public get radius() { return this._radius; }
+    private set radius(value: number) { this._radius = value; }
+    constructor(center: Vector3, private _radius: number){
         super(center);
+    }
+    public scaled(ratio: number): Sphere {
+        return new Sphere(
+            this.center,
+            this.radius * ratio,
+        );
     }
 }
 
 export class Cube extends Figure {
     public readonly shape: Shape = Shape.Cube;
-    constructor(center: Vector3, public readonly edgeLength: number){
+    public get edgeLength() { return this._edgeLength; }
+    private set edgeLength(value: number) { this._edgeLength = value; }
+    constructor(center: Vector3, private _edgeLength: number){
         super(center);
+    }
+    public scaled(ratio: number): Cube {
+        return new Cube(
+            this.center,
+            this.edgeLength * ratio,
+        );
     }
 }
