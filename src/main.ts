@@ -1,4 +1,5 @@
 import { Engine, type Scene } from "#vendor/babylon";
+import { Game } from "./game";
 import { createDemoScene } from "./scenes/demoScene";
 import { showTitleScreen } from "./scenes/titleScreen";
 
@@ -32,12 +33,11 @@ showTitleScreen({
     },
 });
 
-const TARGRT_FPS = 60;
 window.setInterval(() => {
     engine.beginFrame();
     currentScene?.render();
     engine.endFrame();
-}, 1000 / TARGRT_FPS);
+}, 1000 / Game.TARGET_FPS);
 
 window.addEventListener("resize", () => {
     engine.resize();

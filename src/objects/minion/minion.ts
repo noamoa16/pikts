@@ -157,10 +157,6 @@ export abstract class Minion extends Entity {
             const angle = (this.id % ANGLE_NUM - (ANGLE_NUM - 1) / 2) / ((ANGLE_NUM - 1) / 2) * MAX_ANGLE;
             dir = rotate2D(dir, angle);
             this.moveFor(toVector3(dir));
-            console.log('Minion.avoidDuplication', {
-                id: this.id,
-                dir: dir.clone(),
-            });
         }
     }
 

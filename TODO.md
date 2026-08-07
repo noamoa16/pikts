@@ -1,8 +1,6 @@
 - update系の処理をGameに集約する
-- 壁に接してMinionを投げるとMinionが壁にめり込む問題の解消
-  - MinionのavoidをBlockにも適用するのが1つの案
-   　- Blockの上にMinionを乗せた際にも反発力が働いてしまう課題がある
-  - 「Blockに接してBlockの方向を向いてMinionを投げた際に、Blockの中にMinionがめり込んでしまう問題があります。MinionがBlockにめり込んでいたら、壁から少しずつ離れるように動くようにすると良さそうです。修正してください。」
+- 壁に接して複数Minionを投げるとMinionが壁にめり込む問題の解消
+  - Throwing状態のMinion同士の当たり判定を見直すのが良さそうか
 - Minionの加速投げを実装する
   - Playerのvelocity取得が必要
     - 「Playerの移動速度をPlayer.velocityによって取得できるようにしたいのですが、どうするのが良いと思いますか？解決策を考えてください。Minionの場合はvelocityをセットして移動していますが、Playerはmesh.moveWithCollisionsを実行して移動しているため、Playerの速度を取得するのが容易ではないのが現状です。」

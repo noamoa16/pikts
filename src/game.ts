@@ -18,6 +18,8 @@ export class Game {
     private set cachedFigure(value: Figure[]) { this._cachedFigure = value; }
     private readonly collision = new Collision();
 
+    public static readonly TARGET_FPS = 60;
+
     private _time = 0;
     /** ゲーム内時間 */
     public get time(){ return this._time; }
