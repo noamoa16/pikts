@@ -66,11 +66,11 @@ export function createDemoScene(engine: Engine): Scene {
         }
     );
     const updateKeyboardState = (event: KeyboardEvent, pressed: boolean) => {
-        if (event.key === "[") {
-            dpad.setKeyboardPressed("whistle", pressed);
-            player.whistle.active = pressed;
-        }
         switch (event.key) {
+            case "[":
+                dpad.setKeyboardPressed("whistle", pressed);
+                player.whistle.active = pressed;
+                break;
             case "w":
             case "W":
                 dpad.setKeyboardPressed("up", pressed);
