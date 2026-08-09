@@ -70,20 +70,25 @@ export function createDemoScene(engine: Engine): Scene {
             dpad.setKeyboardPressed("whistle", pressed);
             player.whistle.active = pressed;
         }
-        switch (event.code) {
-            case "KeyW":
+        switch (event.key) {
+            case "w":
+            case "W":
                 dpad.setKeyboardPressed("up", pressed);
                 break;
-            case "KeyA":
+            case "a":
+            case "A":
                 dpad.setKeyboardPressed("left", pressed);
                 break;
-            case "KeyS":
+            case "s":
+            case "S":
                 dpad.setKeyboardPressed("down", pressed);
                 break;
-            case "KeyD":
+            case "d":
+            case "D":
                 dpad.setKeyboardPressed("right", pressed);
                 break;
-            case "KeyF":
+            case "f":
+            case "F":
                 dpad.setKeyboardPressed("rotate", pressed);
                 if (pressed) {
                     game.camera.startRotate(player.rotation.z);
