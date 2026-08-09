@@ -5,7 +5,6 @@
   - Playerのvelocity取得が必要
     - 「Playerの移動速度をPlayer.velocityによって取得できるようにしたいのですが、どうするのが良いと思いますか？解決策を考えてください。Minionの場合はvelocityをセットして移動していますが、Playerはmesh.moveWithCollisionsを実行して移動しているため、Playerの速度を取得するのが容易ではないのが現状です。」
   - PlayerのvelocityがX,Y方向にあるとき、それの一部をMinionの投げ初速に上乗せする
-- 「src/scenes/demoScene.tsのupdateKeyboardStateについて、event.codeでの判定をやめ、event.keyで判定するよう統一してください。」
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定
   - n(n-1)/2 回の比較を避ける
