@@ -83,6 +83,8 @@ export class Player extends Entity {
     }
 
     override update(deltaSeconds: number): void {
+        this.velocity.x = 0;
+        this.velocity.y = 0;
         super.update(deltaSeconds);
 
         // 移動
@@ -96,7 +98,13 @@ export class Player extends Entity {
                 : toVector3(rotate2D(moveX, moveY, this.game.camera.rotation - Math.PI / 2))
                     .normalize()
                     .scale(this.speed * deltaSeconds);
+        const positionBeforeHorizontalMove = this.position.clone();
         this.mesh.moveWithCollisions(horizontalDisplacement);
+        const actualHorizontalDisplacement = this.position.subtract(positionBeforeHorizontalMove);
+        if(deltaSeconds > 0){
+            this.velocity.x = actualHorizontalDisplacement.x / deltaSeconds;
+            this.velocity.y = actualHorizontalDisplacement.y / deltaSeconds;
+        }
 
         // 向きを変える
         if(!horizontalDisplacement.equals(Vector3.Zero())){
