@@ -170,4 +170,13 @@ describe("Figure.space", () => {
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(0);
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(0);
     });
+
+    it("allows a sphere resting on a cube top edge to move outward", () => {
+        const radius = 0.075;
+        const moving = new Sphere(new Vector3(0.5, 0, 1 + radius), radius);
+        const stationary = new Cube(new Vector3(0, 0, 0.5), 1);
+
+        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
+        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(Infinity);
+    });
 });

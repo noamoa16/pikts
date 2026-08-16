@@ -123,6 +123,7 @@ export abstract class Figure {
             const p = [this.center.x, this.center.y, this.center.z];
             const u = [dir.x, dir.y, dir.z];
             const r = this.radius;
+            const CONTACT_EPSILON = 1e-12;
 
             // 中心が既に球の衝突領域内なら 0
             let distanceSq = 0;
@@ -180,11 +181,17 @@ export abstract class Figure {
                 const t0 = (-B - sqrtDisc) / (2 * A);
                 const t1 = (-B + sqrtDisc) / (2 * A);
                 const t = Math.max(a, t0);
-                if(t1 <= 1e-12){
+                if(t1 <= CONTACT_EPSILON){
                     continue;
                 }
 
-                if (t <= Math.min(b, t1)) return t;
+                if (t <= Math.min(b, t1)){
+                    if(t <= CONTACT_EPSILON){
+                        if(B >= -CONTACT_EPSILON) continue;
+                        return 0;
+                    }
+                    return t;
+                }
             }
 
             return Infinity;
