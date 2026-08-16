@@ -9,7 +9,7 @@ import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Player } from "../player/player";
-import { atan, rotate2D, toVector2, toVector3 } from "../../core/math";
+import { atan, hashInt32, rotate2D, toVector2, toVector3 } from "../../core/math";
 import { Cursor } from "../player/cursor";
 
 export enum MinionState {
@@ -141,17 +141,31 @@ export abstract class Minion extends Entity {
     private avoidDuplication(deltaSeconds: number){
         const VELOCITY = 0.5;
         const DISTANCE_DELTA = 0.01;
+        const MIN_DISTANCE_SQ = 0.000001;
         const MAX_ANGLE = Math.PI / 8;
         let dir = new Vector2();
-        for(const figure of this.game.cachedFigure){
+        const ignoreEntities: Entity[] = [];
+        for(const object of this.game.objects){
+            if(!this.isAvoidanceTarget(object)) continue;
+
+            const figure = object.figure;
             const extendedFigure = this.figure.scaled(1 + DISTANCE_DELTA);
             const diff = this.position.subtract(figure.center);
-            const distanceSq = diff.lengthSquared();
             // 衝突 or 衝突寸前
-            if(Number.EPSILON * Number.EPSILON < distanceSq && extendedFigure.intersects(figure)){
-                const diff2d = toVector2(diff);
+            if(extendedFigure.intersects(figure)){
+                let diff2d = toVector2(diff);
                 const distanceSq2d = diff2d.lengthSquared();
-                dir.addInPlace(diff2d.scale(Math.pow(distanceSq2d, -3 / 2)));
+                if(distanceSq2d < MIN_DISTANCE_SQ){
+                    if(!(object instanceof Minion)) continue;
+                    diff2d = this.calcSeparationDirection(object);
+                    dir.addInPlace(diff2d.scale(Math.pow(MIN_DISTANCE_SQ, -1 / 2)));
+                }
+                else{
+                    dir.addInPlace(diff2d.scale(Math.pow(distanceSq2d, -3 / 2)));
+                }
+                if(object instanceof Minion){
+                    ignoreEntities.push(object);
+                }
             }
         }
         if(dir.lengthSquared() > 0){
@@ -160,8 +174,61 @@ export abstract class Minion extends Entity {
             // Minionごとにベクトルを少しずらして重ならないようにする
             const angle = (Math.random() * 2 - 1) * MAX_ANGLE;
             dir = rotate2D(dir, angle);
-            this.moveFor(toVector3(dir));
+            this.moveFor(toVector3(dir), { ignoreEntities });
         }
+    }
+
+    private isAvoidanceTarget(object: Entity): boolean {
+        if(object === this) return false;
+        if(object instanceof Minion){
+            return [MinionState.following, MinionState.free].includes(object.state);
+        }
+        return object instanceof Player;
+    }
+
+    private calcSeparationDirection(entity: Entity): Vector2 {
+        const lowId = Math.min(this.id, entity.id);
+        const highId = Math.max(this.id, entity.id);
+        const theta = hashInt32(lowId * 65537 + highId) / 0xffffffff * Math.PI * 2;
+        const dir = new Vector2(Math.cos(theta), Math.sin(theta));
+        return this.id === lowId ? dir : dir.scale(-1);
+    }
+
+    private resolveLandingOverlap(): void {
+        const MOVE_DISTANCE = this.size + 0.01;
+        const MIN_DISTANCE_SQ = 0.000001;
+        const MAX_ATTEMPTS = 12;
+
+        for(let attempt = 0; attempt < MAX_ATTEMPTS; attempt++){
+            const overlaps = this.getOverlappingMinions();
+            if(overlaps.length === 0) return;
+
+            let dir = new Vector2();
+            for(const minion of overlaps){
+                const diff2d = toVector2(this.position.subtract(minion.position));
+                if(diff2d.lengthSquared() < MIN_DISTANCE_SQ){
+                    dir.addInPlace(this.calcSeparationDirection(minion));
+                }
+                else{
+                    dir.addInPlace(diff2d.normalize());
+                }
+            }
+            if(dir.lengthSquared() === 0) return;
+
+            const angleStep = Math.ceil(attempt / 2) * Math.PI / 8;
+            const angle = attempt === 0 ? 0 : angleStep * (attempt % 2 === 0 ? 1 : -1);
+            const moveVector = rotate2D(dir.normalize(), angle).scale(MOVE_DISTANCE);
+            this.moveFor(toVector3(moveVector), { ignoreEntities: overlaps });
+        }
+    }
+
+    private getOverlappingMinions(): Minion[] {
+        return this.game.objects.filter((object): object is Minion => {
+            if(object === this) return false;
+            if(!(object instanceof Minion)) return false;
+            if(![MinionState.following, MinionState.free].includes(object.state)) return false;
+            return this.figure.intersects(object.figure);
+        });
     }
 
     public get isFree(): boolean{
@@ -171,7 +238,16 @@ export abstract class Minion extends Entity {
     public becomeFree(){
         this.state = MinionState.free;
         this.velocity = Vector3.Zero();
+        this.resolveLandingOverlap();
     }
+
+    protected override shouldBlockMovement(entity: Entity): boolean {
+        if(this.state === MinionState.thrown && entity instanceof Minion){
+            return false;
+        }
+        return super.shouldBlockMovement(entity);
+    }
+
     public becomeFollowing(player: Player, src?: string){
         if(this.state == MinionState.free){
             this.state = MinionState.following;

@@ -105,7 +105,7 @@ export abstract class Entity {
     }
 
     // 移動
-    protected moveFor(dir: Vector3): Vector3 {
+    protected moveFor(dir: Vector3, options: { ignoreEntities?: readonly Entity[] } = {}): Vector3 {
         const dir1 = new Vector3(dir.x, 0, 0);
         const dir2 = new Vector3(0, dir.y, 0);
         const dir3 = new Vector3(0, 0, dir.z);
@@ -120,6 +120,12 @@ export abstract class Entity {
                     continue;
                 }
                 if(this.id === entity.id){ // 自分自身とは衝突判定しない
+                    continue;
+                }
+                if(options.ignoreEntities?.includes(entity)){
+                    continue;
+                }
+                if(!this.shouldBlockMovement(entity)){
                     continue;
                 }
                 space = Math.min(this.figure.space(entity.figure, dir), space);
@@ -152,6 +158,10 @@ export abstract class Entity {
         if(Math.abs(movedActual.x) < Math.abs(movedExpected.x) / 2) this.velocity.x = 0;
         if(Math.abs(movedActual.y) < Math.abs(movedExpected.y) / 2) this.velocity.y = 0;
         if(Math.abs(movedActual.z) < Math.abs(movedExpected.z) / 2) this.velocity.z = 0;
+    }
+
+    protected shouldBlockMovement(_: Entity): boolean {
+        return true;
     }
 
     // Collisionイベントを発生させるか
