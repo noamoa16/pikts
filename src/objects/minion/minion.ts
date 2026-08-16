@@ -117,21 +117,24 @@ export abstract class Minion extends Entity {
     private calcMoveVector(playerPosition: Vector3, deltaSeconds: number): Vector3 {
         const MAX_DISTANCE = 1.0;
         const MIN_DISTANCE = 0.5;
-        const distance = Vector3.Distance(this.groundingPosition, playerPosition);
+        const minionPosition = toVector2(this.groundingPosition);
+        const targetPosition = toVector2(playerPosition);
+        const toTarget = targetPosition.subtract(minionPosition);
+        const distance = toTarget.length();
 
         // 距離が遠すぎる場合は近付こうとする
         if (distance > MAX_DISTANCE) {
-            return playerPosition
-                .subtract(this.groundingPosition)
+            return toVector3(toTarget
                 .normalize()
-                .scale(Math.min(this.speed * deltaSeconds, distance - MAX_DISTANCE));
+                .scale(Math.min(this.speed * deltaSeconds, distance - MAX_DISTANCE)));
         }
         //距離が近すぎる場合は離れようとする
         if (distance < MIN_DISTANCE) {
-            return this.groundingPosition
-                .subtract(playerPosition)
+            if(distance === 0) return Vector3.Zero();
+            return toVector3(minionPosition
+                .subtract(targetPosition)
                 .normalize()
-                .scale(Math.min(this.speed * deltaSeconds, MIN_DISTANCE - distance));
+                .scale(Math.min(this.speed * deltaSeconds, MIN_DISTANCE - distance)));
         }
 
         return Vector3.Zero();
@@ -264,6 +267,7 @@ export abstract class Minion extends Entity {
         this.follower = player;
         console.log('Minion.becomeHeld', {
             id: this.id,
+            beforePosition: this.position.clone(),
         });
     }
     private updateHeldPosition(){
