@@ -142,7 +142,6 @@ export abstract class Minion extends Entity {
         const VELOCITY = 0.5;
         const DISTANCE_DELTA = 0.01;
         const MAX_ANGLE = Math.PI / 8;
-        const ANGLE_NUM = 16;
         let dir = new Vector2();
         for(const figure of this.game.cachedFigure){
             const extendedFigure = this.figure.scaled(1 + DISTANCE_DELTA);
@@ -159,7 +158,7 @@ export abstract class Minion extends Entity {
             dir = dir.normalize().scale(VELOCITY * deltaSeconds);
 
             // Minionごとにベクトルを少しずらして重ならないようにする
-            const angle = (this.hash % ANGLE_NUM - (ANGLE_NUM - 1) / 2) / ((ANGLE_NUM - 1) / 2) * MAX_ANGLE;
+            const angle = (Math.random() * 2 - 1) * MAX_ANGLE;
             dir = rotate2D(dir, angle);
             this.moveFor(toVector3(dir));
         }
@@ -266,7 +265,6 @@ export abstract class Minion extends Entity {
         this.position = this.calcSafeThrownPosition();
 
         const MAX_ANGLE = Math.PI / 64;
-        const ANGLE_NUM = 16;
 
         // 重力加速度 g
         // 初期位置　　　　　　　　　　: p0      = (p0.x, p0.y)
@@ -294,7 +292,7 @@ export abstract class Minion extends Entity {
         let rot = atan(this.follower.cursor.unrotatedPosition);
 
         // Minionごとにベクトルを少しずらして重ならないようにする
-        const deltaAngle = (this.hash % ANGLE_NUM - (ANGLE_NUM - 1) / 2) / ((ANGLE_NUM - 1) / 2) * MAX_ANGLE;
+        const deltaAngle = (Math.random() * 2 - 1) * MAX_ANGLE;
         rot += deltaAngle;
         
         const velocity = new Vector3(
