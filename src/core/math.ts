@@ -1,5 +1,15 @@
 import { Vector2, Vector3 } from "#vendor/babylon";
 
+export function hashInt32(x: number): number {
+    x |= 0;
+    x ^= x >>> 16;
+    x = Math.imul(x, 0x7feb352d);
+    x ^= x >>> 15;
+    x = Math.imul(x, 0x846ca68b);
+    x ^= x >>> 16;
+    return x >>> 0;
+}
+
 export function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(value, max));
 }

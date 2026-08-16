@@ -36,7 +36,7 @@ export abstract class Minion extends Entity {
     private get thrownMaxHeight(){ return (this.constructor as typeof Minion)._THROWN_MAX_HEIGHT; }
 
     constructor(game: Game, position: Vector3) {
-        super(game, "minion", Shape.Sphere, 0.25, position, { fall: true });
+        super(game, "minion", Shape.Sphere, 0.15, position, { fall: true });
         this.speed = 3;
         this.collisionEventsEnabled = true;
 
@@ -61,16 +61,21 @@ export abstract class Minion extends Entity {
             this.checkCollisions = false;
         }
         else if(this.state === MinionState.thrown){
-            if(this.velocity.z == 0){
+            if(
+                this.velocity.z == 0 || // 衝突
+                this.velocity.z > this.prevVelocity.z // 落下速度が減衰した
+            ){
                 console.log('Minion 着地', {
                     id: this.id,
                     position: this.position,
                     velocity: this.velocity.clone(),
+                    prevVelocity: this.prevVelocity.clone(),
                 })
                 
                 // 投げ状態終了
                 this.becomeFree();
             }
+            this.checkCollisions = true;
         }
         else if(this.state === MinionState.free){
             this.avoidDuplication(deltaSeconds);
@@ -154,7 +159,7 @@ export abstract class Minion extends Entity {
             dir = dir.normalize().scale(VELOCITY * deltaSeconds);
 
             // Minionごとにベクトルを少しずらして重ならないようにする
-            const angle = (this.id % ANGLE_NUM - (ANGLE_NUM - 1) / 2) / ((ANGLE_NUM - 1) / 2) * MAX_ANGLE;
+            const angle = (this.hash % ANGLE_NUM - (ANGLE_NUM - 1) / 2) / ((ANGLE_NUM - 1) / 2) * MAX_ANGLE;
             dir = rotate2D(dir, angle);
             this.moveFor(toVector3(dir));
         }
@@ -260,6 +265,9 @@ export abstract class Minion extends Entity {
         }
         this.position = this.calcSafeThrownPosition();
 
+        const MAX_ANGLE = Math.PI / 64;
+        const ANGLE_NUM = 16;
+
         // 重力加速度 g
         // 初期位置　　　　　　　　　　: p0      = (p0.x, p0.y)
         // 初期速度　　　　　　　　　　: v0      = (v0.x, v0.y)
@@ -275,19 +283,20 @@ export abstract class Minion extends Entity {
         const g = Math.abs(this.scene.gravity.z);
         const p0 = new Vector2(Minion.HELD_DIFF_HORIZONTAL, Minion.HELD_DIFF_VERTICAL);
  
-        // 加速投げ (未実装)
-        // 実装にはPlayerの速度取得が必要
-        // const xMaxBase = Cursor.CURSOR_DISTANCE;
-        // const xMaxAccelerated = Cursor.CURSOR_DISTANCE * 1.5;
-        // const accelerationRate = toVector2(this.follower.velocity).length() / Player.SPEED;
-        // const xMax = xMaxBase * (1 - accelerationRate) + xMaxAccelerated * accelerationRate;
-
-        const xMax = this.follower.cursor.unrotatedPosition.length();
+        const xMaxBase = this.follower.cursor.unrotatedPosition.length();
+        const xMaxAccelerated = xMaxBase * 1.25;
+        const accelerationRate = toVector2(this.follower.velocity).length() / Player.SPEED;
+        const xMax = xMaxBase * (1 - accelerationRate) + xMaxAccelerated * accelerationRate;
         const yMax = this.thrownMaxHeight;
         const VERTICAL_VELOCITY = Math.sqrt(2 * g * (yMax - p0.y));
         const HOLIZONTAL_VELOCITY = g * (xMax - p0.x) / (VERTICAL_VELOCITY + Math.sqrt(2 * g * yMax));
 
-        const rot = atan(this.follower.cursor.unrotatedPosition);
+        let rot = atan(this.follower.cursor.unrotatedPosition);
+
+        // Minionごとにベクトルを少しずらして重ならないようにする
+        const deltaAngle = (this.hash % ANGLE_NUM - (ANGLE_NUM - 1) / 2) / ((ANGLE_NUM - 1) / 2) * MAX_ANGLE;
+        rot += deltaAngle;
+        
         const velocity = new Vector3(
             HOLIZONTAL_VELOCITY * Math.cos(rot),
             HOLIZONTAL_VELOCITY * Math.sin(rot),

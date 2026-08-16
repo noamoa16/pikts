@@ -4,6 +4,7 @@ import {
 } from "#vendor/babylon";
 import { Cube, Figure, Shape, Sphere } from "../physics/figure";
 import { Game } from "../game";
+import { hashInt32 } from "../core/math";
 
 /** 実体を持つオブジェクト */
 export abstract class Entity {
@@ -11,6 +12,7 @@ export abstract class Entity {
     // 固有ID
     private static count = 0;
     public readonly id: number;
+    public get hash() { return hashInt32(this.id); }
 
     // 主要オブジェクト
     public readonly mesh: Mesh;
@@ -46,6 +48,7 @@ export abstract class Entity {
     private _velocity: Vector3 = Vector3.Zero();
     public get velocity(): Vector3 { return this._velocity; }
     protected set velocity(value: Vector3) { this._velocity = value; }
+    protected prevVelocity: Vector3 = Vector3.Zero();
 
     // 形状
     public get figure(): Figure {
@@ -141,12 +144,14 @@ export abstract class Entity {
         this.velocity.addInPlace(this.scene.gravity.scale(deltaSeconds))
 
         // dx = v * dt
-        const moved = this.moveFor(this.velocity.scale(deltaSeconds));
+        const movedExpected = this.velocity.scale(deltaSeconds);
+        const movedActual = this.moveFor(movedExpected.clone());
 
-        // 移動できなかった場合は速度0にする
-        if(Math.abs(moved.x) < Number.EPSILON) this.velocity.x = 0;
-        if(Math.abs(moved.y) < Number.EPSILON) this.velocity.y = 0;
-        if(Math.abs(moved.z) < Number.EPSILON) this.velocity.z = 0;
+        // 移動しきれなかった場合は速度0にする
+        this.prevVelocity = this.velocity.clone();
+        if(Math.abs(movedActual.x) < Math.abs(movedExpected.x) / 2) this.velocity.x = 0;
+        if(Math.abs(movedActual.y) < Math.abs(movedExpected.y) / 2) this.velocity.y = 0;
+        if(Math.abs(movedActual.z) < Math.abs(movedExpected.z) / 2) this.velocity.z = 0;
     }
 
     // Collisionイベントを発生させるか
