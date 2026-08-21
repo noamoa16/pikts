@@ -87,10 +87,12 @@ export abstract class Figure {
             if (disc <= 0) return Infinity; // 接触しない
     
             const sqrtDisc = Math.sqrt(disc);
-            const t1 = b - sqrtDisc; // 早い解
-            const t2 = b + sqrtDisc; // 遅い解
+            const t1 = b - sqrtDisc; // 接触開始時刻
+            const t2 = b + sqrtDisc; // 接触終了時刻
     
             if (t1 >= 0) return t1;
+
+            // 重複回避処理
             if (t2 >= -Number.EPSILON){
                 if(Math.abs(t1) > Math.abs(t2)){ 
                     return Infinity;// 動くべき側
@@ -99,6 +101,7 @@ export abstract class Figure {
                     return 0; //　制止するべき側
                 }
             }
+
             return Infinity;
         }
     
@@ -122,17 +125,15 @@ export abstract class Figure {
             const p = [this.center.x, this.center.y, this.center.z];
             const u = [dir.x, dir.y, dir.z];
             const r = this.radius;
-            const CONTACT_EPSILON = 1e-12;
 
             // 球の中心が、各軸の min/max を通過する時刻で区間を分割する
             // (区間ごとに距離関数が変わる)
             const ts = [0, Infinity];
             for (let i = 0; i < 3; i++) {
-                if (u[i] !== 0) {
-                    for (const x of [min[i], max[i]]) {
-                        const t = (x - p[i]) / u[i];
-                        if (t > 0) ts.push(t);
-                    }
+                if (u[i] === 0) continue;
+                for (const x of [min[i], max[i]]) {
+                    const t = (x - p[i]) / u[i];
+                    if (t > 0) ts.push(t);
                 }
             }
             ts.sort((a, b) => a - b);
@@ -167,24 +168,23 @@ export abstract class Figure {
 
                 if (A === 0) continue;
 
+                // 近付かない or 遠ざかる方向に動く
+                if (B >= 0){
+                    continue;
+                }
+
                 const disc = B * B - A * C; // D/4 = b^2 - ac
                 if (disc <= 0) continue;
 
                 const sqrtDisc = Math.sqrt(disc);
-                const t0 = (-B - sqrtDisc) / A;
-                const t1 = (-B + sqrtDisc) / A;
-                const t = Math.max(a, t0);
-                if(t1 <= CONTACT_EPSILON){
-                    continue;
-                }
+                const t1 = (-B - sqrtDisc) / A; // 接触開始時刻
+                const t2 = (-B + sqrtDisc) / A; // 接触終了時刻
+                const t = Math.max(a, t1); // 区間内で初めに接触する時刻
+                
+                // この区間内では衝突しない
+                if (t2 < a) continue;
 
-                if (t <= Math.min(b, t1)){
-                    if(t <= CONTACT_EPSILON){
-                        if(B >= -CONTACT_EPSILON) continue;
-                        return 0;
-                    }
-                    return t;
-                }
+                return t;
             }
 
             return Infinity;
