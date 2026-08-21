@@ -13,36 +13,11 @@ import { Nose } from "./nose";
 import { Cursor } from "./cursor";
 import { Whistle } from "./whistle";
 import { Minion, MinionState } from "../minion/minion";
-
-type InputSource = "keyboard" | "virtual";
-
-type PlayerInputState = {
-    keyboard: Record<PlayerAction, boolean>;
-    virtual: Record<PlayerAction, boolean>;
-};
+import { PlayerInput } from "./playerInput";
 
 export class Player extends Entity {
     public static readonly SPEED = 4.0;
-    private readonly inputState: PlayerInputState = {
-        keyboard: {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            whistle: false,
-            hold: false,
-        },
-        virtual: {
-            up: false,
-            down: false,
-            left: false,
-            right: false,
-            whistle: false,
-            hold: false,
-        },
-    };
-    private readonly onKeyDown: (event: KeyboardEvent) => void;
-    private readonly onKeyUp: (event: KeyboardEvent) => void;
+    private readonly input = new PlayerInput();
 
     public readonly cursor: Cursor;
     public readonly whistle: Whistle;
@@ -72,13 +47,8 @@ export class Player extends Entity {
         this.whistle = new Whistle(this.game, this, this.cursor);
 
         // キー入力
-        this.onKeyDown = this.createKeyHandler(true);
-        this.onKeyUp = this.createKeyHandler(false);
-        window.addEventListener("keydown", this.onKeyDown);
-        window.addEventListener("keyup", this.onKeyUp);
         this.scene.onDisposeObservable.add(() => {
-            window.removeEventListener("keydown", this.onKeyDown);
-            window.removeEventListener("keyup", this.onKeyUp);
+            this.input.dispose();
         });
     }
 
@@ -88,14 +58,11 @@ export class Player extends Entity {
         super.update(deltaSeconds);
 
         // 移動
-        const moveX =
-            Number(this.isActionActive("right")) - Number(this.isActionActive("left"));
-        const moveY =
-            Number(this.isActionActive("up")) - Number(this.isActionActive("down"));
+        const movement = this.input.getMovement();
         const horizontalDisplacement =
-            moveX === 0 && moveY === 0
+            movement.equalsToFloats(0, 0)
                 ? Vector3.Zero()
-                : toVector3(rotate2D(moveX, moveY, this.game.camera.rotation - Math.PI / 2))
+                : toVector3(rotate2D(movement, this.game.camera.rotation - Math.PI / 2))
                     .normalize()
                     .scale(this.speed * deltaSeconds);
         const positionBeforeHorizontalMove = this.position.clone();
@@ -153,45 +120,11 @@ export class Player extends Entity {
     }
 
     public setVirtualInput(action: PlayerAction, pressed: boolean): void {
-        this.setInput("virtual", action, pressed);
-    }
-
-    private createKeyHandler(pressed: boolean): (event: KeyboardEvent) => void {
-        return (event: KeyboardEvent) => {
-            switch (event.code) {
-                case "KeyW":
-                    this.setInput("keyboard", "up", pressed);
-                    break;
-                case "KeyS":
-                    this.setInput("keyboard", "down", pressed);
-                    break;
-                case "KeyA":
-                    this.setInput("keyboard", "left", pressed);
-                    break;
-                case "KeyD":
-                    this.setInput("keyboard", "right", pressed);
-                    break;
-                // case "Enter":
-            }
-        };
-    }
-
-    private setInput(
-        source: InputSource,
-        action: PlayerAction,
-        pressed: boolean,
-    ): void {
-        this.inputState[source][action] = pressed;
-    }
-
-    private isActionActive(action: PlayerAction): boolean {
-        return this.inputState.keyboard[action] || this.inputState.virtual[action];
+        this.input.setVirtual(action, pressed);
     }
 
     public removeEvents(){
-        this.setVirtualInput("up", false);
-        this.setVirtualInput("down", false);
-        this.setVirtualInput("left", false);
-        this.setVirtualInput("right", false);
+        this.input.clearVirtualMovement();
+        this.input.dispose();
     }
 }
