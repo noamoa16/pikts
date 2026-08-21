@@ -125,6 +125,7 @@ export abstract class Figure {
             const CONTACT_EPSILON = 1e-12;
 
             // 球の中心が、各軸の min/max を通過する時刻で区間を分割する
+            // (区間ごとに距離関数が変わる)
             const ts = [0, Infinity];
             for (let i = 0; i < 3; i++) {
                 if (u[i] !== 0) {
@@ -140,12 +141,14 @@ export abstract class Figure {
             for (let j = 0; j < ts.length - 1; j++) {
                 const a = ts[j];
                 const b = ts[j + 1];
+
+                // 区間の代表座標を計算する用のサンプル時刻
                 const mid = Number.isFinite(b) ? (a + b) / 2 : a + 1;
 
                 // p: 球の座標
                 // u: 移動ベクトル
                 // |u * t + q| = r
-                // |u|^2 * t^2 + 2 * (q * u) * t+ |q|^2 - r^2 = 0
+                // |u|^2 * t^2 + 2 * (q * u) * t + |q|^2 - r^2 = 0
                 let A = 0, B = 0, C = -r * r;
                 for (let i = 0; i < 3; i++) {
                     const x = p[i] + u[i] * mid;
