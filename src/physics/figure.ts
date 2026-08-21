@@ -37,15 +37,14 @@ export abstract class Figure {
             const maxZ = other.center.z + half;
 
             // 球の中心を立方体に最も近い点へクリップ
-            const closestX = clamp(this.center.x, minX, maxX);
-            const closestY = clamp(this.center.y, minY, maxY);
-            const closestZ = clamp(this.center.z, minZ, maxZ);
+            const closest = new Vector3(
+                clamp(this.center.x, minX, maxX),
+                clamp(this.center.y, minY, maxY),
+                clamp(this.center.z, minZ, maxZ),
+            );
 
             // 球の中心とその最短点間距離（平方）
-            const dx = this.center.x - closestX;
-            const dy = this.center.y - closestY;
-            const dz = this.center.z - closestZ;
-            const distanceSq = dx * dx + dy * dy + dz * dz;
+            const distanceSq = this.center.subtract(closest).lengthSquared();
 
             // 球の半径平方と比較して交差判定
             return distanceSq <
@@ -72,23 +71,19 @@ export abstract class Figure {
     
         /* ---------- Sphere – Sphere ---------- */
         if (this instanceof Sphere && other instanceof Sphere) {
-            const dx = other.center.x - this.center.x;
-            const dy = other.center.y - this.center.y;
-            const dz = other.center.z - this.center.z;
+            const d = other.center.subtract(this.center);
 
-            const ux = dir.x;
-            const uy = dir.y;
-            const uz = dir.z;
+            const u = dir.clone();
 
             const R = this.radius + other.radius;
     
             // ||t * u - d0|| = R となる t が答え
             // 解方程式: t^2 - 2(d0·u)t + (|d0|^2 - R^2) = 0
             // u は移動方向のベクトル
-            const b = dx * ux + dy * uy + dz * uz;
-            const c = dx * dx + dy * dy + dz * dz - R * R;
+            const b = d.dot(u);
+            const c = d.lengthSquared() - R * R;
     
-            const disc = b * b - c;
+            const disc = b * b - c; // D/4 = b^2 - ac
             if (disc <= 0) return Infinity; // 接触しない
     
             const sqrtDisc = Math.sqrt(disc);
@@ -109,13 +104,17 @@ export abstract class Figure {
     
         /* ---------- Sphere – Cube ---------- */
         if (this instanceof Sphere && other instanceof Cube) {
+
+            // 中心が既に球の衝突領域内なら 0
+            if(this.intersects(other)) return 0;
+
             const half = other.edgeLength / 2;
-            const min = [
+            const min = [ // 立方体の面 (小さい方の座標)
                 other.center.x - half,
                 other.center.y - half,
                 other.center.z - half,
             ];
-            const max = [
+            const max = [ // 立方体の面 (大きい方の座標)
                 other.center.x + half,
                 other.center.y + half,
                 other.center.z + half,
@@ -125,19 +124,8 @@ export abstract class Figure {
             const r = this.radius;
             const CONTACT_EPSILON = 1e-12;
 
-            // 中心が既に球の衝突領域内なら 0
-            let distanceSq = 0;
-            for (let i = 0; i < 3; i++) {
-                const d = p[i] < min[i] ? min[i] - p[i] :
-                        p[i] > max[i] ? p[i] - max[i] : 0;
-                distanceSq += d * d;
-            }
-            if (distanceSq < (r - Number.EPSILON) * (r - Number.EPSILON)){
-                return 0;
-            }
-
             // 球の中心が、各軸の min/max を通過する時刻で区間を分割する
-            const ts = [0];
+            const ts = [0, Infinity];
             for (let i = 0; i < 3; i++) {
                 if (u[i] !== 0) {
                     for (const x of [min[i], max[i]]) {
@@ -147,7 +135,6 @@ export abstract class Figure {
                 }
             }
             ts.sort((a, b) => a - b);
-            ts.push(Infinity);
 
             // 各区間では AABB までの距離^2 が二次関数になる
             for (let j = 0; j < ts.length - 1; j++) {
@@ -155,31 +142,34 @@ export abstract class Figure {
                 const b = ts[j + 1];
                 const mid = Number.isFinite(b) ? (a + b) / 2 : a + 1;
 
+                // p: 球の座標
+                // u: 移動ベクトル
+                // |u * t + q| = r
+                // |u|^2 * t^2 + 2 * (q * u) * t+ |q|^2 - r^2 = 0
                 let A = 0, B = 0, C = -r * r;
-
                 for (let i = 0; i < 3; i++) {
                     const x = p[i] + u[i] * mid;
                     if (x < min[i]) {
                         const q = p[i] - min[i];
                         A += u[i] * u[i];
-                        B += 2 * q * u[i];
+                        B += q * u[i];
                         C += q * q;
                     } else if (x > max[i]) {
                         const q = p[i] - max[i];
                         A += u[i] * u[i];
-                        B += 2 * q * u[i];
+                        B += q * u[i];
                         C += q * q;
                     }
                 }
 
                 if (A === 0) continue;
 
-                const disc = B * B - 4 * A * C;
+                const disc = B * B - A * C; // D/4 = b^2 - ac
                 if (disc <= 0) continue;
 
                 const sqrtDisc = Math.sqrt(disc);
-                const t0 = (-B - sqrtDisc) / (2 * A);
-                const t1 = (-B + sqrtDisc) / (2 * A);
+                const t0 = (-B - sqrtDisc) / A;
+                const t1 = (-B + sqrtDisc) / A;
                 const t = Math.max(a, t0);
                 if(t1 <= CONTACT_EPSILON){
                     continue;
