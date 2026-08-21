@@ -83,7 +83,7 @@ export abstract class Figure {
             const b = d.dot(u);
             const c = d.lengthSquared() - R * R;
     
-            const disc = b * b - c; // D/4 = b^2 - ac
+            const disc = b * b - c; // D/4 = b^2 - ac = |d * u|^2 - |d|^2 + R^2
             if (disc <= 0) return Infinity; // 接触しない
     
             const sqrtDisc = Math.sqrt(disc);
@@ -178,11 +178,8 @@ export abstract class Figure {
 
                 const sqrtDisc = Math.sqrt(disc);
                 const t1 = (-B - sqrtDisc) / A; // 接触開始時刻
-                const t2 = (-B + sqrtDisc) / A; // 接触終了時刻
+                // 接触終了時刻 は使わない
                 const t = Math.max(a, t1); // 区間内で初めに接触する時刻
-                
-                // この区間内では衝突しない
-                if (t2 < a) continue;
 
                 return t;
             }
