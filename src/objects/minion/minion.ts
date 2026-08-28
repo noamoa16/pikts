@@ -38,7 +38,7 @@ export abstract class Minion extends Entity {
     private get thrownMaxHeight(){ return (this.constructor as typeof Minion)._THROWN_MAX_HEIGHT; }
 
     constructor(game: Game, position: Vector3) {
-        super(game, "minion", Shape.Sphere, 0.15, position, { fall: true });
+        super(game, "minion", Shape.Sphere, 0.125, position, { fall: true });
         this.speed = 3;
         this.collisionEventsEnabled = true;
 
@@ -232,6 +232,7 @@ export abstract class Minion extends Entity {
         console.log('Minion.becomeFollowing', {
             id: this.id,
             src,
+            position: this.position.clone(),
         });
     }
     public becomeHeld(player: Player){

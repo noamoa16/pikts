@@ -15,6 +15,32 @@ export function clamp(value: number, min: number, max: number): number {
 }
 
 /**
+ * double（IEEE‑754 64bit）の下位 16bit をクリアする
+ *
+ * @param x 入力 double（JavaScript の number）
+ * @returns クリア後の数値
+ */
+export function clearLow16Bits(x: number): number {
+    // バッファを作る（8 バイト = 64bit）
+    const buffer = new ArrayBuffer(8);
+    const view   = new DataView(buffer);
+  
+    // 入力値を Float64 として書き込む
+    view.setFloat64(0, x, true);   // little‑endian
+  
+    /* ---- ビット列を取得 & 下位16bitクリア ---- */
+    // BigUint64 を使うとコードが簡潔
+    const bits   = view.getBigUint64(0, true);
+    const clearedBits = bits & 0xFFFFFFFFFFFF0000n;   // 下位16bitを0に
+  
+    // クリアしたビット列を書き戻す
+    view.setBigUint64(0, clearedBits, true);
+  
+    /* ---- Float64 として読み取る ---- */
+    return view.getFloat64(0, true);
+}
+
+/**
  * 角度を [-π, π) の範囲に正規化する
  * includePi が true ならば、(-π, π]
  */

@@ -4,7 +4,7 @@ import {
 } from "#vendor/babylon";
 import { Cube, Figure, Shape, Sphere } from "../physics/figure";
 import { Game } from "../game";
-import { hashInt32 } from "../core/math";
+import { clearLow16Bits, hashInt32 } from "../core/math";
 
 /** 実体を持つオブジェクト */
 export abstract class Entity {
@@ -57,6 +57,8 @@ export abstract class Entity {
                 return new Sphere(this.position, this.size / 2);
             case Shape.Cube:
                 return new Cube(this.position, this.size);
+            default:
+                throw new Error(`figure() not implemented for ${this.shape}`);
         }
     }
 
@@ -97,6 +99,9 @@ export abstract class Entity {
                     this.scene,
                 );
                 break;
+            case Shape.RectangularPrism:
+            case Shape.Slope:
+                throw new Error(`Entity() not implemented for ${this.shape}`);
         }
         this.mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く
         this.mesh.isPickable = false; // クリックによるオブジェクト選択を無効化 (軽量化のため)
@@ -135,6 +140,11 @@ export abstract class Entity {
             }
             let moveVec = dir.clone().normalize();
             moveVec = moveVec.scale(Math.min(dir.length(), space));
+            moveVec = new Vector3(
+                clearLow16Bits(moveVec.x),
+                clearLow16Bits(moveVec.y),
+                clearLow16Bits(moveVec.z),
+            );
             this.position.addInPlace(moveVec);
         }
         return this.position.subtract(prevPosition);
