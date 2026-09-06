@@ -15,6 +15,7 @@ import { createBoundaryWalls } from "./demoScene/walls";
 import { RedMinion } from "../objects/minion/redMinion";
 import { Game } from "../game";
 import { isMoveAction } from "../actions/action";
+import { RedOnion } from "../objects/onion/redOnion";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -42,6 +43,7 @@ export function createDemoScene(engine: Engine): Scene {
             new RedMinion(game, new Vector3(i, j, 0));
         }
     }
+    new RedOnion(game, new Vector3(-3, 3, 0));
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);

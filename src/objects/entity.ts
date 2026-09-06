@@ -2,7 +2,7 @@ import {
     Mesh, Scene, Vector3,
     CreateSphere, CreateBox,
 } from "#vendor/babylon";
-import { Cube, Figure, Shape, Sphere } from "../physics/figure";
+import { Cube, Figure, Shape, Slope, Sphere } from "../physics/figure";
 import { Game } from "../game";
 import { clearLow16Bits, hashInt32 } from "../core/math";
 
@@ -57,6 +57,8 @@ export abstract class Entity {
                 return new Sphere(this.position, this.size / 2);
             case Shape.Cube:
                 return new Cube(this.position, this.size);
+            case Shape.Slope:
+                return new Slope(this.position, this.size, this.size);
             default:
                 throw new Error(`figure() not implemented for ${this.shape}`);
         }
@@ -99,8 +101,7 @@ export abstract class Entity {
                     this.scene,
                 );
                 break;
-            case Shape.RectangularPrism:
-            case Shape.Slope:
+            default:
                 throw new Error(`Entity() not implemented for ${this.shape}`);
         }
         this.mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く

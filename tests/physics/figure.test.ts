@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 
 import { Vector3 } from "../../src/vendor/babylon";
-import { Cube, Sphere } from "../../src/physics/figure";
+import { Cube, Slope, Sphere } from "../../src/physics/figure";
+import { Sphere2Slope } from "../../src/physics/figureImpl/sphere2Slope";
 
-const delta = Math.pow(2, -10); // float64 の誤差で消えない程度の差分
+const delta = Math.pow(2, -40); // float64 の誤差で消えない程度の差分
 
 describe("Figure.intersects", () => {
     it("球同士が重なっているときに true を返す", () => {
@@ -82,6 +83,55 @@ describe("Figure.intersects", () => {
         expect(left.intersects(right)).toBe(false);
         expect(right.intersects(left)).toBe(false);
     });
+
+    it("球とスロープがy方向で重なっている場合に true を返す", () => {
+        const left = new Sphere(new Vector3(0, 0, 0), 2);
+        const right = new Slope(new Vector3(0, 3 - delta, 0), 2, 2);
+        expect(left.intersects(right)).toBe(true);
+        expect(right.intersects(left)).toBe(true);
+    });
+    it("球とスロープがy方向で接する場合に false を返す", () => {
+        const left = new Sphere(new Vector3(0, 0, 0), 2);
+        const right = new Slope(new Vector3(0, 3, 0), 2, 2);
+        expect(left.intersects(right)).toBe(false);
+        expect(right.intersects(left)).toBe(false);
+    });
+    it("球とスロープが斜面で重なっている場合に true を返す", () => {
+        const left = new Sphere(new Vector3(-1, 0, 2), Math.sqrt(5) + delta);
+        const right = new Slope(new Vector3(0, 0, 0), 2, 2);
+        expect(left.intersects(right)).toBe(true);
+        expect(right.intersects(left)).toBe(true);
+    });
+    it("球とスロープが斜面で接する場合に true を返す", () => {
+        const left = new Sphere(new Vector3(-1, 0, 2), Math.sqrt(5) - delta);
+        const right = new Slope(new Vector3(0, 0, 0), 2, 2);
+        expect(left.intersects(right)).toBe(false);
+        expect(right.intersects(left)).toBe(false);
+    });
+    it("球がスロープの右側で重なっている場合に true を返す", () => {
+        const left = new Sphere(new Vector3(2, 0, 0), 1 + delta);
+        const right = new Slope(new Vector3(0, 0, 0), 2, 1);
+        expect(left.intersects(right)).toBe(true);
+        expect(right.intersects(left)).toBe(true);
+    });
+    it("球がスロープの右側で接する場合に true を返す", () => {
+        const left = new Sphere(new Vector3(2, 0, 0), 1);
+        const right = new Slope(new Vector3(0, 0, 0), 2, 1);
+        expect(left.intersects(right)).toBe(false);
+        expect(right.intersects(left)).toBe(false);
+    });
+    it("球がスロープの下側で重なっている場合に true を返す", () => {
+        const left = new Sphere(new Vector3(0, 0, -3 / 2), 1 + delta);
+        const right = new Slope(new Vector3(0, 0, 0), 2, 1);
+        expect(left.intersects(right)).toBe(true);
+        expect(right.intersects(left)).toBe(true);
+    });
+    it("球がスロープの下側で接する場合に true を返す", () => {
+        const left = new Sphere(new Vector3(0, 0, -3 / 2), 1);
+        const right = new Slope(new Vector3(0, 0, 0), 2, 1);
+        expect(left.intersects(right)).toBe(false);
+        expect(right.intersects(left)).toBe(false);
+    });
 });
 
 describe("Figure.space", () => {
@@ -128,8 +178,8 @@ describe("Figure.space", () => {
     it("球-立方体の移動時に最初の接触距離を返す", () => {
         const moving = new Sphere(new Vector3(0, 0, 0), 1);
         const stationary = new Cube(new Vector3(5, 0, 0), 2);
-        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBeCloseTo(3);
-        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBeCloseTo(3);
+        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(3);
+        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(3);
     });
 
     it("球が立方体から遠ざかる方向に移動したときに Infinity を返す", () => {
@@ -155,8 +205,8 @@ describe("Figure.space", () => {
     it("立方体-立方体の移動時に最初の接触距離を返す", () => {
         const moving = new Cube(new Vector3(0, 0, 0), 2);
         const stationary = new Cube(new Vector3(5, 0, 0), 2);
-        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBeCloseTo(3);
-        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBeCloseTo(3);
+        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(3);
+        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(3);
     });
     it("立方体-立方体がギリギリですれ違うときに Infinity を返す", () => {
         const moving = new Cube(new Vector3(0, 0, 0), 2);
@@ -178,5 +228,49 @@ describe("Figure.space", () => {
 
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(Infinity);
+    });
+
+    it("球が長方形の上側から衝突する", () => {
+        const sphere = new Sphere(new Vector3(0, 0, 2), 1);
+        const slope = new Slope(new Vector3(0, 0, 0.5), 2, 1);
+        expect(sphere.space(slope, new Vector3(0, 0, -1))).toBe(1);
+        expect(slope.space(sphere, new Vector3(0, 0, 1))).toBe(1);
+    });
+    it("球が長方形の下側から衝突する", () => {
+        const sphere = new Sphere(new Vector3(0, 0, -2), 1);
+        const slope = new Slope(new Vector3(0, 0, 0.5), 2, 1);
+        expect(sphere.space(slope, new Vector3(0, 0, 1))).toBe(1);
+        expect(slope.space(sphere, new Vector3(0, 0, -1))).toBe(1);
+    });
+
+    it("球が長方形とギリギリですれ違う", () => {
+        const sphere = new Sphere(new Vector3(-3, 0, 1), 1);
+        const slope = new Slope(new Vector3(0, 0, 0.5), 2, 1);
+        expect(sphere.space(slope, new Vector3(1, 0, 0))).toBe(Infinity);
+        expect(slope.space(sphere, new Vector3(-1, 0, 0))).toBe(Infinity);
+    });
+    it("球が長方形とギリギリ衝突する", () => {
+        const sphere = new Sphere(new Vector3(-3, 0, 1 - delta), 1);
+        const slope = new Slope(new Vector3(0, 0, 0.5), 2, 1);
+        expect(sphere.space(slope, new Vector3(1, 0, 0))).toBeCloseTo(2 - Math.sqrt(2 * delta));
+        expect(slope.space(sphere, new Vector3(-1, 0, 0))).toBeCloseTo(2 - Math.sqrt(2 * delta));
+    });
+});
+
+describe("Sphere2Slope.resolveOverlapUpDistance", () => {
+    it("スロープの下側", () => {
+        const sphere = new Sphere(new Vector3(0, 0, 0), 1);
+        const slope = new Slope(new Vector3(1, 0, 0.5), 2, 1);
+        expect(new Sphere2Slope(sphere, slope).resolveOverlapUpDistance()).toBeCloseTo(Math.sqrt(5) / 2);
+    });
+    it("スロープの中間", () => {
+        const sphere = new Sphere(new Vector3(0, 1.5, 0), 1);
+        const slope = new Slope(new Vector3(0, 0, 0), 2, 1);
+        expect(new Sphere2Slope(sphere, slope).resolveOverlapUpDistance()).toBeCloseTo(Math.sqrt(15 / 4) / 2);
+    });
+    it("スロープの上側", () => {
+        const sphere = new Sphere(new Vector3(0, 0, 0), 1);
+        const slope = new Slope(new Vector3(-1, 0, -0.5), 2, 1);
+        expect(new Sphere2Slope(sphere, slope).resolveOverlapUpDistance()).toBe(1);
     });
 });
