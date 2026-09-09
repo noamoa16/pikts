@@ -8,6 +8,14 @@ export enum Shape {
     Cube,
     Slope,
 }
+export function shapeToString(shape: Shape){
+    return {
+        [Shape.Sphere]: "Sphere",
+        [Shape.RectangularPrism]: "RectangularPrism",
+        [Shape.Cube]: "Cube",
+        [Shape.Slope]: "Slope",
+    }[shape];
+}
 export enum Dir4 {
     Right,
     Left,
@@ -134,6 +142,7 @@ export class Slope extends Figure {
             this.center,
             this.width * ratio,
             this.height * ratio,
+            this.upward,
         );
     }
 }

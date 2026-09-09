@@ -1,13 +1,8 @@
 - minion, playerのサブファイルの名前をシンプルにする
-- スロープオブジェクトを作成して配置する
-  - babylon.jsで、三角柱のmeshを作成するコードを書いてください。
-  - 三角柱の領域を表す不等式：
-  - -height / 2 <= z - center.z <= (x - center.x) / 2 <= height / 2
-  - -width / 2 <= y - center.y <= width / 2
-- Onionを作る
-  - 足：OnionPillar
-    - 足の底面座標：(0, 0, size / 3), (size / 2 * cos(θ), size / 2 * sin(θ), -size / 2)
-    - babylon.jsで、底面座標が (0, 0, a), (b, c, d) である円柱のMeshを作成する方法
+- スロープ
+  - mesh.tsのリファクタリング
+  - upwardに対応する
+  - 物理演算実装
 - update系の処理をGameに集約する
 - カーソルを合わせたオブジェクトのデバッグ情報表示機能
   - 「デバッグモードがONのときに、画面上で、特定のEntity(PlayerまたはMinion)にカーソルを合わせた際に、そのEntityの詳細情報を画面に出し、かつそのEntityをハイライトするようにしたいです。どうすれば実現できるか検討してください。コードの変更はまだ行わないでください。」

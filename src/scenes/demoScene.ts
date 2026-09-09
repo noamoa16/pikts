@@ -16,6 +16,7 @@ import { RedMinion } from "../objects/minion/redMinion";
 import { Game } from "../game";
 import { isMoveAction } from "../actions/action";
 import { RedOnion } from "../objects/onion/redOnion";
+import { Slope } from "../objects/slope";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -37,7 +38,8 @@ export function createDemoScene(engine: Engine): Scene {
 
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));
-    new Block(game, new Vector3(2, 1, 0))
+    new Block(game, new Vector3(2, 1, 0));
+    new Slope(game, new Vector3(2, -2, 0), 1);
     for(let i = -3; i <= -1; i++){
         for(let j = -3; j <= -1; j++){
             new RedMinion(game, new Vector3(i, j, 0));

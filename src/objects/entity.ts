@@ -2,9 +2,10 @@ import {
     Mesh, Scene, Vector3,
     CreateSphere, CreateBox,
 } from "#vendor/babylon";
-import { Cube, Figure, Shape, Slope, Sphere } from "../physics/figure";
+import { Cube, Figure, Shape, shapeToString, Slope, Sphere } from "../physics/figure";
 import { Game } from "../game";
 import { clearLow16Bits, hashInt32 } from "../core/math";
+import { createSlopeMesh } from "../physics/mesh";
 
 /** 実体を持つオブジェクト */
 export abstract class Entity {
@@ -60,7 +61,7 @@ export abstract class Entity {
             case Shape.Slope:
                 return new Slope(this.position, this.size, this.size);
             default:
-                throw new Error(`figure() not implemented for ${this.shape}`);
+                throw new Error(`figure() not implemented for ${shapeToString(this.shape)}`);
         }
     }
 
@@ -101,10 +102,15 @@ export abstract class Entity {
                     this.scene,
                 );
                 break;
+            case Shape.Slope:
+                this.mesh = createSlopeMesh(this.scene, new Slope(position.clone(), size, size));
+                break;
             default:
-                throw new Error(`Entity() not implemented for ${this.shape}`);
+                throw new Error(`Entity() not implemented for ${shapeToString(this.shape)}`);
         }
-        this.mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く
+        if(this.shape != Shape.Slope){
+            this.mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く
+        }
         this.mesh.isPickable = false; // クリックによるオブジェクト選択を無効化 (軽量化のため)
         this.mesh.checkCollisions = true;
         this.groundingPosition = position.clone();
