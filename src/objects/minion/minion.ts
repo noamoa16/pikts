@@ -11,19 +11,19 @@ import { Entity } from "../entity";
 import { Player } from "../player/player";
 import { rotate2D, toVector2, toVector3 } from "../../core/math";
 import { Cursor } from "../player/cursor";
-import { MinionState } from "./minionState";
+import { MinionState } from "./state";
 import {
     calcMinionFollowMoveVector,
     calcSeparationDirection,
-} from "./minionMovement";
+} from "./movement";
 import {
     calcHeldPosition,
     calcThrownLaunchDirection,
     calcThrownStartPosition,
     calcThrownVelocity,
-} from "./minionThrow";
+} from "./throw";
 
-export { MinionState } from "./minionState";
+export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
     protected static readonly _BASE_COLOR: Color3 = new Color3(0, 0.95, 0);

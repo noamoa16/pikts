@@ -13,7 +13,7 @@ import { Nose } from "./nose";
 import { Cursor } from "./cursor";
 import { Whistle } from "./whistle";
 import { Minion, MinionState } from "../minion/minion";
-import { PlayerInput } from "./playerInput";
+import { PlayerInput } from "./input";
 
 export class Player extends Entity {
     public static readonly SPEED = 4.0;
