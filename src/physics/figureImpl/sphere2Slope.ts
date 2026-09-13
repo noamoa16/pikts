@@ -5,7 +5,32 @@ import { getFigureImpl, IFigureImpl } from "./figureImpl";
 
 export class Sphere2Slope implements IFigureImpl {
     constructor(private sphere: Sphere, private slope: Slope){}
+
     public intersects(): boolean{
+        return this.intersectsFull(); // 仮
+    }
+
+    /**
+     * スロープの右下半分だけで計算
+     */
+    public intersectsHalf(): boolean{
+        const halfSlope = new Slope(
+            new Vector3(
+                this.slope.center.x + this.slope.height / 2,
+                this.slope.center.y,
+                this.slope.center.z + this.slope.height / 4,
+            ),
+            this.slope.width,
+            this.slope.height / 2,
+        )
+        const impl = new Sphere2Slope(this.sphere, halfSlope);
+        return impl.intersectsFull();
+    }
+    
+    /**
+     * 完全なスロープとして計算
+     */
+    public intersectsFull(): boolean{
         const center = rotateByDir4(
             this.slope.center.subtract(this.sphere.center),
             this.slope.upward,
@@ -42,9 +67,35 @@ export class Sphere2Slope implements IFigureImpl {
             return getFigureImpl(originSphere, rectPrism).intersects();
         }
     }
-
-    // スロープの底面のみで計算する
+    
     public space(_dir: Vector3): number{
+        return this.spaceBottom(_dir); // 仮
+    }
+
+    /**
+     * 完全なスロープとして計算
+     */
+    public spaceFull(_dir: Vector3): number{
+        // 既に衝突している
+        if(this.intersectsFull()) return 0;
+
+        // const center = rotateByDir4(
+        //     this.slope.center.subtract(this.sphere.center),
+        //     this.slope.upward,
+        // );
+        _dir = rotateByDir4(
+            _dir,
+            this.slope.upward,
+        );
+
+        // TODO
+        throw new Error('Not implemented')
+    }
+
+    /**
+     * スロープの底面のみで計算
+     */
+    public spaceBottom(_dir: Vector3): number{
         const center = rotateByDir4(
             this.slope.center.subtract(this.sphere.center),
             this.slope.upward,
@@ -69,7 +120,9 @@ export class Sphere2Slope implements IFigureImpl {
         return getFigureImpl(originSphere, rectPrism).space(_dir);
     }
 
-    //　重複を解消するためにどれだけ上に動けばいいか
+    /**
+     * 重複を解消するためにどれだけ上に動けばいいか
+     */
     public resolveOverlapUpDistance(): number{
         if(!this.intersects()) return 0;
 

@@ -17,6 +17,7 @@ import { Game } from "../game";
 import { isMoveAction } from "../actions/action";
 import { RedOnion } from "../objects/onion/redOnion";
 import { Slope } from "../objects/slope";
+import { Dir4 } from "../physics/figure";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -39,9 +40,12 @@ export function createDemoScene(engine: Engine): Scene {
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));
     new Block(game, new Vector3(2, 1, 0));
-    new Slope(game, new Vector3(2, -2, 0), 1);
-    for(let i = -3; i <= -1; i++){
-        for(let j = -3; j <= -1; j++){
+    new Slope(game, new Vector3(-2, -3, 0), 1, Dir4.Right);
+    new Slope(game, new Vector3(0, -3, 0), 1, Dir4.Front);
+    new Slope(game, new Vector3(2, -3, 0), 1, Dir4.Left);
+    new Slope(game, new Vector3(4, -3, 0), 1, Dir4.Back);
+    for(let i = -3; i <= -2; i += 0.5){
+        for(let j = 0; j <= 1; j += 0.5){
             new RedMinion(game, new Vector3(i, j, 0));
         }
     }

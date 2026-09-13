@@ -28,16 +28,16 @@ export function createSlopeMesh(scene: Scene, slope: Slope): Mesh {
         A1, B1, C1,
 
         // A-B 側面
-        0, 1, 4,
-        0, 4, 3,
+        A0, B0, B1,
+        A0, B1, A1,
 
         // B-C 側面
-        1, 2, 5,
-        1, 5, 4,
+        B0, C0, C1,
+        B0, C1, B1,
 
         // C-A 側面
-        2, 0, 3,
-        2, 3, 5,
+        C0, A0, A1,
+        C0, A1, C1,
     ];
 
     const vertexData = new VertexData();

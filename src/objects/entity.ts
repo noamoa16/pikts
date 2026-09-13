@@ -2,10 +2,13 @@ import {
     Mesh, Scene, Vector3,
     CreateSphere, CreateBox,
 } from "#vendor/babylon";
-import { Cube, Figure, Shape, shapeToString, Slope, Sphere } from "../physics/figure";
+import {
+    Cube, Dir4, dir4ToVector2, Figure, Shape, shapeToString, Sphere, Slope,
+} from "../physics/figure";
 import { Game } from "../game";
-import { clearLow16Bits, hashInt32 } from "../core/math";
+import { atan, clearLow16Bits, hashInt32 } from "../core/math";
 import { createSlopeMesh } from "../physics/mesh";
+import { Sphere2Slope } from "../physics/figureImpl/sphere2Slope";
 
 /** 実体を持つオブジェクト */
 export abstract class Entity {
@@ -58,8 +61,6 @@ export abstract class Entity {
                 return new Sphere(this.position, this.size / 2);
             case Shape.Cube:
                 return new Cube(this.position, this.size);
-            case Shape.Slope:
-                return new Slope(this.position, this.size, this.size);
             default:
                 throw new Error(`figure() not implemented for ${shapeToString(this.shape)}`);
         }
@@ -80,7 +81,10 @@ export abstract class Entity {
         public readonly shape: Shape,
         size: number,
         position: Vector3,
-        options: { fall: boolean },
+        options: {
+            fall: boolean,
+            upward?: Dir4,
+        },
     ) {
         this.id = Entity.count++;
         this.size = size;
@@ -103,12 +107,27 @@ export abstract class Entity {
                 );
                 break;
             case Shape.Slope:
-                this.mesh = createSlopeMesh(this.scene, new Slope(position.clone(), size, size));
+                this.mesh = createSlopeMesh(
+                    this.scene,
+                    new Slope(
+                        position.clone(),
+                        size,
+                        size,
+                        options.upward ?? Dir4.Right,
+                    ),
+                );
                 break;
             default:
                 throw new Error(`Entity() not implemented for ${shapeToString(this.shape)}`);
         }
-        if(this.shape != Shape.Slope){
+        if(this.shape == Shape.Slope){
+            this.mesh.rotation = new Vector3(
+                0,
+                0,
+                atan(dir4ToVector2(options.upward ?? Dir4.Right)),
+            );
+        }
+        else{
             this.mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く
         }
         this.mesh.isPickable = false; // クリックによるオブジェクト選択を無効化 (軽量化のため)
@@ -175,6 +194,23 @@ export abstract class Entity {
         if(Math.abs(movedActual.x) < Math.abs(movedExpected.x) / 2) this.velocity.x = 0;
         if(Math.abs(movedActual.y) < Math.abs(movedExpected.y) / 2) this.velocity.y = 0;
         if(Math.abs(movedActual.z) < Math.abs(movedExpected.z) / 2) this.velocity.z = 0;
+
+        // スロープへのめり込み時処理
+        if(
+            movedExpected.lengthSquared() > 0 && // 移動しようとしたオブジェクトのみ対象
+            this.figure instanceof Sphere // 球体オブジェクトのみ対象
+        ){
+            let distance = 0;
+            for(const entity of this.game.objects){
+                if(entity.figure instanceof Slope){
+                    const impl = new Sphere2Slope(this.figure, entity.figure);
+                    distance = Math.max(distance, impl.resolveOverlapUpDistance());
+                }
+            }
+            if(distance > 0){
+                this.position.addInPlace(new Vector3(0, 0, distance));
+            }
+        }
     }
 
     protected shouldBlockMovement(_: Entity): boolean {

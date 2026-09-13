@@ -1,5 +1,5 @@
-import { Vector3 } from "#vendor/babylon"
-import { atan, rotate2D, toVector2 } from "../core/math";
+import { Vector2, Vector3 } from "#vendor/babylon"
+import { atan, rotate2D } from "../core/math";
 import { getFigureImpl } from "./figureImpl/figureImpl";
 
 export enum Shape {
@@ -22,7 +22,7 @@ export enum Dir4 {
     Front,
     Back,
 }
-export function dir4ToVector(dir: Dir4): Vector3 {
+export function dir4ToVector3(dir: Dir4): Vector3 {
     return {
         [Dir4.Right]: new Vector3(1, 0, 0),
         [Dir4.Left]: new Vector3(-1, 0, 0),
@@ -30,9 +30,17 @@ export function dir4ToVector(dir: Dir4): Vector3 {
         [Dir4.Back]: new Vector3(0, -1, 0),
     }[dir];
 }
+export function dir4ToVector2(dir: Dir4): Vector2 {
+    return {
+        [Dir4.Right]: new Vector2(1, 0,),
+        [Dir4.Left]: new Vector2(-1, 0,),
+        [Dir4.Front]: new Vector2(0, 1),
+        [Dir4.Back]: new Vector2(0, -1),
+    }[dir];
+}
 export function rotateByDir4(v: Vector3, dir: Dir4): Vector3 {
     v = v.clone();
-    const theta = atan(toVector2(dir4ToVector(dir))); // dirの角度
+    const theta = atan(dir4ToVector2(dir)); // dirの角度
     const rotatedCenter2 = rotate2D(v.x, v.y, -theta);
     v.x = rotatedCenter2.x;
     v.y = rotatedCenter2.y;
@@ -114,13 +122,6 @@ export class Cube extends RectangularPrism {
     }
 }
 
-/**
- * -h / 2 <= z - c_z <= (x - c_x) / 2 <= h / 2
- * -w / 2 <= y - c_y <= w / 2
- * 
- * -x方向が低く、+x方向が高い
- * 後でスロープの向き (4通り) も考える
- * */
 export class Slope extends Figure {
     public readonly shape: Shape = Shape.Slope;
     public get width() { return this._width; }
@@ -133,7 +134,7 @@ export class Slope extends Figure {
         center: Vector3,
         private _width: number,
         private _height: number,
-        private _upward: Dir4 = Dir4.Right,
+        private _upward: Dir4 = Dir4.Right, // 上昇する方向
     ) {
         super(center);
     }

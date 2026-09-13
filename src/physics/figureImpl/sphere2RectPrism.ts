@@ -32,7 +32,7 @@ export class Sphere2RectPrism implements IFigureImpl {
             (this.sphere.radius - Number.EPSILON);
     }
     public space(_dir: Vector3): number{
-        // 中心が既に球の衝突領域内なら 0
+        // 既に衝突している
         if(this.intersects()) return 0;
 
         // 球の中心が原点に来るようにずらす
