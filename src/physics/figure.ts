@@ -41,6 +41,14 @@ export function dir4ToVector2(dir: Dir4): Vector2 {
 export function rotateByDir4(v: Vector3, dir: Dir4): Vector3 {
     v = v.clone();
     const theta = atan(dir4ToVector2(dir)); // dirの角度
+    const rotatedCenter2 = rotate2D(v.x, v.y, theta);
+    v.x = rotatedCenter2.x;
+    v.y = rotatedCenter2.y;
+    return v;
+}
+export function invRotateByDir4(v: Vector3, dir: Dir4): Vector3 {
+    v = v.clone();
+    const theta = atan(dir4ToVector2(dir)); // dirの角度
     const rotatedCenter2 = rotate2D(v.x, v.y, -theta);
     v.x = rotatedCenter2.x;
     v.y = rotatedCenter2.y;
@@ -144,6 +152,42 @@ export class Slope extends Figure {
             this.width * ratio,
             this.height * ratio,
             this.upward,
+        );
+    }
+    public half(): Slope {
+        const gap = invRotateByDir4(
+            new Vector3(
+                this.height / 2,
+                0,
+                -this.height / 4,
+            ),
+            this.upward,
+        );
+        return new Slope(
+            this.center.add(gap),
+            this.width,
+            this.height / 2,
+            this.upward,
+        );
+    }
+    public rectPrism(): RectangularPrism {
+        const center = this.center.clone();
+        let edgeLengths = new Vector3(
+            2 * this.height,
+            this.width,
+            this.height,
+        );
+        const rotatedCenter = rotateByDir4(center, this.upward);
+        if(this.upward == Dir4.Front || this.upward == Dir4.Back){
+            edgeLengths = new Vector3(
+                edgeLengths.y,
+                edgeLengths.x,
+                edgeLengths.z,
+            );
+        }
+        return new RectangularPrism(
+            rotatedCenter,
+            edgeLengths,
         );
     }
 }

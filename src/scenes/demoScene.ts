@@ -41,9 +41,8 @@ export function createDemoScene(engine: Engine): Scene {
     const player = new Player(game, new Vector3(0, 0, 0));
     new Block(game, new Vector3(2, 1, 0));
     new Slope(game, new Vector3(-2, -3, 0), 1, Dir4.Right);
-    new Slope(game, new Vector3(0, -3, 0), 1, Dir4.Front);
-    new Slope(game, new Vector3(2, -3, 0), 1, Dir4.Left);
-    new Slope(game, new Vector3(4, -3, 0), 1, Dir4.Back);
+    new Block(game, new Vector3(-0.5, -3, 0));
+    new Slope(game, new Vector3(2.5, -3, 0), 1, Dir4.Right);
     for(let i = -3; i <= -2; i += 0.5){
         for(let j = 0; j <= 1; j += 0.5){
             new RedMinion(game, new Vector3(i, j, 0));

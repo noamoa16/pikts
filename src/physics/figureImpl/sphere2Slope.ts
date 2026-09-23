@@ -1,7 +1,8 @@
 import { Vector3 } from "#vendor/babylon";
 import { clamp } from "../../core/math";
-import { RectangularPrism, rotateByDir4, Slope, Sphere } from "../figure";
+import { RectangularPrism, invRotateByDir4, Slope, Sphere } from "../figure";
 import { getFigureImpl, IFigureImpl } from "./figureImpl";
+import { Sphere2RectPrism } from "./sphere2RectPrism";
 
 export class Sphere2Slope implements IFigureImpl {
     constructor(private sphere: Sphere, private slope: Slope){}
@@ -14,62 +15,51 @@ export class Sphere2Slope implements IFigureImpl {
      * スロープの右下半分だけで計算
      */
     public intersectsHalf(): boolean{
-        const halfSlope = new Slope(
-            new Vector3(
-                this.slope.center.x + this.slope.height / 2,
-                this.slope.center.y,
-                this.slope.center.z + this.slope.height / 4,
-            ),
-            this.slope.width,
-            this.slope.height / 2,
-        )
-        const impl = new Sphere2Slope(this.sphere, halfSlope);
-        return impl.intersectsFull();
+        return new Sphere2Slope(this.sphere, this.slope.half()).intersectsFull();
     }
     
     /**
      * 完全なスロープとして計算
      */
     public intersectsFull(): boolean{
-        const center = rotateByDir4(
+        const center = invRotateByDir4(
             this.slope.center.subtract(this.sphere.center),
             this.slope.upward,
         );
 
-        // 円の中心からスロープまでの最短地点が側面の場合
-        if(center.z >= center.x / 2){
-            // 直方体とみなして計算
-            const rectPrism = new RectangularPrism(
-                this.slope.center.clone(),
-                new Vector3(
-                    2 * this.slope.height,
-                    this.slope.width,
-                    this.slope.height,
-                ),
-            );
-            return getFigureImpl(this.sphere, rectPrism).intersects();
-        }
-        else{
-            // xz平面上で -arctan(1/2) 回転させ、sqrt(5)倍にスケールを拡大
-            const originSphere = new Sphere(Vector3.Zero(), Math.sqrt(5) * this.sphere.radius);
-            const rectPrism = new RectangularPrism(
-                new Vector3(
-                    2 * center.x + center.z,
-                    center.y,
-                    -center.x + 2 * center.z - this.slope.height,
-                ),
-                new Vector3(
-                    Math.sqrt(5) * this.slope.height,
-                    this.slope.width,
-                    2 * this.slope.height,
-                ),
-            );
-            return getFigureImpl(originSphere, rectPrism).intersects();
-        }
+        // 直方体とみなして計算
+        const straightRect = this.slope.rectPrism();
+
+        // xz平面上で -arctan(1/2) 回転させ、sqrt(5)倍にスケールを拡大
+        const originSphere = new Sphere(Vector3.Zero(), Math.sqrt(5) * this.sphere.radius);
+        const diagRect = new RectangularPrism(
+            new Vector3(
+                2 * center.x + center.z,
+                center.y,
+                -center.x + 2 * center.z - this.slope.height,
+            ),
+            new Vector3(
+                5 * this.slope.height,
+                this.slope.width,
+                2 * this.slope.height,
+            ),
+        );
+        
+        return (
+            getFigureImpl(this.sphere, straightRect).intersects() &&
+            getFigureImpl(originSphere, diagRect).intersects()
+        );
     }
     
     public space(_dir: Vector3): number{
-        return this.spaceBottom(_dir); // 仮
+        return this.spaceHalf(_dir); // 仮
+    }
+
+    /**
+     * 右下半分のスロープとして計算
+     */
+    public spaceHalf(_dir: Vector3): number{
+        return new Sphere2Slope(this.sphere, this.slope.half()).spaceFull(_dir);
     }
 
     /**
@@ -79,28 +69,52 @@ export class Sphere2Slope implements IFigureImpl {
         // 既に衝突している
         if(this.intersectsFull()) return 0;
 
-        // const center = rotateByDir4(
-        //     this.slope.center.subtract(this.sphere.center),
-        //     this.slope.upward,
-        // );
-        _dir = rotateByDir4(
+        const center = invRotateByDir4(
+            this.slope.center.subtract(this.sphere.center),
+            this.slope.upward,
+        );
+        _dir = invRotateByDir4(
             _dir,
             this.slope.upward,
         );
 
-        // TODO
-        throw new Error('Not implemented')
+        const straightRect = this.slope.rectPrism();
+        straightRect.center = center.clone();
+        const originSphere = new Sphere(Vector3.Zero(), this.sphere.radius);
+        const SQRT5 = Math.sqrt(5);
+        const SQRT1_5 = 1 / SQRT5;
+        const diagonalRect = new RectangularPrism(
+            new Vector3(
+                (2 * center.x + center.z) * SQRT1_5,
+                center.y,
+                (-center.x + 2 * center.z) * SQRT1_5 - this.slope.height,
+            ),
+            new Vector3(
+                SQRT5 * this.slope.height,
+                this.slope.width,
+                2 * this.slope.height,
+            ),
+        );
+        const _dirForDiag = new Vector3(
+            2 * _dir.x + _dir.z,
+            _dir.y,
+            -_dir.x + 2 * _dir.z,
+        );
+        return Math.max(
+            new Sphere2RectPrism(originSphere, straightRect).space(_dir),
+            new Sphere2RectPrism(originSphere, diagonalRect).space(_dirForDiag),
+        );
     }
 
     /**
      * スロープの底面のみで計算
      */
     public spaceBottom(_dir: Vector3): number{
-        const center = rotateByDir4(
+        const center = invRotateByDir4(
             this.slope.center.subtract(this.sphere.center),
             this.slope.upward,
         );
-        _dir = rotateByDir4(
+        _dir = invRotateByDir4(
             _dir,
             this.slope.upward,
         );
@@ -126,7 +140,7 @@ export class Sphere2Slope implements IFigureImpl {
     public resolveOverlapUpDistance(): number{
         if(!this.intersects()) return 0;
 
-        const center = rotateByDir4(
+        const center = invRotateByDir4(
             this.slope.center.subtract(this.sphere.center),
             this.slope.upward,
         );

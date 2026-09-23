@@ -53,6 +53,15 @@ export function normalizeAngle(angle: number, { includePi = false } = {}): numbe
     return a;
 }
 
+function normalizeZero(value: number): number {
+    if(Math.abs(value) < Number.EPSILON){
+        return 0;
+    }
+    else{
+        return value;
+    }
+}
+
 export function atan(v: Vector2): number {
     return Math.atan2(v.y, v.x);
 }
@@ -60,7 +69,8 @@ export function atan(v: Vector2): number {
 export function rotate2D(x: number, y: number, angle: number): Vector2;
 export function rotate2D(v: Vector2, angle: number): Vector2;
 export function rotate2D(a: any, b: any, c?: any): Vector2 {
-    const angle: number = typeof c === 'number' ? c : b;
+    let angle: number = typeof c === 'number' ? c : b;
+    angle = normalizeAngle(angle);
 
     let x: number, y: number;
     if (a instanceof Vector2) {
@@ -69,6 +79,19 @@ export function rotate2D(a: any, b: any, c?: any): Vector2 {
     } else {
         x = a;
         y = b as number;
+    }
+
+    if(Math.abs(angle) < Number.EPSILON){
+        return new Vector2(x, y);
+    }
+    else if(Math.abs(angle - Math.PI) < Number.EPSILON || Math.abs(angle - (-Math.PI)) < Number.EPSILON){
+        return new Vector2(normalizeZero(-x), normalizeZero(-y));
+    }
+    else if(Math.abs(angle - (-Math.PI / 2)) < Number.EPSILON){
+        return new Vector2(y, normalizeZero(-x));
+    }
+    else if(Math.abs(angle - (Math.PI / 2)) < Number.EPSILON){
+        return new Vector2(normalizeZero(-y), x);
     }
 
     const cVal = Math.cos(angle);
