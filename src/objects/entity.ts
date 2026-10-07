@@ -112,7 +112,8 @@ export abstract class Entity {
                     new Slope(
                         position.clone(),
                         size,
-                        size,
+                        2 * size,
+                        1 / 2,
                         options.upward ?? Dir4.Right,
                     ),
                 );
@@ -136,7 +137,7 @@ export abstract class Entity {
     }
 
     // 移動
-    protected moveFor(dir: Vector3, options: { ignoreEntities?: readonly Entity[] } = {}): Vector3 {
+    protected moveFor(dir: Vector3, options: { ignoredEntities?: readonly Entity[], strict?: boolean } = {}): Vector3 {
         const dir1 = new Vector3(dir.x, 0, 0);
         const dir2 = new Vector3(0, dir.y, 0);
         const dir3 = new Vector3(0, 0, dir.z);
@@ -153,13 +154,13 @@ export abstract class Entity {
                 if(this.id === entity.id){ // 自分自身とは衝突判定しない
                     continue;
                 }
-                if(options.ignoreEntities?.includes(entity)){
+                if(options.ignoredEntities?.includes(entity)){
                     continue;
                 }
-                if(!this.shouldBlockMovement(entity)){
+                if(!this.isBlockedBy(entity)){
                     continue;
                 }
-                space = Math.min(this.figure.space(entity.figure, dir), space);
+                space = Math.min(this.figure.space(entity.figure, dir, options?.strict === true), space);
             }
             if(space <= 3 * Number.EPSILON){ // 移動不可
                 continue;
@@ -213,7 +214,10 @@ export abstract class Entity {
         }
     }
 
-    protected shouldBlockMovement(_: Entity): boolean {
+    /**
+     * 移動の際に他オブジェクトの邪魔をするかどうか
+     */
+    protected isBlockedBy(_: Entity): boolean {
         return true;
     }
 

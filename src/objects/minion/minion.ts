@@ -18,10 +18,10 @@ import {
 } from "./movement";
 import {
     calcHeldPosition,
-    calcThrownLaunchDirection,
-    calcThrownStartPosition,
-    calcThrownVelocity,
+    calcThrownInitialPosition,
+    calcThrownInitialVelocity,
 } from "./throw";
+import { Random } from "../../core/random";
 
 export { MinionState } from "./state";
 
@@ -103,6 +103,17 @@ export abstract class Minion extends Entity {
         }
     }
 
+    protected moveFor(
+        dir: Vector3,
+        options: { ignoredEntities?: readonly Entity[]; strict?: boolean } = {}
+    ): Vector3 {
+        // 投げ状態のときはスロープに触れたときに移動を止めるようにする
+        return super.moveFor(dir, {
+            ...options,
+            strict: this.state == MinionState.thrown,
+        });
+    }
+
     override onCollisionEnter(entity: Entity): void {
         if(entity instanceof Player){
             if(this.isFree){
@@ -127,7 +138,7 @@ export abstract class Minion extends Entity {
         const MIN_DISTANCE_SQ = 0.000001;
         const MAX_ANGLE = Math.PI / 8;
         let dir = new Vector2();
-        const ignoreEntities: Entity[] = [];
+        const ignoredEntities: Entity[] = [];
         for(const object of this.game.objects){
             if(!this.isAvoidanceTarget(object)) continue;
 
@@ -141,13 +152,15 @@ export abstract class Minion extends Entity {
                 if(distanceSq2d < MIN_DISTANCE_SQ){
                     if(!(object instanceof Minion)) continue;
                     diff2d = calcSeparationDirection(this, object);
+                    // MIN_DISTANCE だけ離す
                     dir.addInPlace(diff2d.scale(Math.pow(MIN_DISTANCE_SQ, -1 / 2)));
                 }
                 else{
+                    // 引力 r / |r|^3 を加える (引力係数は1)
                     dir.addInPlace(diff2d.scale(Math.pow(distanceSq2d, -3 / 2)));
                 }
                 if(object instanceof Minion){
-                    ignoreEntities.push(object);
+                    ignoredEntities.push(object);
                 }
             }
         }
@@ -155,9 +168,9 @@ export abstract class Minion extends Entity {
             dir = dir.normalize().scale(VELOCITY * deltaSeconds);
 
             // Minionごとにベクトルを少しずらして重ならないようにする
-            const angle = (Math.random() * 2 - 1) * MAX_ANGLE;
+            const angle = Random.uniform(-MAX_ANGLE, MAX_ANGLE);
             dir = rotate2D(dir, angle);
-            this.moveFor(toVector3(dir), { ignoreEntities });
+            this.moveFor(toVector3(dir), { ignoredEntities });
         }
     }
 
@@ -193,7 +206,7 @@ export abstract class Minion extends Entity {
             const angleStep = Math.ceil(attempt / 2) * Math.PI / 8;
             const angle = attempt === 0 ? 0 : angleStep * (attempt % 2 === 0 ? 1 : -1);
             const moveVector = rotate2D(dir.normalize(), angle).scale(MOVE_DISTANCE);
-            this.moveFor(toVector3(moveVector), { ignoreEntities: overlaps });
+            this.moveFor(toVector3(moveVector), { ignoredEntities: overlaps });
         }
     }
 
@@ -216,11 +229,12 @@ export abstract class Minion extends Entity {
         this.resolveLandingOverlap();
     }
 
-    protected override shouldBlockMovement(entity: Entity): boolean {
+    protected override isBlockedBy(entity: Entity): boolean {
+        // 投げ状態であれば、他のMinionを無視して移動する
         if(this.state === MinionState.thrown && entity instanceof Minion){
             return false;
         }
-        return super.shouldBlockMovement(entity);
+        return super.isBlockedBy(entity);
     }
 
     public becomeFollowing(player: Player, src?: string){
@@ -247,45 +261,47 @@ export abstract class Minion extends Entity {
         if(!this.follower) return;
         this.position = calcHeldPosition(this.follower.position, this.follower.rotation.z);
     }
-    private calcThrownLaunchDirection(): Vector3{
-        if(!this.follower){
-            throw new Error("Player is null");
-        }
-
-        return calcThrownLaunchDirection(
-            this.follower.cursor.unrotatedPosition,
-            this.scene.gravity.z,
-            this.thrownMaxHeight,
-        );
-    }
-    private isSpawnBlocked(position: Vector3): boolean{
+    
+    /**
+     * 指定した位置に Minion が瞬間移動可能か
+     */
+    private canSpawnAt(position: Vector3): boolean{
         const candidate = new Sphere(position, this.size / 2);
-        return this.game.objects.some(object => {
-            if(object === this || object === this.follower) return false;
-            if(object instanceof Player) return false;
-            if(!object.checkCollisions) return false;
-            return candidate.intersects(object.figure);
+        return this.game.objects.every(object => {
+            if(object.id === this.id) return true;
+            if(object instanceof Player) return true;
+            if(!object.checkCollisions) return true;
+            return !candidate.intersects(object.figure);
         });
     }
-    private calcSafeThrownPosition(): Vector3{
+    /**
+     * Minionを投げる際の、Minionの安全な初期位置
+     */
+    private calcThrownSafeInitialPosition(): Vector3{
         if(!this.follower){
             throw new Error("Player should not be null");
         }
 
         const playerPos = this.follower.position;
         const playerRot = this.follower.rotation.z;
-        const launchDirection = this.calcThrownLaunchDirection();
-        let candidate = calcThrownStartPosition(playerPos, playerRot);
+        const initialVelocity = calcThrownInitialVelocity(
+            this.follower.cursor.unrotatedPosition,
+            Vector3.Zero(),
+            Player.SPEED,
+            this.scene.gravity.z,
+            this.thrownMaxHeight,
+        );
+        let candidate = calcThrownInitialPosition(playerPos, playerRot);
 
-        if(!this.isSpawnBlocked(candidate)){
+        if(this.canSpawnAt(candidate)){
             return candidate;
         }
 
         const STEP = 1 / 64;
         const MAX_TRAVEL = Cursor.CURSOR_DISTANCE + this.size;
         let traveled = 0;
-        while(traveled < MAX_TRAVEL && this.isSpawnBlocked(candidate)){
-            candidate = candidate.subtract(launchDirection.scale(STEP));
+        while(traveled < MAX_TRAVEL && !this.canSpawnAt(candidate)){
+            candidate = candidate.subtract(initialVelocity.scale(STEP));
             traveled += STEP;
         }
 
@@ -296,13 +312,13 @@ export abstract class Minion extends Entity {
         if(!this.follower){
             throw new Error("Player should not be null");
         }
-        this.position = this.calcSafeThrownPosition();
+        this.position = this.calcThrownSafeInitialPosition();
 
         const MAX_ANGLE = Math.PI / 128;
 
         // Minionごとにベクトルを少しずらして重ならないようにする
-        const deltaAngle = (Math.random() * 2 - 1) * MAX_ANGLE;
-        const velocity = calcThrownVelocity(
+        const deltaAngle = Random.uniform(-MAX_ANGLE, MAX_ANGLE);
+        const velocity = calcThrownInitialVelocity(
             this.follower.cursor.unrotatedPosition,
             this.follower.velocity,
             Player.SPEED,

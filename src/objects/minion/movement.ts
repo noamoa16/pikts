@@ -2,6 +2,10 @@ import { Vector2, Vector3 } from "#vendor/babylon";
 import { hashInt32, toVector2, toVector3 } from "../../core/math";
 import { Entity } from "../entity";
 
+/**
+ * Minion が Player に対して追従する際の移動ベクトルを計算
+ * 距離を `MIN_DISTANCE` (0.5) 〜 `MAX_DISTANCE` (1.0) の範囲に収める方向に移動
+ */
 export function calcMinionFollowMoveVector(
     minionPosition: Vector3,
     playerPosition: Vector3,
@@ -33,6 +37,9 @@ export function calcMinionFollowMoveVector(
     return Vector3.Zero();
 }
 
+/**
+ * 二つのエンティティ間で、衝突を回避するために使用する「分離方向」 (単位ベクトル) を計算
+ */
 export function calcSeparationDirection(self: Entity, entity: Entity): Vector2 {
     const lowId = Math.min(self.id, entity.id);
     const highId = Math.max(self.id, entity.id);

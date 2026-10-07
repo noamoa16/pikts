@@ -19,7 +19,8 @@ export class Slope extends Entity {
     }
 
     public override get figure(): Figure {
-        return new SlopeFigure(this.position, this.size, this.size, this.upward);
+        // 坂道の先にあるブロックに登るため、1 / 64 だけ高くする
+        return new SlopeFigure(this.position, this.size, 2 * this.size, 1 / 2 * (1 + 1 / 64), this.upward);
     }
 
     override update(_: number): void {

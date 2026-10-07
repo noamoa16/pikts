@@ -6,6 +6,7 @@ export enum Shape {
     Sphere,
     RectangularPrism,
     Cube,
+    Cylinder,
     Slope,
 }
 export function shapeToString(shape: Shape){
@@ -13,6 +14,7 @@ export function shapeToString(shape: Shape){
         [Shape.Sphere]: "Sphere",
         [Shape.RectangularPrism]: "RectangularPrism",
         [Shape.Cube]: "Cube",
+        [Shape.Cylinder]: "Cylinder",
         [Shape.Slope]: "Slope",
     }[shape];
 }
@@ -70,16 +72,16 @@ export abstract class Figure {
     }
 
     /** この図形は、other に衝突することなく dir の方向にどれだけ移動可能か */
-    public space(other: Figure, _dir: Vector3): number {
+    public space(other: Figure, _dir: Vector3, strict: boolean = false): number {
     
         // dir がゼロなら無限に移動できる
         if (_dir.lengthSquared() === 0) return Infinity;
 
         // Shapeの順序的に、this < other にする
         if(this.shape > other.shape){
-            return other.space(this, _dir.negate());
+            return other.space(this, _dir.negate(), strict);
         }
-        return getFigureImpl(this, other).space(_dir);
+        return getFigureImpl(this, other).space(_dir, strict);
     }
 
     public abstract scaled(_: number): Figure;
@@ -130,18 +132,40 @@ export class Cube extends RectangularPrism {
     }
 }
 
+export class Cylinder extends Figure {
+    public readonly shape: Shape = Shape.Cylinder;
+    public get radius() { return this._radius; }
+    private set radius(value: number) { this._radius = value; }
+    public get height() { return this._height; }
+    private set height(value: number) { this._height = value; }
+    constructor(center: Vector3, private _radius: number, private _height: number){
+        super(center);
+    }
+    public scaled(ratio: number): Cylinder {
+        return new Cylinder(
+            this.center,
+            this.radius * ratio,
+            this.height * ratio,
+        );
+    }
+}
+
 export class Slope extends Figure {
     public readonly shape: Shape = Shape.Slope;
     public get width() { return this._width; }
     private set width(v: number) { this._width = v; }
-    public get height() { return this._height; }
-    private set height(v: number) { this._height = v; }
+    public get length() { return this._length; }
+    private set length(v: number) { this._length = v; }
+    public get gradient() { return this._gradient; }
+    private set gradient(v: number) { this._gradient = v; }
+    public get height() { return this.length * this.gradient; }
     public get upward() { return this._upward; }
     private set upward(v: Dir4) { this._upward = v; }
     constructor(
         center: Vector3,
         private _width: number,
-        private _height: number,
+        private _length: number,
+        private _gradient: number,
         private _upward: Dir4 = Dir4.Right, // 上昇する方向
     ) {
         super(center);
@@ -150,32 +174,34 @@ export class Slope extends Figure {
         return new Slope(
             this.center,
             this.width * ratio,
-            this.height * ratio,
+            this.length * ratio,
+            this.gradient,
             this.upward,
         );
     }
-    public half(): Slope {
+    public scaledAsTriangle(ratio: number): Slope {
         const gap = invRotateByDir4(
             new Vector3(
-                this.height / 2,
+                (1 - ratio) * this.length / 2,
                 0,
-                -this.height / 4,
+                (1 - ratio) * -this.height / 2,
             ),
             this.upward,
         );
         return new Slope(
             this.center.add(gap),
             this.width,
-            this.height / 2,
+            this.length * ratio,
+            this.gradient,
             this.upward,
         );
     }
-    public rectPrism(): RectangularPrism {
+    public rectPrism(alpha: number = 0): RectangularPrism {
         const center = this.center.clone();
         let edgeLengths = new Vector3(
-            2 * this.height,
+            this.length,
             this.width,
-            this.height,
+            this.height * (1 + alpha),
         );
         const rotatedCenter = rotateByDir4(center, this.upward);
         if(this.upward == Dir4.Front || this.upward == Dir4.Back){

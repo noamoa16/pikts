@@ -1,5 +1,5 @@
 import { Vector3 } from "#vendor/babylon";
-import { clamp } from "../../core/math";
+import { clamp, rotate2D } from "../../core/math";
 import { RectangularPrism, invRotateByDir4, Slope, Sphere } from "../figure";
 import { getFigureImpl, IFigureImpl } from "./figureImpl";
 import { Sphere2RectPrism } from "./sphere2RectPrism";
@@ -8,20 +8,20 @@ export class Sphere2Slope implements IFigureImpl {
     constructor(private sphere: Sphere, private slope: Slope){}
 
     public intersects(): boolean{
-        return this.intersectsFull(); // 仮
+        return this.intersectsFull();
     }
 
     /**
-     * スロープの右下半分だけで計算
+     * スロープの右下 7/8 だけで計算
      */
-    public intersectsHalf(): boolean{
-        return new Sphere2Slope(this.sphere, this.slope.half()).intersectsFull();
+    public intersectsScaled(): boolean{
+        return new Sphere2Slope(this.sphere, this.slope.scaledAsTriangle(7 / 8)).intersectsFull();
     }
     
     /**
      * 完全なスロープとして計算
      */
-    public intersectsFull(): boolean{
+    public intersectsFull(alpha: number = 0): boolean{
         const center = invRotateByDir4(
             this.slope.center.subtract(this.sphere.center),
             this.slope.upward,
@@ -30,18 +30,26 @@ export class Sphere2Slope implements IFigureImpl {
         // 直方体とみなして計算
         const straightRect = this.slope.rectPrism();
 
-        // xz平面上で -arctan(1/2) 回転させ、sqrt(5)倍にスケールを拡大
-        const originSphere = new Sphere(Vector3.Zero(), Math.sqrt(5) * this.sphere.radius);
+        /*
+        xz平面上で -arctan(g) 回転
+        θ = -arctan(g)
+        tanθ = -g
+        cosθ = 1 / sqrt(1 + g^2)
+        sinθ = -g / sqrt(1 + g^2)
+        */
+        const originSphere = new Sphere(Vector3.Zero(), this.sphere.radius);
+        const rectHeight = this.slope.height;
+        const rotatedPoint = rotate2D(center.x, center.z, -Math.atan(this.slope.gradient + alpha));
         const diagRect = new RectangularPrism(
             new Vector3(
-                2 * center.x + center.z,
+                rotatedPoint.x,
                 center.y,
-                -center.x + 2 * center.z - this.slope.height,
+                rotatedPoint.y - rectHeight,
             ),
             new Vector3(
-                5 * this.slope.height,
+                Math.sqrt(1 + this.slope.gradient * this.slope.gradient) * this.slope.length, // 1 / cosθ * length
                 this.slope.width,
-                2 * this.slope.height,
+                2 * rectHeight,
             ),
         );
         
@@ -51,15 +59,20 @@ export class Sphere2Slope implements IFigureImpl {
         );
     }
     
-    public space(_dir: Vector3): number{
-        return this.spaceHalf(_dir); // 仮
+    public space(_dir: Vector3, strict: boolean = false): number{
+        if(strict){
+            return this.spaceFull(_dir);
+        }
+        else{
+            return this.spaceScaled(_dir);
+        }
     }
 
     /**
-     * 右下半分のスロープとして計算
+     * 右下 7/8 のスロープとして計算
      */
-    public spaceHalf(_dir: Vector3): number{
-        return new Sphere2Slope(this.sphere, this.slope.half()).spaceFull(_dir);
+    public spaceScaled(_dir: Vector3): number{
+        return new Sphere2Slope(this.sphere, this.slope.scaledAsTriangle(7 / 8)).spaceFull(_dir);
     }
 
     /**
@@ -137,8 +150,23 @@ export class Sphere2Slope implements IFigureImpl {
     /**
      * 重複を解消するためにどれだけ上に動けばいいか
      */
-    public resolveOverlapUpDistance(): number{
-        if(!this.intersects()) return 0;
+    public resolveOverlapUpDistance(alpha: number = 0): number{
+        /*
+        y = gx
+        gx - y = 0
+        点と直線の距離は
+        d = |gx - y| / sqrt(1 + g^2)
+        y+ で距離が増加するので
+        d = (-gx + y) / sqrt(1 + g^2)
+        斜面の傾きは θ = arctan(g)
+        1/cosθ = sqrt(1 + g^2)
+        y方向の距離は sqrt(1 + g^2) * d
+        球の直径分は sqrt(1 + g^2) * r
+        u = sqrt(1 + g^2) * (d + r) 
+          = -gx + y + sqrt(1 + g^2) * r
+        */
+
+        if(!this.intersectsFull(alpha)) return 0;
 
         const center = invRotateByDir4(
             this.slope.center.subtract(this.sphere.center),
@@ -152,9 +180,12 @@ export class Sphere2Slope implements IFigureImpl {
             return 0;
         }
 
+        const g = this.slope.gradient + alpha;
         const top = center.z + this.slope.height / 2;
-        const u = (-center.x + 2 * center.z + Math.sqrt(5 * rSq)) / 2;
+        const d = -g * center.x + center.z;
+        const r = Math.sqrt((1 + g * g) * rSq);
+        const u = d + r;
 
-        return Math.min(u, top + Math.sqrt(rSq));
+        return clamp(u, 0, top + Math.sqrt(rSq));
     }
 }

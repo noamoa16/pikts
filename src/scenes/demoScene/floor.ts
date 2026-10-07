@@ -8,6 +8,7 @@ import {
     Texture,
     Vector3,
 } from "#vendor/babylon";
+import { Random } from "../../core/random";
 import { Game } from "../../game";
 import { Block } from "../../objects/block";
 
@@ -61,9 +62,9 @@ function drawGrassTexture(texture: DynamicTexture): void {
     context.fillRect(0, 0, width, height);
 
     for (let index = 0; index < 1800; index += 1) {
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        const size = 2 + Math.random() * 6;
+        const x = Random.uniform(0, width);
+        const y = Random.uniform(0, height);
+        const size = Random.uniform(2, 8);
         context.fillStyle =
             index % 3 === 0 ? "#5e8d31" : index % 3 === 1 ? "#8cc152" : "#6fa83b";
         context.fillRect(x, y, size, size);
@@ -72,14 +73,14 @@ function drawGrassTexture(texture: DynamicTexture): void {
     context.lineWidth = 1;
 
     for (let index = 0; index < 700; index += 1) {
-        const x = Math.random() * width;
-        const y = Math.random() * height;
-        const bladeHeight = 4 + Math.random() * 8;
+        const x = Random.uniform(0, width);
+        const y = Random.uniform(0, height);
+        const bladeHeight = Random.uniform(4, 12);
         context.strokeStyle =
             index % 2 === 0 ? "rgba(53, 94, 25, 0.55)" : "rgba(167, 214, 103, 0.35)";
         context.beginPath();
         context.moveTo(x, y + bladeHeight / 2);
-        context.lineTo(x + (Math.random() - 0.5) * 3, y - bladeHeight / 2);
+        context.lineTo(x + Random.uniform(-1.5, 1.5), y - bladeHeight / 2);
         context.stroke();
     }
 

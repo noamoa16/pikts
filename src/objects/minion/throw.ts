@@ -6,6 +6,9 @@ const HELD_DIFF_VERTICAL = 1 / 8;
 const THROWN_DIFF_HORIZONTAL = 1 / 4;
 const THROWN_DIFF_VERTICAL = 1 / 2;
 
+/**
+ * プレイヤーの位置と向きから、Minionが掴まれているときの位置を計算
+ */
 export function calcHeldPosition(playerPosition: Vector3, playerRotation: number): Vector3 {
     return playerPosition.add(new Vector3(
         HELD_DIFF_HORIZONTAL * Math.cos(playerRotation),
@@ -14,7 +17,10 @@ export function calcHeldPosition(playerPosition: Vector3, playerRotation: number
     ));
 }
 
-export function calcThrownStartPosition(playerPosition: Vector3, playerRotation: number): Vector3 {
+/**
+ * プレイヤーの位置と向きから、Minionが投げられるときの初期位置を計算
+ */
+export function calcThrownInitialPosition(playerPosition: Vector3, playerRotation: number): Vector3 {
     return playerPosition.add(new Vector3(
         THROWN_DIFF_HORIZONTAL * Math.cos(playerRotation),
         THROWN_DIFF_HORIZONTAL * Math.sin(playerRotation),
@@ -22,34 +28,13 @@ export function calcThrownStartPosition(playerPosition: Vector3, playerRotation:
     ));
 }
 
-export function calcThrownLaunchDirection(
-    cursorPosition: Vector2,
-    gravityZ: number,
-    thrownMaxHeight: number,
-): Vector3 {
-    const g = Math.abs(gravityZ);
-    const p0 = new Vector2(HELD_DIFF_HORIZONTAL, HELD_DIFF_VERTICAL);
-    const xMax = cursorPosition.length();
-    const yMax = thrownMaxHeight;
-    const verticalVelocity = Math.sqrt(2 * g * (yMax - p0.y));
-    const horizontalVelocity =
-        g * (xMax - p0.x) / (verticalVelocity + Math.sqrt(2 * g * yMax));
-    const rot = atan(cursorPosition);
-
-    return new Vector3(
-        horizontalVelocity * Math.cos(rot),
-        horizontalVelocity * Math.sin(rot),
-        verticalVelocity,
-    ).normalize();
-}
-
-export function calcThrownVelocity(
+export function calcThrownInitialVelocity(
     cursorPosition: Vector2,
     playerVelocity: Vector3,
     playerSpeed: number,
     gravityZ: number,
     thrownMaxHeight: number,
-    deltaAngle: number,
+    deltaAngle: number = 0,
 ): Vector3 {
     // 重力加速度 g
     // 初期位置                    : p0      = (p0.x, p0.y)
