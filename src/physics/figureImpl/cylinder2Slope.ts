@@ -231,7 +231,7 @@ export class Cylinder2Slope implements IFigureImpl {
                     0,
                 )
             );
-            return new Cylinder2RectPrism(cylinder, rect).space(_dir);
+            return new Cylinder2RectPrism(cylinder, rect).space(dir);
         };
         return Math.min(vsSlope(), vsRect());
     }

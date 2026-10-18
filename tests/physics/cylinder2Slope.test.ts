@@ -101,6 +101,12 @@ describe("Cylinder2Slope.spaceFull", () => {
         expect(impl.spaceFull(new Vector3(0, 0, 1))).toBe(1);
     });
 
+    it("回転したスロープの側面に向かう移動方向をローカル座標で判定する", () => {
+        const cylinder = new Cylinder(new Vector3(-3, 0, -3 / 2), 1 / 2, 2);
+        const slope = new Slope(new Vector3(0, 0, 0), 2, 4, 1 / 2, Dir4.Front);
+        const impl = new Cylinder2Slope(cylinder, slope);
+        expect(impl.spaceFull(new Vector3(1, 0, 0))).toBeCloseTo(3 / 2);
+    });
     it("円柱がスロープのy-方向側面スレスレで落下する", () => {
         const left = new Cylinder(new Vector3(0, -3, 0), 2, 4);
         const right = new Slope(new Vector3(0, 0, 0), 2, 4, 1 / 2);

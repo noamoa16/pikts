@@ -2,7 +2,6 @@ import { Vector3 } from "#vendor/babylon";
 import { clamp } from "../../core/math";
 import { Cylinder, Sphere } from "../figure";
 import { IFigureImpl } from "./figureImpl";
-import { findFirstContactDistance } from "./piecewiseQuadratic";
 
 export class Sphere2Cylinder implements IFigureImpl {
     constructor(private sphere: Sphere, private cylinder: Cylinder){}
@@ -21,93 +20,56 @@ export class Sphere2Cylinder implements IFigureImpl {
     space(_dir: Vector3): number {
         if(this.intersects()) return 0;
 
-        /*
-        (x - u_x * t)^2 + (y - u_y * t)^2 + (z - u_z * t)^2 = r_s^2
-        (x - c_x)^2 + (y ^ c_y)^2 = r_c^2 and c_z - h/2 <= z <= c_z + h/2
-
-        距離関数：
-        d(t)^2 = max((u_x * t - c_x)^2 + (u_y * t - c_y)^2 - r_c^2, 0) + 
-                 clamp(0, u_z * t - (c_z - h/2), u_z * t - (c_z + h/2))^2
-        */
         const c = this.cylinder.center.subtract(this.sphere.center);
-        const h = this.cylinder.height;
         const dir = _dir.clone().normalize();
-        const rs = this.sphere.radius;
-        const rc = this.cylinder.radius;
+        const halfHeight = this.cylinder.height / 2;
+        const radius = this.sphere.radius;
+        const contactRadius = radius - Number.EPSILON;
+        const cylinderRadius = this.cylinder.radius;
 
-        const ts = [0, Infinity];
+        // 円柱までの距離は、有限円柱への最近点距離で求める。
+        // 上下端の角では水平距離と垂直距離を個別に膨らませる近似が
+        // 誤った早期接触を返すため、端面と側面を含む実際の距離を使う。
+        const distanceSquaredAt = (time: number): number => {
+            const x = dir.x * time - c.x;
+            const y = dir.y * time - c.y;
+            const z = dir.z * time - c.z;
+            const radialDistance = Math.hypot(x, y);
+            const radialGap = Math.max(radialDistance - cylinderRadius, 0);
+            const verticalGap = Math.max(Math.abs(z) - halfHeight, 0);
+            return radialGap * radialGap + verticalGap * verticalGap;
+        };
 
-        /*
-        xy平面上で、ベクトルが円と交わる時刻を求める
-        ベクトル：u * t
-        円：|(x, y) - c| = r_c
-        |u * t - c| = r_c
-        t^2 - 2 * (u * c) * t + |c|^2 - r_c^2 = 0
-        */
-        const B = -dir.dot(c);
-        const C = c.lengthSquared() - rc * rc;
-        const D = B * B - C;
-        if(D == 0){
-            const root = -B;
-            if(root > 0){
-                ts.push(root);
+        // 円柱を囲む球から、衝突し得る探索区間の上限を作る。
+        const cylinderBoundRadius = Math.hypot(cylinderRadius, halfHeight);
+        const upperBound = c.length() + cylinderBoundRadius + radius;
+
+        // 凸な円柱までの距離関数を三分探索して、レイ上の最小距離を探す。
+        let low = 0;
+        let high = upperBound;
+        for (let i = 0; i < 80; i++) {
+            const first = (2 * low + high) / 3;
+            const second = (low + 2 * high) / 3;
+            if (distanceSquaredAt(first) <= distanceSquaredAt(second)) {
+                high = second;
+            } else {
+                low = first;
             }
         }
-        else if(D > 0){
-            const root1 = -B - Math.sqrt(D);
-            const root2 = -B + Math.sqrt(D);
-            if(root1 > 0){
-                ts.push(root1);
-            }
-            if(root2 > 0){
-                ts.push(root2);
-            }
-        }
+        const closestTime = (low + high) / 2;
+        if (distanceSquaredAt(closestTime) > contactRadius * contactRadius) return Infinity;
 
-        /*
-        z軸上で、ベクトルが面と交わる時刻を求める
-        */
-        if(dir.z != 0){
-            for (const x of [c.z - h / 2, c.z + h / 2]) {
-                const t = x / dir.z;
-                if (t > 0) ts.push(t);
+        // t=0 は intersects() で除外済み。最初の接触点を二分探索する。
+        low = 0;
+        high = closestTime;
+        for (let i = 0; i < 80; i++) {
+            const mid = (low + high) / 2;
+            if (distanceSquaredAt(mid) <= contactRadius * contactRadius) {
+                high = mid;
+            } else {
+                low = mid;
             }
         }
-
-        ts.sort((a, b) => a - b);
-
-        // 距離関数の区間ごとに計算
-        // d(t)^2 - r_s^2 = At^2 + 2Bt + C の形にする
-        return findFirstContactDistance(ts, mid => {
-            let A = 0, B = 0, C = -rs * rs;
-
-            const ut = dir.scale(mid); // u * t (tは代表値)
-
-            // xy平面上で中心点同士の距離
-            const dSq = (ut.x - c.x) * (ut.x - c.x) + (ut.y - c.y) * (ut.y - c.y);
-            if(dSq > rc * rc){
-                //   (u_x * t - c_x)^2 + (u_y * t - c_y)^2 - r_c^2
-                // = (u_x^2 + u_y^2) t^2 - 2 (u_x * c_x + u_y * c_y) t + c_x^2 + c_y^2 - r_c^2
-                A += dir.x * dir.x + dir.y * dir.y;
-                B += -(dir.x * c.x + dir.y * c.y);
-                C = c.x * c.x + c.y * c.y - (rs + rc) * (rs + rc);
-            }
-
-            // z方向で中心点同士の距離
-            if(ut.z < c.z - h / 2){
-                const q = c.z - h / 2;
-                A += dir.z * dir.z;
-                B += -q * dir.z;
-                C += q * q;
-            }
-            else if(ut.z > c.z + h / 2){
-                const q = c.z + h / 2;
-                A += dir.z * dir.z;
-                B += -q * dir.z;
-                C += q * q;
-            }
-
-            return { a: A, b: B, c: C };
-        });
+        return high;
     }
 }
