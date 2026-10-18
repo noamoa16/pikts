@@ -2,6 +2,7 @@ import { Vector3 } from "#vendor/babylon";
 import { clamp } from "../../core/math";
 import { RectangularPrism, Sphere } from "../figure";
 import { IFigureImpl } from "./figureImpl";
+import { findFirstContactDistance } from "./piecewiseQuadratic";
 
 export class Sphere2RectPrism implements IFigureImpl {
     constructor(private sphere: Sphere, private rectPrism: RectangularPrism){}
@@ -63,17 +64,11 @@ export class Sphere2RectPrism implements IFigureImpl {
         ts.sort((a, b) => a - b);
 
         // 各区間では AABB までの距離^2 が二次関数になる
-        for (let j = 0; j < ts.length - 1; j++) {
-            const a = ts[j];
-            const b = ts[j + 1];
-
+        return findFirstContactDistance(ts, mid => {
             // 区間の代表座標を計算する用のサンプル時刻
-            const mid = (a + b) / 2;
-
             // q：立方体の座標 (衝突点)
             // u: 移動ベクトル
-            // |u * t - q| = r
-            // |u|^2 * t^2 - 2 * (q * u) * t + |q|^2 - r^2 = 0
+            // |u * t - q|^2 - r^2 = At^2 + 2Bt + C
             let A = 0, B = 0, C = -r * r;
             for (let i = 0; i < 3; i++) {
                 const x = u[i] * mid;
@@ -90,24 +85,7 @@ export class Sphere2RectPrism implements IFigureImpl {
                 }
             }
 
-            if (A === 0) continue;
-
-            // 近付かない or 遠ざかる方向に動く
-            if (B >= 0){
-                continue;
-            }
-
-            const disc = B * B - A * C; // D/4 = b^2 - ac
-            if (disc <= 0) continue;
-
-            const sqrtDisc = Math.sqrt(disc);
-            const t1 = (-B - sqrtDisc) / A; // 接触開始時刻
-            // 接触終了時刻 は使わない
-            const t = Math.max(a, t1); // 区間内で初めに接触する時刻
-
-            return t;
-        }
-
-        return Infinity;
+            return { a: A, b: B, c: C };
+        });
     }
 }

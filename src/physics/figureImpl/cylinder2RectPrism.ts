@@ -2,6 +2,7 @@ import { Vector3 } from "#vendor/babylon";
 import { clamp } from "../../core/math";
 import { RectangularPrism, Cylinder } from "../figure";
 import { IFigureImpl } from "./figureImpl";
+import { findFirstContactDistance } from "./piecewiseQuadratic";
 
 export class Cylinder2RectPrism implements IFigureImpl {
     constructor(private cylinder: Cylinder, private rectPrism: RectangularPrism){}
@@ -54,22 +55,16 @@ export class Cylinder2RectPrism implements IFigureImpl {
         }
         ts.sort((a, b) => a - b);
 
-        for (let j = 0; j < ts.length - 1; j++) {
-            const a = ts[j];
-            const b = ts[j + 1];
-
+        return findFirstContactDistance(ts, mid => {
             // 区間の代表座標を計算する用のサンプル時刻
-            const mid = (a + b) / 2;
-
             // z座標が衝突しているか
             if(!(min[2] <= dir.z * mid && dir.z * mid <= max[2])){
-                continue;
+                return null;
             }
 
             // q：立方体の座標 (衝突点)
             // u: 移動ベクトル
-            // |u * t - q| = r
-            // |u|^2 * t^2 - 2 * (q * u) * t + |q|^2 - r^2 = 0
+            // |u * t - q|^2 - r^2 = At^2 + 2Bt + C
             let A = 0, B = 0, C = -r * r;
             for (let i = 0; i < 2; i++) {
                 const x = u[i] * mid;
@@ -89,34 +84,19 @@ export class Cylinder2RectPrism implements IFigureImpl {
             if (A === 0){
                 // x,y座標の条件を満たさないときはスキップ
                 if(C === 0 || dir.z === 0){
-                    continue;
+                    return null;
                 }
                 const t1 = min[2] / dir.z;
                 const t2 = max[2] / dir.z;
                 if(t1 >= 0){
-                    return t1;
+                    return { contactDistance: t1 };
                 }
                 if(t2 >= 0){
-                    return t2;
+                    return { contactDistance: t2 };
                 }
             }
 
-            // 近付かない or 遠ざかる方向に動く
-            if (B >= 0){
-                continue;
-            }
-
-            const disc = B * B - A * C; // D/4 = b^2 - ac
-            if (disc <= 0) continue;
-
-            const sqrtDisc = Math.sqrt(disc);
-            const t1 = (-B - sqrtDisc) / A; // 接触開始時刻
-            // 接触終了時刻 は使わない
-            const t = Math.max(a, t1); // 区間内で初めに接触する時刻
-
-            return t;
-        }
-
-        return Infinity;
+            return { a: A, b: B, c: C };
+        });
     }
 }

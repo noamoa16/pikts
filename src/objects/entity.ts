@@ -1,16 +1,11 @@
 import {
     Mesh, Scene, Vector3,
-    CreateSphere, CreateBox,
-    CreateCylinder,
 } from "#vendor/babylon";
-import {
-    Cube, Dir4, dir4ToVector2, Figure, Shape, shapeToString, Sphere, Slope,
-    Cylinder,
-} from "../physics/figure";
+import { Dir4, Figure, Shape, Sphere, Slope } from "../physics/figure";
 import { Game } from "../game";
-import { atan, clearLow16Bits, hashInt32 } from "../core/math";
-import { createSlopeMesh } from "../physics/mesh";
+import { clearLow16Bits, hashInt32 } from "../core/math";
 import { Sphere2Slope } from "../physics/figureImpl/sphere2Slope";
+import { createEntityFigure, createEntityShape } from "./entityShape";
 
 /** 実体を持つオブジェクト */
 export abstract class Entity {
@@ -58,16 +53,7 @@ export abstract class Entity {
 
     // 形状
     public get figure(): Figure {
-        switch(this.shape){
-            case Shape.Sphere:
-                return new Sphere(this.position, this.size / 2);
-            case Shape.Cube:
-                return new Cube(this.position, this.size);
-            case Shape.Cylinder:
-                return new Cylinder(this.position, this.size / 2, this.size / 2);
-            default:
-                throw new Error(`figure() not implemented for ${shapeToString(this.shape)}`);
-        }
+        return createEntityFigure(this.shape, this.position, this.size);
     }
 
     // 衝突判定
@@ -94,60 +80,15 @@ export abstract class Entity {
         this.size = size;
         this.fall = options.fall;
         this.game.objects.push(this);
-        switch(this.shape){
-            case Shape.Sphere:
-                this.mesh = CreateSphere(this.name, { diameter: this.size }, this.scene);
-                this.mesh.ellipsoid = new Vector3(
-                    this.size / 2,
-                    this.size / 2,
-                    this.size / 2,
-                );
-                break;
-            case Shape.Cube:
-                this.mesh = CreateBox(
-                    this.name,
-                    { width: this.size, height: this.size, depth: this.size },
-                    this.scene,
-                );
-                break;
-            case Shape.Cylinder:
-                this.mesh = CreateCylinder(
-                    this.name,
-                    {
-                        height: this.size / 2,
-                        diameter: this.size,
-                    },
-                    this.scene,
-                );
-                break;
-            case Shape.Slope:
-                this.mesh = createSlopeMesh(
-                    this.scene,
-                    new Slope(
-                        position.clone(),
-                        size,
-                        2 * size,
-                        1 / 2,
-                        options.upward ?? Dir4.Right,
-                    ),
-                );
-                break;
-            default:
-                throw new Error(`Entity() not implemented for ${shapeToString(this.shape)}`);
-        }
-        if(this.shape == Shape.Slope){
-            this.mesh.rotation = new Vector3(
-                0,
-                0,
-                atan(dir4ToVector2(options.upward ?? Dir4.Right)),
-            );
-        }
-        else if(this.shape == Shape.Sphere || this.shape == Shape.Cube){
-            this.mesh.rotation = new Vector3(0, 0, Math.PI * 3 / 2); // 前方を向く
-        }
-        else if(this.shape == Shape.Cylinder){
-            this.mesh.rotation = new Vector3(Math.PI / 2, 0, 0);
-        }
+        const shapeDefinition = createEntityShape(this.shape, {
+            scene: this.scene,
+            name: this.name,
+            size: this.size,
+            position,
+            upward: options.upward ?? Dir4.Right,
+        });
+        this.mesh = shapeDefinition.mesh;
+        this.mesh.rotation = shapeDefinition.initialRotation;
         this.mesh.isPickable = false; // クリックによるオブジェクト選択を無効化 (軽量化のため)
         this.mesh.checkCollisions = true;
         this.groundingPosition = position.clone();

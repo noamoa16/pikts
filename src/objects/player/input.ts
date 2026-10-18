@@ -1,5 +1,6 @@
 import { Vector2 } from "#vendor/babylon";
-import type { PlayerAction } from "../../actions/action";
+import { isMoveAction, type PlayerAction } from "../../actions/action";
+import { getKeyboardAction } from "../../actions/keyboardBindings";
 
 type InputSource = "keyboard" | "virtual";
 
@@ -13,13 +14,6 @@ const initialActionState = (): Record<PlayerAction, boolean> => ({
     whistle: false,
     hold: false,
 });
-
-const keyboardActions: Partial<Record<string, PlayerAction>> = {
-    KeyW: "up",
-    KeyS: "down",
-    KeyA: "left",
-    KeyD: "right",
-};
 
 export class PlayerInput {
     private readonly state: PlayerInputState = {
@@ -59,8 +53,8 @@ export class PlayerInput {
 
     private createKeyHandler(pressed: boolean): (event: KeyboardEvent) => void {
         return (event: KeyboardEvent) => {
-            const action = keyboardActions[event.code];
-            if (action) {
+            const action = getKeyboardAction(event);
+            if (action && isMoveAction(action)) {
                 this.setInput("keyboard", action, pressed);
             }
         };

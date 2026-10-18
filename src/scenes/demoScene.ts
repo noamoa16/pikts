@@ -15,6 +15,7 @@ import { createBoundaryWalls } from "./demoScene/walls";
 import { RedMinion } from "../objects/minion/redMinion";
 import { Game } from "../game";
 import { isMoveAction } from "../actions/action";
+import { getKeyboardAction } from "../actions/keyboardBindings";
 import { RedOnion } from "../objects/onion/redOnion";
 import { Slope } from "../objects/slope";
 import { Dir4 } from "../physics/figure";
@@ -75,42 +76,28 @@ export function createDemoScene(engine: Engine): Scene {
         }
     );
     const updateKeyboardState = (event: KeyboardEvent, pressed: boolean) => {
-        switch (event.key) {
-            case "[":
-                dpad.setKeyboardPressed("whistle", pressed);
+        const action = getKeyboardAction(event);
+        if (!action) return;
+
+        dpad.setKeyboardPressed(action, pressed);
+        switch (action) {
+            case "whistle":
                 player.whistle.active = pressed;
                 break;
-            case "w":
-            case "W":
-                dpad.setKeyboardPressed("up", pressed);
-                break;
-            case "a":
-            case "A":
-                dpad.setKeyboardPressed("left", pressed);
-                break;
-            case "s":
-            case "S":
-                dpad.setKeyboardPressed("down", pressed);
-                break;
-            case "d":
-            case "D":
-                dpad.setKeyboardPressed("right", pressed);
-                break;
-            case "f":
-            case "F":
-                dpad.setKeyboardPressed("rotate", pressed);
+            case "rotate":
                 if (pressed) {
                     game.camera.startRotate(player.rotation.z);
                 }
                 break;
-            case "Enter":
-                dpad.setKeyboardPressed("hold", pressed);
+            case "hold":
                 if (pressed) {
                     player.tryHoldMinion();
                 }
                 else {
                     player.tryReleaseMinion();
                 }
+                break;
+            default:
                 break;
         }
     };

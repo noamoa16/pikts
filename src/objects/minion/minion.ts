@@ -12,10 +12,8 @@ import { Player } from "../player/player";
 import { rotate2D, toVector2, toVector3 } from "../../core/math";
 import { Cursor } from "../player/cursor";
 import { MinionState } from "./state";
-import {
-    calcMinionFollowMoveVector,
-    calcSeparationDirection,
-} from "./movement";
+import { calcSeparationDirection } from "./movement";
+import { updateMinionState, type MinionStateUpdateActions } from "./updateState";
 import {
     calcHeldPosition,
     calcThrownInitialPosition,
@@ -33,6 +31,23 @@ export abstract class Minion extends Entity {
     public state: MinionState = MinionState.free;
     public follower: Player | null = null;
 
+    private readonly stateUpdateActions: MinionStateUpdateActions = {
+        moveFor: direction => { this.moveFor(direction); },
+        avoidDuplication: deltaSeconds => this.avoidDuplication(deltaSeconds),
+        updateHeldPosition: () => this.updateHeldPosition(),
+        isThrownLanded: () => this.velocity.z === 0 || this.velocity.z > this.prevVelocity.z,
+        finishThrow: () => {
+            console.log('Minion 着地', {
+                id: this.id,
+                position: this.position,
+                velocity: this.velocity.clone(),
+                prevVelocity: this.prevVelocity.clone(),
+            });
+            this.becomeFree();
+        },
+        setCollisionsEnabled: enabled => { this.checkCollisions = enabled; },
+    };
+
     // 掴み/投げ
     protected static readonly _THROWN_MAX_HEIGHT = 2.25;
     private get thrownMaxHeight(){ return (this.constructor as typeof Minion)._THROWN_MAX_HEIGHT; }
@@ -49,48 +64,7 @@ export abstract class Minion extends Entity {
 
     override update(deltaSeconds: number): void {
         super.update(deltaSeconds);
-
-        if(this.state === MinionState.following && this.follower){
-            const moveVector = calcMinionFollowMoveVector(
-                this.groundingPosition,
-                this.follower.groundingPosition,
-                this.speed,
-                deltaSeconds,
-            );
-            this.moveFor(moveVector);
-            if(moveVector.lengthSquared() === 0){
-                this.avoidDuplication(deltaSeconds);
-            }
-            this.checkCollisions = true;
-        }
-        else if(this.state === MinionState.held && this.follower){
-            this.updateHeldPosition();
-            this.checkCollisions = false;
-        }
-        else if(this.state === MinionState.thrown){
-            if(
-                this.velocity.z == 0 || // 衝突
-                this.velocity.z > this.prevVelocity.z // 落下速度が減衰した
-            ){
-                console.log('Minion 着地', {
-                    id: this.id,
-                    position: this.position,
-                    velocity: this.velocity.clone(),
-                    prevVelocity: this.prevVelocity.clone(),
-                })
-                
-                // 投げ状態終了
-                this.becomeFree();
-            }
-            this.checkCollisions = true;
-        }
-        else if(this.state === MinionState.free){
-            this.avoidDuplication(deltaSeconds);
-            this.checkCollisions = true;
-        }
-        else{
-            this.checkCollisions = true;
-        }
+        updateMinionState(this, deltaSeconds, this.stateUpdateActions);
 
         // 色
         const material = this.mesh.material;

@@ -3,6 +3,7 @@ import { clamp } from "../../core/math";
 import { RectangularPrism, invRotateByDir4, Slope, Cylinder } from "../figure";
 import { Cylinder2RectPrism } from "./cylinder2RectPrism";
 import { IFigureImpl } from "./figureImpl";
+import { findFirstContactDistance } from "./piecewiseQuadratic";
 
 export class Cylinder2Slope implements IFigureImpl {
     constructor(private cylinder: Cylinder, private slope: Slope){}
@@ -155,16 +156,11 @@ export class Cylinder2Slope implements IFigureImpl {
             }
             ts.sort((a, b) => a - b);
 
-            for (let j = 0; j < ts.length - 1; j++) {
-                const a = ts[j];
-                const b = ts[j + 1];
-
+            return findFirstContactDistance(ts, mid => {
                 // 区間の代表座標を計算する用のサンプル時刻
-                const mid = b !== Infinity ? (a + b) / 2 : a + 1;
-
                 // z座標が衝突しているか
                 if(!(c.z - h / 2 <= dir.z * mid && dir.z * mid <= c.z + h / 2)){
-                    continue;
+                    return null;
                 }
 
                 let A = 0, B = 0, C = -r * r;
@@ -213,25 +209,8 @@ export class Cylinder2Slope implements IFigureImpl {
                     }
                 }
 
-                if (A === 0) continue;
-
-                // 近付かない or 遠ざかる方向に動く
-                if (B >= 0){
-                    continue;
-                }
-
-                const disc = B * B - A * C; // D/4 = b^2 - ac
-                if (disc <= 0) continue;
-
-                const sqrtDisc = Math.sqrt(disc);
-                const t1 = (-B - sqrtDisc) / A; // 接触開始時刻
-                // 接触終了時刻 は使わない
-                const t = Math.max(a, t1); // 区間内で初めに接触する時刻
-
-                return t;
-            }
-
-            return Infinity;
+                return { a: A, b: B, c: C };
+            });
         };
 
         const vsRect = () => {
