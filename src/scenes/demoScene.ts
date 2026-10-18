@@ -6,6 +6,7 @@ import {
     Vector3,
 } from "#vendor/babylon";
 import { DebugInfo } from "../ui/debug/debugInfo";
+import { MinionInspector } from "../ui/debug/minionInspector";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
@@ -55,6 +56,7 @@ export function createDemoScene(engine: Engine): Scene {
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);
+    const minionInspector = IS_DEV ? new MinionInspector(game, engine) : null;
     const dpad = new Dpad(
         engine,
        (action, pressed) => {
@@ -123,6 +125,7 @@ export function createDemoScene(engine: Engine): Scene {
             const fpsInfoCollision = `Collision: ${game.frameTimerCollision.averageTime.toFixed(2)} ms`;
             debugInfo.text = `${playerInfo}, ${fpsInfoUpdate}, ${fpsInfoCollision}`;
         }
+        minionInspector?.update();
     });
 
     // 画面がリサイズされたら

@@ -24,5 +24,6 @@ export { VertexBuffer } from "@babylonjs/core";
 export { Texture } from "@babylonjs/core/Materials/Textures/texture";
 export { VertexData } from "@babylonjs/core/Meshes/mesh.vertexData";
 export { MeshBuilder } from "@babylonjs/core/Meshes/meshBuilder";
+export { HighlightLayer } from "@babylonjs/core/Layers/highlightLayer";
 import "@babylonjs/core/Collisions/collisionCoordinator";
 import "@babylonjs/core/Lights/Shadows/shadowGeneratorSceneComponent";

@@ -54,6 +54,7 @@ export abstract class Minion extends Entity {
 
     constructor(game: Game, position: Vector3) {
         super(game, "minion", Shape.Sphere, 0.125, position, { fall: true });
+        this.mesh.isPickable = true;
         this.speed = 3;
         this.collisionEventsEnabled = true;
 
