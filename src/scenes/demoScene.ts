@@ -18,7 +18,7 @@ import { isMoveAction } from "../actions/action";
 import { RedOnion } from "../objects/onion/redOnion";
 import { Slope } from "../objects/slope";
 import { Dir4 } from "../physics/figure";
-import { Carriable } from "../objects/carriable/carriable";
+import { Pellet1 } from "../objects/carriable/pellet1";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -50,7 +50,7 @@ export function createDemoScene(engine: Engine): Scene {
         }
     }
     new RedOnion(game, new Vector3(-3, 3, 0));
-    new Carriable(game, new Vector3(-2, -1, 0), 0.5); // 仮、後で 1 pellet に変更予定
+    new Pellet1(game, new Vector3(-2, -1, 0));
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);

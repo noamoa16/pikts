@@ -10,7 +10,7 @@ import { Entity } from "../entity";
 
 export class Carriable extends Entity {
     constructor(game: Game, position: Vector3, size: number = 1) {
-        super(game, "carriable", Shape.Sphere, size, position, { fall: true }); // 円柱にしたい (仮に旧にしている)
+        super(game, "carriable", Shape.Cylinder, size, position, { fall: true });
 
         const material = new StandardMaterial(`${this.name}.material`, this.scene);
         material.backFaceCulling = false;

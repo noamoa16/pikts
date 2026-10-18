@@ -14,7 +14,8 @@ export class Sphere2Cylinder implements IFigureImpl {
             0,
         );
         const dz = clamp(0, center.z - this.cylinder.height / 2, center.z + this.cylinder.height / 2);
-        return dxy * dxy + dz * dz < this.sphere.radius * this.sphere.radius;
+        return dxy * dxy + dz * dz <
+            (this.sphere.radius - Number.EPSILON) * (this.sphere.radius - Number.EPSILON);
     }
     space(_dir: Vector3): number {
         if(this.intersects()) return 0;

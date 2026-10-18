@@ -26,7 +26,7 @@ describe("Sphere2Slope.intersectsFull", () => {
     });
     it("球とスロープが斜面で接する場合に false を返す", () => {
         const left = new Sphere(new Vector3(2, 0, 2), Math.sqrt(5) - delta);
-        const right = new Slope(new Vector3(3, 0, 0), 2, 2, 1 / 2);
+        const right = new Slope(new Vector3(3, 0, 0), 2, 4, 1 / 2);
         const impl = new Sphere2Slope(left, right);
         expect(impl.intersectsFull()).toBe(false);
     });

@@ -147482,4 +147482,4 @@ function Mct() {
 //#region src/vendor/babylon.ts
 Mct(), hp(), lu(), FK(), _i();
 //#endregion
-export { Zh as ArcRotateCamera, hi as Axis, bp as Camera, Ci as Color3, wi as Color4, Ab as CreateBox, Mb as CreateCylinder, Kx as CreateLines, qx as CreatePlane, Yx as CreateSphere, Zx as CreateTorus, nS as CreateTube, tg as DirectionalLight, MO as DynamicTexture, Yn as Engine, rg as HemisphericLight, Wpe as MeshBuilder, F as Quaternion, zd as Scene, Tb as ShadowGenerator, jO as StandardMaterial, K as Texture, N as Vector2, P as Vector3, q as VertexBuffer, Np as VertexData };
+export { Zh as ArcRotateCamera, hi as Axis, bp as Camera, Ci as Color3, wi as Color4, Ab as CreateBox, Mb as CreateCylinder, Kx as CreateLines, qx as CreatePlane, Yx as CreateSphere, Zx as CreateTorus, nS as CreateTube, tg as DirectionalLight, MO as DynamicTexture, Yn as Engine, rg as HemisphericLight, Pm as Material, Wpe as MeshBuilder, F as Quaternion, zd as Scene, Tb as ShadowGenerator, jO as StandardMaterial, K as Texture, N as Vector2, P as Vector3, q as VertexBuffer, Np as VertexData };

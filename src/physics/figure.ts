@@ -4,9 +4,9 @@ import { getFigureImpl } from "./figureImpl/figureImpl";
 
 export enum Shape {
     Sphere,
+    Cylinder,
     RectangularPrism,
     Cube,
-    Cylinder,
     Slope,
 }
 export function shapeToString(shape: Shape){

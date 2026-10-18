@@ -18,6 +18,7 @@ export { CreateTube } from "@babylonjs/core/Meshes/Builders/tubeBuilder";
 export type { Mesh } from "@babylonjs/core/Meshes/mesh";
 export { Scene } from "@babylonjs/core/scene";
 export { StandardMaterial } from "@babylonjs/core/Materials/standardMaterial";
+export { Material } from "@babylonjs/core/Materials/material";
 export { DynamicTexture } from "@babylonjs/core/Materials/Textures/dynamicTexture";
 export { VertexBuffer } from "@babylonjs/core";
 export { Texture } from "@babylonjs/core/Materials/Textures/texture";

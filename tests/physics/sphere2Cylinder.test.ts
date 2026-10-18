@@ -46,10 +46,48 @@ describe("Figure.intersects", () => {
 });
 
 describe("Figure.space", () => {
-    it("球-円柱の移動時に最初の接触距離を返す", () => {
+    it("球-円柱のx+方向の移動時に最初の接触距離を返す", () => {
         const left = new Sphere(new Vector3(0, 0, 0), 1);
         const right = new Cylinder(new Vector3(3, 0, 0), 1, 2);
         expect(left.space(right, new Vector3(1, 0, 0))).toBe(1);
         expect(right.space(left, new Vector3(-1, 0, 0))).toBe(1);
+    });
+    it("球-円柱のx+y+方向の移動時に最初の接触距離を返す", () => {
+        const left = new Sphere(new Vector3(0, 0, 0), 1);
+        const right = new Cylinder(new Vector3(3, 3, 0), 1, 2);
+        expect(left.space(right, new Vector3(1, 1, 0))).toBeCloseTo(3 * Math.SQRT2 - 2);
+        expect(right.space(left, new Vector3(-1, -1, 0))).toBeCloseTo(3 * Math.SQRT2 - 2);
+    });
+    it("球が円柱に接触しているときに 0 を返す", () => {
+        const moving = new Sphere(new Vector3(Math.SQRT2 - delta, Math.SQRT2 - delta, 0), 1);
+        const stationary = new Cylinder(new Vector3(0, 0, 0), 1, 2);
+        expect(moving.space(stationary, new Vector3(1, 1, 0))).toBe(0);
+        expect(stationary.space(moving, new Vector3(-1, -1, 0))).toBe(0);
+    });
+    it("球が円柱から遠ざかる方向に移動したときに Infinity を返す", () => {
+        const moving = new Sphere(new Vector3(Math.SQRT2 + delta, Math.SQRT2 + delta, 0), 1);
+        const stationary = new Cylinder(new Vector3(0, 0, 0), 1, 2);
+        expect(moving.space(stationary, new Vector3(1, 1, 0))).toBe(Infinity);
+        expect(stationary.space(moving, new Vector3(-1, -1, 0))).toBe(Infinity);
+    });
+
+    it("球-円柱がギリギリですれ違うときに Infinity を返す", () => {
+        const moving = new Sphere(new Vector3(0, 0, 0), 1);
+        const stationary = new Cylinder(new Vector3(2, 2, 0), 1, 2);
+        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
+        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(Infinity);
+    });
+    it("球-円柱がギリギリで衝突する", () => {
+        const moving = new Sphere(new Vector3(0, 0, 0), 1);
+        const stationary = new Cylinder(new Vector3(2, 2 - delta, 0), 1, 2);
+        expect(moving.space(stationary, new Vector3(1, 0, 0))).toBeCloseTo(2 - Math.sqrt(2 * delta));
+        expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBeCloseTo(2 - Math.sqrt(2 * delta));
+    });
+
+    it("球-円柱のz方向の移動時に最初の接触距離を返す", () => {
+        const left = new Sphere(new Vector3(0, 0, 3), 1);
+        const right = new Cylinder(new Vector3(0, 0, 0), 1, 2);
+        expect(left.space(right, new Vector3(0, 0, -1))).toBe(1);
+        expect(right.space(left, new Vector3(0, 0, 1))).toBe(1);
     });
 });
