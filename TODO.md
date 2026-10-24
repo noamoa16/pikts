@@ -1,12 +1,7 @@
+- Minionの運搬処理のコメント記述＆実装
+  - Minionをリリースする処理が無さそう
+- Minionが運搬物に引っ掛かる問題の修正 (Minionが運搬物から離れて移動するように、Codexに修正させるべきかも)
 - プロンプト：
-  - src/ui/debug/minionInspector.ts について、Minionにカーソルを合わせた状態でクリックをした場合に、そのMinion情報を表示し続けるようにしてください。他の場所をクリックしたり、Minion自体が存在しなくなった (nullになる) らそのモードは解除してください。
-  - src/objects/carriable/pellet1.ts について、オブジェクトの両面に白い文字で数字の１を書くようにしてください。
-  - Minionについて、free状態のときに、自分から半径1以内にCarriableなオブジェクト(ただし、carriers.length < maxCarriers)が存在すれば、そのCarriableオブジェクトの中から最も距離が近いCarriableオブジェクトに向かって移動するようにしてください。
-    - 半径1以内にCarriableオブジェクトが存在しなくなった場合は移動をやめてください。
-    - 自分から半径0.5以内にCarriableなオブジェクトが存在すれば、そのMinionの状態をcarryingに変更し、carriedフィールドにそのCarriableオブジェクトをセットしてください。
-    - carryingのstateのとき
-      - freeと同じで笛に反応します。
-      - carriedにセットしているCarriableオブジェクトの中心に向かって移動します。距離が「carriedの radius + 1/32」以下になったら移動をやめます。それ以外の場合では自発的に移動せず、速度は0を保ちます。
   - このレポジトリで、リファクタリングできそうな箇所はありますか？より良い関数名の提案も含め。なお、コードの変更はまだ行わないでください。
 - update系の処理をGameに集約する
 - 衝突判定の高速化

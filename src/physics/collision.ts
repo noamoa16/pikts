@@ -2,7 +2,7 @@ import { Entity } from "../objects/entity";
 
 export class Collision {
     private activeCollisionPairs = new Set<string>();
-    public dispatchEvents(objects: Entity[]): void {
+    public dispatchCollisionEvents(objects: Entity[]): void {
         const nextCollisionPairs = new Set<string>();
         objects = objects.filter(o => o.collisionEventsEnabled);
         objects.forEach(o => o.mesh.computeWorldMatrix(true));
@@ -50,6 +50,6 @@ export class Collision {
     }
 }
 
-function createCollisionPairKey(leftIndex: number, rightIndex: number): string {
-    return `${leftIndex}:${rightIndex}`;
+function createCollisionPairKey(leftId: number, rightId: number): string {
+    return `${leftId}:${rightId}`;
 }

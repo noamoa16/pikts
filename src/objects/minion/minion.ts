@@ -37,8 +37,15 @@ export abstract class Minion extends Entity {
      * Minionの更新時アクション
      */
     private readonly stateUpdateActions: MinionStateUpdateActions = {
-        moveFor: direction => { this.moveFor(direction); },
-        avoidDuplication: deltaSeconds => this.avoidDuplication(deltaSeconds),
+        moveFor: (direction, ignoredEntities) => { this.moveFor(direction, { ignoredEntities }); },
+        separateFromOverlappingEntities: deltaSeconds => this.separateFromOverlappingEntities(deltaSeconds),
+        getNearbyCarriables: maxDistance => this.getNearbyCarriables(maxDistance),
+        tryBecomeCarrying: carriable => this.tryBecomeCarrying(carriable),
+        stopSelfMovement: () => {
+            this.velocity.x = 0;
+            this.velocity.y = 0;
+        },
+        stopMovement: () => { this.velocity = Vector3.Zero(); },
         updateHeldPosition: () => this.updateHeldPosition(),
         isThrownLanded: () => this.velocity.z === 0 || this.velocity.z > this.prevVelocity.z,
         finishThrow: () => {
@@ -96,7 +103,7 @@ export abstract class Minion extends Entity {
 
     override onCollisionEnter(entity: Entity): void {
         if(entity instanceof Player){
-            if(this.isFree){
+            if(this.state == MinionState.free){
                 this.becomeFollowing(entity, 'プレイヤーと衝突');
             }
         }
@@ -113,7 +120,7 @@ export abstract class Minion extends Entity {
     }
 
     /** 他の Figure と (x, y) 座標が重複するのを避けるように動く */
-    private avoidDuplication(deltaSeconds: number){
+    private separateFromOverlappingEntities(deltaSeconds: number){
         const VELOCITY = 0.5;
         const DISTANCE_DELTA = 0.01;
         const MIN_DISTANCE_SQ = 0.000001;
@@ -163,7 +170,7 @@ export abstract class Minion extends Entity {
         return object instanceof Player;
     }
 
-    private resolveLandingOverlap(): void {
+    private separateFromOverlappingMinions(): void {
         const MOVE_DISTANCE = this.size + 0.01;
         const MIN_DISTANCE_SQ = 0.000001;
         const MAX_ATTEMPTS = 12;
@@ -200,14 +207,10 @@ export abstract class Minion extends Entity {
         });
     }
 
-    public get isFree(): boolean{
-        return this.state == MinionState.free;
-    }
-
     public becomeFree(){
         this.state = MinionState.free;
         this.velocity = Vector3.Zero();
-        this.resolveLandingOverlap();
+        this.separateFromOverlappingMinions();
     }
 
     protected override isBlockedBy(entity: Entity): boolean {
@@ -219,7 +222,8 @@ export abstract class Minion extends Entity {
     }
 
     public becomeFollowing(player: Player, src?: string){
-        if(this.state == MinionState.free){
+        if(this.state == MinionState.free || this.state == MinionState.carrying){
+            this.carried = null;
             this.state = MinionState.following;
             this.follower = player;
             this.velocity.z = 1;
@@ -246,11 +250,28 @@ export abstract class Minion extends Entity {
     public tryBecomeCarrying(carriable: Carriable): boolean{
         if(this.state == MinionState.free && carriable.tryAddCarrier(this)){
             this.state = MinionState.carrying;
+            this.carried = carriable;
             return true;
         }
         else{
             return false;
         }
+    }
+
+    private getNearbyCarriables(maxDistance: number): Carriable[] {
+        const maxDistanceSquared = maxDistance * maxDistance;
+        return this.game.objects
+            .filter((object): object is Carriable =>
+                object instanceof Carriable && object.canAcceptCarrier,
+            )
+            .map(carriable => ({
+                carriable,
+                distanceSquared: (carriable.position.x - this.position.x) ** 2
+                    + (carriable.position.y - this.position.y) ** 2,
+            }))
+            .filter(candidate => candidate.distanceSquared <= maxDistanceSquared)
+            .sort((a, b) => a.distanceSquared - b.distanceSquared)
+            .map(candidate => candidate.carriable);
     }
     
     /**

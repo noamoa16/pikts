@@ -6,7 +6,7 @@ import {
     Vector3,
 } from "#vendor/babylon";
 import { DebugInfo } from "../ui/debug/debugInfo";
-import { MinionInspector } from "../ui/debug/minionInspector";
+import { EntityInspector } from "../ui/debug/entityInspector";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
@@ -15,8 +15,7 @@ import { createDemoFloor } from "./demoScene/floor";
 import { createBoundaryWalls } from "./demoScene/walls";
 import { RedMinion } from "../objects/minion/redMinion";
 import { Game } from "../game";
-import { isMoveAction } from "../actions/action";
-import { getKeyboardAction } from "../actions/keyboardBindings";
+import { isMoveAction, type Action } from "../actions/action";
 import { RedOnion } from "../objects/onion/redOnion";
 import { Slope } from "../objects/slope";
 import { Dir4 } from "../physics/figure";
@@ -56,32 +55,8 @@ export function createDemoScene(engine: Engine): Scene {
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);
-    const minionInspector = IS_DEV ? new MinionInspector(game, engine) : null;
-    const dpad = new Dpad(
-        engine,
-       (action, pressed) => {
-            if(isMoveAction(action)){
-                player.setVirtualInput(action, pressed);
-            }
-            else if(action === 'rotate'){
-                if(pressed){
-                    game.camera.startRotate(player.rotation.z);
-                }
-            }
-            else if(action === 'whistle'){
-                player.whistle.active = pressed;
-            }
-            else if(action === 'hold'){
-                if(pressed) player.tryHoldMinion();
-                else player.tryReleaseMinion();
-            }
-        }
-    );
-    const updateKeyboardState = (event: KeyboardEvent, pressed: boolean) => {
-        const action = getKeyboardAction(event);
-        if (!action) return;
-
-        dpad.setKeyboardPressed(action, pressed);
+    const entityInspector = IS_DEV ? new EntityInspector(game, engine) : null;
+    const handleNonMovementAction = (action: Action, pressed: boolean) => {
         switch (action) {
             case "whistle":
                 player.whistle.active = pressed;
@@ -103,11 +78,22 @@ export function createDemoScene(engine: Engine): Scene {
                 break;
         }
     };
-    document.addEventListener("keydown", (event: KeyboardEvent) => {
-        updateKeyboardState(event, true);
-    });
-    document.addEventListener("keyup", (event: KeyboardEvent) => {
-        updateKeyboardState(event, false);
+    const dpad = new Dpad(
+        engine,
+       (action, pressed) => {
+            if(isMoveAction(action)){
+                player.setVirtualInput(action, pressed);
+            }
+            else {
+                handleNonMovementAction(action, pressed);
+            }
+        }
+    );
+    player.setKeyboardActionHandler((action, pressed) => {
+        dpad.setKeyboardPressed(action, pressed);
+        if (!isMoveAction(action)) {
+            handleNonMovementAction(action, pressed);
+        }
     });
 
     // 定期実行
@@ -125,7 +111,7 @@ export function createDemoScene(engine: Engine): Scene {
             const fpsInfoCollision = `Collision: ${game.frameTimerCollision.averageTime.toFixed(2)} ms`;
             debugInfo.text = `${playerInfo}, ${fpsInfoUpdate}, ${fpsInfoCollision}`;
         }
-        minionInspector?.update();
+        entityInspector?.update();
     });
 
     // 画面がリサイズされたら

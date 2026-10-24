@@ -20,6 +20,9 @@ export class Carriable extends Entity {
     public get minCarriers(){ return (this.constructor as typeof Carriable)._MIN_CARRIERS; }
     public get maxCarriers(){ return (this.constructor as typeof Carriable)._MAX_CARRIERS; }
     protected carriers: Minion[] = [];
+    public get carrierCount(): number { return this.carriers.length; }
+    public get radius(): number { return this.size / 2; }
+    public get canAcceptCarrier(): boolean { return this.carriers.length < this.maxCarriers; }
 
     public state: CarriableState = CarriableState.free;
 
@@ -43,7 +46,7 @@ export class Carriable extends Entity {
     }
 
     public tryAddCarrier(minion: Minion): boolean{
-        if(this.carriers.length + 1 <= this.maxCarriers){
+        if(this.canAcceptCarrier){
             this.carriers.push(minion);
             return true;
         }

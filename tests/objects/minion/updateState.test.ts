@@ -7,7 +7,7 @@ import { updateMinionState, type MinionStateUpdateActions } from "../../../src/o
 function makeActions(): MinionStateUpdateActions {
     return {
         moveFor: vi.fn(),
-        avoidDuplication: vi.fn(),
+        separateFromOverlappingEntities: vi.fn(),
         updateHeldPosition: vi.fn(),
         isThrownLanded: vi.fn(() => false),
         finishThrow: vi.fn(),
@@ -31,7 +31,7 @@ describe("updateMinionState", () => {
         const actions = makeActions();
         updateMinionState(minion, 1 / 60, actions);
         expect(actions.moveFor).not.toHaveBeenCalled();
-        expect(actions.avoidDuplication).not.toHaveBeenCalled();
+        expect(actions.separateFromOverlappingEntities).not.toHaveBeenCalled();
         expect(actions.setCollisionsEnabled).toHaveBeenCalledWith(true);
         expect(actions.setCollisionsEnabled).toHaveBeenCalledTimes(1);
     });
@@ -49,7 +49,7 @@ describe("updateMinionState", () => {
         expect(move.x).toBeCloseTo(0.3);
         expect(move.y).toBe(0);
         expect(move.z).toBe(0);
-        expect(actions.avoidDuplication).not.toHaveBeenCalled();
+        expect(actions.separateFromOverlappingEntities).not.toHaveBeenCalled();
         expect(actions.setCollisionsEnabled).toHaveBeenCalledWith(true);
     });
 
@@ -63,7 +63,7 @@ describe("updateMinionState", () => {
         updateMinionState(minion, 0.1, actions);
         expect(actions.moveFor).toHaveBeenCalledTimes(1);
         expect(vi.mocked(actions.moveFor).mock.calls[0][0].lengthSquared()).toBe(0);
-        expect(actions.avoidDuplication).toHaveBeenCalledWith(0.1);
+        expect(actions.separateFromOverlappingEntities).toHaveBeenCalledWith(0.1);
     });
 
     it("掴まれていて追従対象がいる場合は位置を更新し、衝突判定を無効にする", () => {
@@ -103,7 +103,7 @@ describe("updateMinionState", () => {
         const minion = makeMinion({ state: MinionState.free });
         const actions = makeActions();
         updateMinionState(minion, 0.1, actions);
-        expect(actions.avoidDuplication).toHaveBeenCalledWith(0.1);
+        expect(actions.separateFromOverlappingEntities).toHaveBeenCalledWith(0.1);
         expect(actions.setCollisionsEnabled).toHaveBeenCalledWith(true);
     });
 });

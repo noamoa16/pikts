@@ -1,18 +1,25 @@
 import { Vector3 } from "#vendor/babylon";
+import { toVector2 } from "../../core/math";
 import type { Minion } from "./minion";
 import { MinionState } from "./state";
-import { calcMinionFollowMoveVector } from "./movement";
+import { calcCarriableApproachMoveVector, calcMinionFollowMoveVector } from "./movement";
+import type { Carriable } from "../carriable/carriable";
+import type { Entity } from "../entity";
 
 /**
  * Minionの更新時アクションをまとめたクラス
  */
 export type MinionStateUpdateActions = {
-    moveFor(direction: Vector3): void;
-    avoidDuplication(deltaSeconds: number): void;
+    moveFor(direction: Vector3, ignoredEntities?: readonly Entity[]): void;
+    separateFromOverlappingEntities(deltaSeconds: number): void;
     updateHeldPosition(): void;
     isThrownLanded(): boolean;
     finishThrow(): void;
     setCollisionsEnabled(enabled: boolean): void;
+    getNearbyCarriables(maxDistance: number): Carriable[];
+    tryBecomeCarrying(carriable: Carriable): boolean;
+    stopSelfMovement(): void;
+    stopMovement(): void;
 };
 
 export function updateMinionState(
@@ -31,7 +38,10 @@ export function updateMinionState(
             updateThrown(actions);
             return;
         case MinionState.free:
-            updateFree(deltaSeconds, actions);
+            updateFree(minion, deltaSeconds, actions);
+            return;
+        case MinionState.carrying:
+            updateCarrying(minion, deltaSeconds, actions);
             return;
         default:
             actions.setCollisionsEnabled(true);
@@ -56,7 +66,7 @@ function updateFollowing(
     );
     actions.moveFor(moveVector);
     if (moveVector.lengthSquared() === 0) {
-        actions.avoidDuplication(deltaSeconds);
+        actions.separateFromOverlappingEntities(deltaSeconds);
     }
     actions.setCollisionsEnabled(true);
 }
@@ -81,9 +91,52 @@ function updateThrown(actions: MinionStateUpdateActions): void {
 }
 
 function updateFree(
+    minion: Minion,
     deltaSeconds: number,
     actions: MinionStateUpdateActions,
 ): void {
-    actions.avoidDuplication(deltaSeconds);
+    const nearby = actions.getNearbyCarriables(1);
+    const inPickupRange = nearby.find(carriable =>
+        toVector2(minion.position.subtract(carriable.position)).length() <= 0.5,
+    );
+    if (inPickupRange && actions.tryBecomeCarrying(inPickupRange)) {
+        actions.stopSelfMovement();
+        actions.setCollisionsEnabled(true);
+        return;
+    }
+
+    const target = nearby[0];
+    if (target) {
+        actions.stopSelfMovement();
+        actions.moveFor(calcCarriableApproachMoveVector(
+            minion.position,
+            target.position,
+            minion.speed,
+            deltaSeconds,
+            0.5,
+        ));
+    }
+    else {
+        actions.stopSelfMovement();
+        actions.separateFromOverlappingEntities(deltaSeconds);
+    }
+    actions.setCollisionsEnabled(true);
+}
+
+function updateCarrying(
+    minion: Minion,
+    deltaSeconds: number,
+    actions: MinionStateUpdateActions,
+): void {
+    actions.stopMovement();
+    if (minion.carried) {
+        actions.moveFor(calcCarriableApproachMoveVector(
+            minion.position,
+            minion.carried.position,
+            minion.speed,
+            deltaSeconds,
+            minion.carried.radius + 1 / 32,
+        ), [minion.carried]);
+    }
     actions.setCollisionsEnabled(true);
 }

@@ -53,7 +53,7 @@ export class Game {
 
     private dispatchCollisionEvents(): void {
         this.frameTimerCollision.measure(() => {
-            this.collision.dispatchEvents(this.objects);
+            this.collision.dispatchCollisionEvents(this.objects);
         });
     }
 

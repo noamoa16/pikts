@@ -14,6 +14,7 @@ import { Cursor } from "./cursor";
 import { Whistle } from "./whistle";
 import { Minion, MinionState } from "../minion/minion";
 import { PlayerInput } from "./input";
+import type { Action } from "../../actions/action";
 
 export class Player extends Entity {
     public static readonly SPEED = 4.0;
@@ -121,6 +122,10 @@ export class Player extends Entity {
 
     public setVirtualInput(action: PlayerAction, pressed: boolean): void {
         this.input.setVirtual(action, pressed);
+    }
+
+    public setKeyboardActionHandler(handler: (action: Action, pressed: boolean) => void): void {
+        this.input.setActionHandler(handler);
     }
 
     public removeEvents(){

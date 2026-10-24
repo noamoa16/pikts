@@ -37,6 +37,24 @@ export function calcMinionFollowMoveVector(
     return Vector3.Zero();
 }
 
+/** Minion を Carriable に近付け、指定した距離で止める移動ベクトルを計算 */
+export function calcCarriableApproachMoveVector(
+    minionPosition: Vector3,
+    carriablePosition: Vector3,
+    speed: number,
+    deltaSeconds: number,
+    stoppingDistance: number,
+): Vector3 {
+    const toTarget = toVector2(carriablePosition).subtract(toVector2(minionPosition));
+    const distance = toTarget.length();
+    if (distance <= stoppingDistance || distance === 0) {
+        return Vector3.Zero();
+    }
+    return toVector3(toTarget.normalize().scale(
+        Math.min(speed * deltaSeconds, distance - stoppingDistance),
+    ));
+}
+
 /**
  * 二つのエンティティ間で、衝突を回避するために使用する「分離方向」 (単位ベクトル) を計算
  */

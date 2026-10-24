@@ -3,7 +3,7 @@ import { Game } from "../../game";
 import { Sphere } from "../../physics/figure";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
-import { Minion } from "../minion/minion";
+import { Minion, MinionState } from "../minion/minion";
 import { Cursor } from "./cursor";
 import { Player } from "./player";
 
@@ -119,7 +119,7 @@ export class Whistle {
             for(const object of objects){
                 if(object instanceof Minion){
                     if(object.figure.intersects(whistleFigure)){
-                        if(object.isFree){
+                        if([MinionState.free, MinionState.carrying].includes(object.state)){
                             object.becomeFollowing(this.player, '笛で呼ばれた');
                         }
                     }

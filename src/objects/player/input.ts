@@ -1,5 +1,5 @@
 import { Vector2 } from "#vendor/babylon";
-import { isMoveAction, type PlayerAction } from "../../actions/action";
+import { isMoveAction, type Action, type PlayerAction } from "../../actions/action";
 import { getKeyboardAction } from "../../actions/keyboardBindings";
 
 type InputSource = "keyboard" | "virtual";
@@ -20,8 +20,7 @@ export class PlayerInput {
         keyboard: initialActionState(),
         virtual: initialActionState(),
     };
-    private readonly onKeyDown = this.createKeyHandler(true);
-    private readonly onKeyUp = this.createKeyHandler(false);
+    private actionHandler: ((action: Action, pressed: boolean) => void) | null = null;
 
     public constructor(private readonly target: Window = window) {
         this.target.addEventListener("keydown", this.onKeyDown);
@@ -46,18 +45,32 @@ export class PlayerInput {
         this.setVirtual("right", false);
     }
 
+    public setActionHandler(handler: (action: Action, pressed: boolean) => void): void {
+        this.actionHandler = handler;
+    }
+
     public dispose(): void {
         this.target.removeEventListener("keydown", this.onKeyDown);
         this.target.removeEventListener("keyup", this.onKeyUp);
     }
 
-    private createKeyHandler(pressed: boolean): (event: KeyboardEvent) => void {
-        return (event: KeyboardEvent) => {
-            const action = getKeyboardAction(event);
-            if (action && isMoveAction(action)) {
-                this.setInput("keyboard", action, pressed);
-            }
-        };
+    private readonly onKeyDown = (event: KeyboardEvent): void => {
+        this.handleKeyboardEvent(event, true);
+    };
+
+    private readonly onKeyUp = (event: KeyboardEvent): void => {
+        this.handleKeyboardEvent(event, false);
+    };
+
+    private handleKeyboardEvent(event: KeyboardEvent, pressed: boolean): void {
+        const action = getKeyboardAction(event);
+        if (!action) {
+            return;
+        }
+        if (isMoveAction(action)) {
+            this.setInput("keyboard", action, pressed);
+        }
+        this.actionHandler?.(action, pressed);
     }
 
     private setInput(
