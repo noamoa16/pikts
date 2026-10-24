@@ -37,13 +37,12 @@ export function calcThrownInitialVelocity(
     deltaAngle: number = 0,
 ): Vector3 {
     // 重力加速度 g
-    // 初期位置                    : p0      = (p0.x, p0.y)
-    // 初期速度                    : v0      = (v0.x, v0.y)
-    // 頂点までの対空時間          : t1      = v0.y / g
-    // 最大高度                    : y_max   = p0.y + 1/2 * v0.y ^ 2 / g
-    // 頂点から着地までの対空時間  : t2 - t1 = sqrt(2 * y_max / g)
-    // 水平移動距離                : x_max   = p0.x + v0.x * t2
-    //                             :         = p0.x + v0.x * {v0.y / g + sqrt(2 * y_max / g)}
+    // 初期位置 : p0 = (p0.x, p0.y)
+    // 初期速度 : v0 = (v0.x, v0.y)
+    // 頂点までの対空時間 : t1 = v0.y / g
+    // 最大高度 : y_max = p0.y + 1/2 * v0.y ^ 2 / g
+    // 頂点から着地までの対空時間 : t2 - t1 = sqrt(2 * y_max / g)
+    // 水平移動距離 : x_max = p0.x + v0.x * t2 = p0.x + v0.x * {v0.y / g + sqrt(2 * y_max / g)}
 
     // v0.y = sqrt{2 * g * (y_max - p0.y)}
     // v0.x = g * (x_max - p0.x) / {v0.y + sqrt(2 * g * y_max)}

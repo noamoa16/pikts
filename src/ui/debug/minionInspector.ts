@@ -93,7 +93,9 @@ export class MinionInspector {
         const { x: px, y: py, z: pz } = minion.groundingPosition;
         this.panel.textContent = [
             `Minion #${minion.id}`,
-            `Position: x=${px.toFixed(2)} y=${py.toFixed(2)} z=${pz.toFixed(2)}`,
+            `Position: x=${px} `,
+            `          y=${py}`,
+            `          z=${pz}`,
         ].join("\n");
         this.panel.hidden = false;
     }

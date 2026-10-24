@@ -20,6 +20,7 @@ import {
     calcThrownInitialVelocity,
 } from "./throw";
 import { Random } from "../../core/random";
+import { Carriable } from "../carriable/carriable";
 
 export { MinionState } from "./state";
 
@@ -30,7 +31,11 @@ export abstract class Minion extends Entity {
     private get freeColor(){ return (this.constructor as typeof Minion)._FREE_COLOR; }
     public state: MinionState = MinionState.free;
     public follower: Player | null = null;
+    public carried: Carriable | null = null;
 
+    /**
+     * Minionの更新時アクション
+     */
     private readonly stateUpdateActions: MinionStateUpdateActions = {
         moveFor: direction => { this.moveFor(direction); },
         avoidDuplication: deltaSeconds => this.avoidDuplication(deltaSeconds),
@@ -99,10 +104,11 @@ export abstract class Minion extends Entity {
 
     private getColor(): Color3{
         return {
+            [MinionState.free]: this.freeColor,
             [MinionState.following]: this.baseColor,
             [MinionState.held]: this.baseColor,
             [MinionState.thrown]: this.baseColor,
-            [MinionState.free]: this.freeColor,
+            [MinionState.carrying]: this.baseColor,
         }[this.state];
     }
 
@@ -235,6 +241,16 @@ export abstract class Minion extends Entity {
     private updateHeldPosition(){
         if(!this.follower) return;
         this.position = calcHeldPosition(this.follower.position, this.follower.rotation.z);
+    }
+
+    public tryBecomeCarrying(carriable: Carriable): boolean{
+        if(this.state == MinionState.free && carriable.tryAddCarrier(this)){
+            this.state = MinionState.carrying;
+            return true;
+        }
+        else{
+            return false;
+        }
     }
     
     /**

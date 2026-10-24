@@ -3,6 +3,9 @@ import type { Minion } from "./minion";
 import { MinionState } from "./state";
 import { calcMinionFollowMoveVector } from "./movement";
 
+/**
+ * Minionの更新時アクションをまとめたクラス
+ */
 export type MinionStateUpdateActions = {
     moveFor(direction: Vector3): void;
     avoidDuplication(deltaSeconds: number): void;
