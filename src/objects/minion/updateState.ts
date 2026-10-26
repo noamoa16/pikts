@@ -135,7 +135,7 @@ function updateCarrying(
             minion.carried.position,
             minion.speed,
             deltaSeconds,
-            minion.carried.radius + 1 / 32,
+            minion.carried.radius + minion.size / 2 + 1 / 32,
         ));
     }
     actions.setCollisionsEnabled(true);

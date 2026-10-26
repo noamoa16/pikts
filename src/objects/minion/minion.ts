@@ -21,10 +21,12 @@ import {
 } from "./throw";
 import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
+import { MinionColor } from "./color";
 
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
+    public static readonly minionColor: MinionColor = MinionColor.red;
     protected static readonly _BASE_COLOR: Color3 = new Color3(0, 0.95, 0);
     protected static readonly _FREE_COLOR: Color3 = new Color3(0.5, 0.95, 0.5);
     private get baseColor(){ return (this.constructor as typeof Minion)._BASE_COLOR; }
@@ -78,6 +80,9 @@ export abstract class Minion extends Entity {
     override update(deltaSeconds: number): void {
         super.update(deltaSeconds);
         updateMinionState(this, deltaSeconds, this.stateUpdateActions);
+        if ([MinionState.free, MinionState.following, MinionState.carrying].includes(this.state)) {
+            this.separateFromNearbyCarriables(deltaSeconds);
+        }
 
         // 色
         const material = this.mesh.material;
@@ -160,6 +165,36 @@ export abstract class Minion extends Entity {
             dir = rotate2D(dir, angle);
             this.moveFor(toVector3(dir), { ignoredEntities });
         }
+    }
+
+    /** 運搬物にめり込んだ Minion を、運搬物から離れる方向へ移動させる */
+    private separateFromNearbyCarriables(deltaSeconds: number): void {
+        const PROXIMITY_MARGIN = 1 / 32;
+        const SEPARATION_SPEED = 0.5;
+        const MIN_DISTANCE_SQ = 0.000001;
+        const carriables = this.game.objects.filter(
+            (object): object is Carriable => object instanceof Carriable,
+        );
+        let direction = new Vector2();
+        const ignoredEntities: Carriable[] = [];
+
+        for (const carriable of carriables) {
+            const diff = toVector2(this.position.subtract(carriable.position));
+            const distance = diff.length();
+            const minDistance = carriable.radius + this.size / 2 + PROXIMITY_MARGIN;
+            if (distance >= minDistance) continue;
+
+            if (distance * distance < MIN_DISTANCE_SQ) {
+                diff.copyFrom(calcSeparationDirection(this, carriable));
+            }
+            // 重なりが深いほど強く離れる方向に寄与させる
+            direction.addInPlace(diff.normalize().scale(minDistance - distance));
+            ignoredEntities.push(carriable);
+        }
+
+        if (direction.lengthSquared() === 0) return;
+        const move = direction.normalize().scale(SEPARATION_SPEED * deltaSeconds);
+        this.moveFor(toVector3(move), { ignoredEntities });
     }
 
     private isAvoidanceTarget(object: Entity): boolean {

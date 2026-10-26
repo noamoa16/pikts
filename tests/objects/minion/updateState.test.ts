@@ -12,6 +12,10 @@ function makeActions(): MinionStateUpdateActions {
         isThrownLanded: vi.fn(() => false),
         finishThrow: vi.fn(),
         setCollisionsEnabled: vi.fn(),
+        getNearbyCarriables: vi.fn(() => []),
+        tryBecomeCarrying: vi.fn(() => false),
+        stopSelfMovement: vi.fn(),
+        stopMovement: vi.fn(),
     };
 }
 
