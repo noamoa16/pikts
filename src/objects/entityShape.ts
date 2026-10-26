@@ -56,7 +56,7 @@ const ENTITY_SHAPES: Record<Shape, EntityShapeDefinition> = {
     [Shape.Cylinder]: {
         createMesh: ({ scene, name, size }) => CreateCylinder(
             name,
-            { height: size / 2, diameter: size },
+            { height: size / 4, diameter: size },
             scene,
         ),
         createFigure: (center, size) => new Cylinder(center, size / 2, size / 2),

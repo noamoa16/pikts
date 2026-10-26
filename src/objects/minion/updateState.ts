@@ -136,7 +136,7 @@ function updateCarrying(
             minion.speed,
             deltaSeconds,
             minion.carried.radius + 1 / 32,
-        ), [minion.carried]);
+        ));
     }
     actions.setCollisionsEnabled(true);
 }

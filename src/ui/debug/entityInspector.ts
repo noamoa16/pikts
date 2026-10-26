@@ -142,7 +142,7 @@ export class EntityInspector {
         if (entity instanceof Minion) {
             const { x, y, z } = entity.groundingPosition;
             return [
-                `Minion #${entity.id}`,
+                `${entity.constructor.name} #${entity.id}`,
                 `State: ${MinionState[entity.state]}`,
                 `Position: x=${x}`,
                 `          y=${y}`,
@@ -152,7 +152,7 @@ export class EntityInspector {
 
         const { x, y, z } = entity.position;
         return [
-            `Carriable #${entity.id}`,
+            `${entity.constructor.name} #${entity.id}`,
             `State: ${CarriableState[entity.state]}`,
             `Carriers: ${entity.carrierCount} (${entity.minCarriers}~${entity.maxCarriers})`,
             `Position: x=${x} y=${y} z=${z}`,

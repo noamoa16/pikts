@@ -61,7 +61,7 @@ export abstract class Minion extends Entity {
     };
 
     // 掴み/投げ
-    protected static readonly _THROWN_MAX_HEIGHT = 2.25;
+    protected static readonly _THROWN_MAX_HEIGHT: number = 2.25;
     private get thrownMaxHeight(){ return (this.constructor as typeof Minion)._THROWN_MAX_HEIGHT; }
 
     constructor(game: Game, position: Vector3) {
