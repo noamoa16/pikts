@@ -1,6 +1,6 @@
 import { Axis, Color3, CreateCylinder, Quaternion, Scene, StandardMaterial, Vector3 } from "#vendor/babylon";
-import { Color } from "../../rendering/color";
-import { Onion } from "./onion";
+import { Color } from "../../../rendering/color";
+import { Onion } from "../onion";
 
 export class Pillar {
     constructor(scene: Scene, onion: Onion, index: number, color: Color3){

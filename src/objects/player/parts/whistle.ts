@@ -1,11 +1,11 @@
 import { Color3, CreateTube, Mesh, StandardMaterial, Vector3 } from "#vendor/babylon";
-import { Game } from "../../game";
-import { Sphere } from "../../physics/figure";
-import { Color } from "../../rendering/color";
-import { Entity } from "../entity";
-import { Minion, MinionState } from "../minion/minion";
+import { Game } from "../../../game";
+import { Sphere } from "../../../physics/figure";
+import { Color } from "../../../rendering/color";
+import { Entity } from "../../entity";
+import { Minion, MinionState } from "../../minion/minion";
 import { Cursor } from "./cursor";
-import { Player } from "./player";
+import { Player } from "../player";
 
 export class Whistle {
     private static readonly NUM_WHISTLE_PARTS = 24;

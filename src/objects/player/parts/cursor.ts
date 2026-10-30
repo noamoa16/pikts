@@ -1,7 +1,7 @@
 import { Color3, CreateTorus, Scene, StandardMaterial, Vector2, Vector3 } from "#vendor/babylon";
-import { atan, normalizeAngle, rotate2D, toVector2, toVector3 } from "../../core/math";
-import { Color } from "../../rendering/color";
-import { Player } from "./player";
+import { atan, normalizeAngle, rotate2D, toVector2, toVector3 } from "../../../core/math";
+import { Color } from "../../../rendering/color";
+import { Player } from "../player";
 
 export class Cursor {
     public readonly mesh;

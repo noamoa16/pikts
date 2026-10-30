@@ -1,6 +1,6 @@
 import { Color3, CreateSphere, Scene, StandardMaterial, Vector3 } from "#vendor/babylon";
-import { Color } from "../../rendering/color";
-import { Player } from "./player";
+import { Color } from "../../../rendering/color";
+import { Player } from "../player";
 
 export class Nose {
     constructor(scene: Scene, player: Player){

@@ -1,6 +1,6 @@
 import { Color3, CreateSphere, Scene, StandardMaterial, Vector3 } from "#vendor/babylon";
-import { Color } from "../../rendering/color";
-import { Onion } from "./onion";
+import { Color } from "../../../rendering/color";
+import { Onion } from "../onion";
 
 export class Base {
     constructor(scene: Scene, onion: Onion, color: Color3){

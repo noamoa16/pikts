@@ -10,7 +10,7 @@ import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Player } from "../player/player";
 import { rotate2D, toVector2, toVector3 } from "../../core/math";
-import { Cursor } from "../player/cursor";
+import { Cursor } from "../player/parts/cursor";
 import { MinionState } from "./state";
 import { calcSeparationDirection } from "./movement";
 import { updateMinionState, type MinionStateUpdateActions } from "./updateState";

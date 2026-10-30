@@ -11,8 +11,8 @@ import { Game } from "../../game";
 import { Shape } from "../../physics/figure";
 import { Entity } from "../entity";
 import { MinionColor } from "../minion/color";
-import { Base } from "./base";
-import { Pillar } from "./pillar";
+import { Base } from "./parts/base";
+import { Pillar } from "./parts/pillar";
 
 export abstract class Onion extends Entity {
     protected static readonly _SIZE = 2.5;
