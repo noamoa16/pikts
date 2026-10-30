@@ -53,12 +53,33 @@ interface QueueEntry {
     readonly distance: number;
 }
 
+export function getNearestGridPoint(
+    x: number,
+    y: number,
+    goal: GridPoint | null = null,
+): GridPoint {
+    let xDelta = 0.5, yDelta = 0.5;
+    if(goal){
+        if(!Number.isInteger(x)){
+            if(x > goal.x) xDelta = 0;
+            else xDelta = 1;
+        }
+        if(!Number.isInteger(y)){
+            if(y > goal.y) yDelta = 0;
+            else yDelta = 1;
+        }
+    }
+    const xInt = Math.floor(x + xDelta);
+    const yInt = Math.floor(y + yDelta);
+    return {x: xInt, y: yInt};
+}
+
 /**
- * Finds a shortest path through a finite grid with Dijkstra's algorithm.
- * Returned entries are movement deltas, not absolute coordinates. Diagonal
- * moves cost sqrt(2), cardinal moves cost 1, and diagonal corner cutting is
- * disallowed. Returns null when either endpoint is invalid/blocked or no path
- * exists. The map bounds are inclusive.
+ * 有限グリッド内でダイクストラのアルゴリズムを使って最短経路を求める。
+ * 戻り値は絶対座標ではなく、移動量です。斜め移動は √2 のコスト、縦横移動は 1 のコストで計算し、
+ * 対角移動が可能なのは 両隣接セル（縦横）に障害物が無いときのみ。
+ * 開始点または終了点が無効／ブロック状態、もしくは経路が存在しない場合には null を返す。
+ * マップの境界は含む。
  */
 export function findGridPath(
     start: GridPoint,

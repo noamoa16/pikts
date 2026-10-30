@@ -11,7 +11,8 @@ import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Minion, MinionState } from "../minion/minion";
-import { MinionColor } from "../minion/color";
+import { MinionColor, minionColorToString } from "../minion/color";
+// import { Onion } from "../onion/onion";
 
 export enum CarriableState {
     free,
@@ -32,7 +33,6 @@ export class Carriable extends Entity {
 
     private readonly carrierCountTexture: DynamicTexture;
     private readonly carrierCountLabel: Mesh;
-    private lastCarrierCountLabel: string = "";
 
     constructor(game: Game, position: Vector3, size: number = 1) {
         super(game, "carriable", Shape.Cylinder, size, position, { fall: true });
@@ -59,7 +59,7 @@ export class Carriable extends Entity {
         this.updateCarrierCountLabel();
     }
 
-    /** キャリアのうち最も多い色を返す。同数の場合は先に現れた色を返す。 */
+    /** 運搬者のうち最も多い色を返す。同数の場合は先に現れた色を返す。 */
     public getMostCommonCarrierColor(): MinionColor | null {
         if(this.carriers.length === 0){
             return null;
@@ -67,7 +67,7 @@ export class Carriable extends Entity {
 
         const counts = new Map<MinionColor, { count: number; firstIndex: number }>();
         this.carriers.forEach((carrier, index) => {
-            const color = (carrier.constructor as typeof Minion).minionColor;
+            const color = carrier.minionColor;
             const entry = counts.get(color);
             if(entry){
                 entry.count++;
@@ -93,18 +93,28 @@ export class Carriable extends Entity {
         return mostCommonColor;
     }
 
+    /**
+     * 分数ラベルを更新
+     */
     private updateCarrierCountLabel(): void {
         const count = this.carriers.length;
         this.carrierCountLabel.isVisible = count > 0;
         if(count === 0) return;
 
-        const label = `${count}/${this.minCarriers}`;
-        if(label === this.lastCarrierCountLabel) return;
-        this.lastCarrierCountLabel = label;
-
         const context = this.carrierCountTexture.getContext() as CanvasRenderingContext2D;
         context.clearRect(0, 0, 256, 256);
-        context.fillStyle = count >= this.minCarriers ? "white" : "#B0B0B0";
+        if(count >= this.minCarriers){
+            const mostCommonColor = this.getMostCommonCarrierColor();
+            if(mostCommonColor !== null){
+                context.fillStyle = minionColorToString(mostCommonColor);
+            }
+            else{
+                context.fillStyle = "white";
+            }
+        }
+        else{
+            context.fillStyle = "#B0B0B0";
+        }
         context.font = "bold 88px sans-serif";
         context.textAlign = "center";
         context.textBaseline = "middle";
@@ -156,4 +166,22 @@ export class Carriable extends Entity {
             return false;
         }
     }
+
+    // private calcCarryingSpeed(): number{
+    //     const count = this.carriers.length;
+    //     if(count >= this.minCarriers){
+    //         return (count - this.minCarriers + 1) / this.maxCarriers + 1;
+    //     }
+    //     else{
+    //         return 0;
+    //     }
+    // }
+
+    // private getTargetOnion(): Onion | null{
+    //     const onions = this.game.onions.filter(
+    //         onion => onion.minionColor == this.getMostCommonCarrierColor()
+    //     );
+    //     if(onions.length > 0) return onions[0];
+    //     else return null;
+    // }
 }

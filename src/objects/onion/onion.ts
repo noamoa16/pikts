@@ -10,14 +10,18 @@ import {
 import { Game } from "../../game";
 import { Shape } from "../../physics/figure";
 import { Entity } from "../entity";
+import { MinionColor } from "../minion/color";
 import { Base } from "./base";
 import { Pillar } from "./pillar";
 
 export abstract class Onion extends Entity {
-    protected static readonly _BASE_COLOR: Color3 = new Color3(0, 0.95, 0);
     protected static readonly _SIZE = 2.5;
     private static readonly glowLayers = new WeakMap<Scene, GlowLayer>();
+
+    protected static readonly _BASE_COLOR: Color3 = new Color3(0, 0.95, 0);
     private get baseColor(){ return (this.constructor as typeof Onion)._BASE_COLOR; }
+    protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
+    public get minionColor(){ return (this.constructor as typeof Onion)._MINION_COLOR; }
 
     constructor(game: Game, position: Vector3) {
         super(game, "onion", Shape.Sphere, Onion._SIZE, position, { fall: false });

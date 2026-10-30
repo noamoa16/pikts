@@ -1,6 +1,7 @@
 import { Color3, HighlightLayer, type Engine } from "#vendor/babylon";
 import { Game } from "../../game";
 import { Carriable, CarriableState } from "../../objects/carriable/carriable";
+import { minionColorToString } from "../../objects/minion/color";
 import { Minion, MinionState } from "../../objects/minion/minion";
 
 type InspectedEntity = Minion | Carriable;
@@ -150,11 +151,12 @@ export class EntityInspector {
             ].join("\n");
         }
 
-        const { x, y, z } = entity.position;
+        const { x, y, z } = entity.groundingPosition;
         return [
             `${entity.constructor.name} #${entity.id}`,
             `State: ${CarriableState[entity.state]}`,
             `Carriers: ${entity.carrierCount} (${entity.minCarriers}~${entity.maxCarriers})`,
+            `Color: ${minionColorToString(entity.getMostCommonCarrierColor())}`,
             `Position: x=${x} y=${y} z=${z}`,
         ].join("\n");
     }

@@ -9,6 +9,7 @@ import { Block } from "./objects/block";
 import { Slope as SlopeEntity } from "./objects/slope";
 import { Dir4, Figure, Slope as SlopeFigure } from "./physics/figure";
 import { type GridBounds, type GridMap, type GridPoint } from "./core/gridPathfinding";
+import { Onion } from "./objects/onion/onion";
 
 export class Game {
     public readonly objects: Entity[] = [];
@@ -20,12 +21,16 @@ export class Game {
     public get cachedFigure() { return this._cachedFigure; }
     private set cachedFigure(value: Figure[]) { this._cachedFigure = value; }
     private readonly collision = new Collision();
+
     private _gridMap: GridMap = {
         bounds: { minX: 0, maxX: 0, minY: 0, maxY: 0 },
         blocked: [],
     };
     /** Snapshot of the current grid bounds and cells occupied by Blocks/Slopes. */
     public get gridMap(): GridMap { return this._gridMap; }
+
+    private _onions: Onion[] = [];
+    public get onions(): Onion[] { return this._onions; }
 
     public static readonly TARGET_FPS = 60;
 
@@ -147,6 +152,10 @@ export class Game {
         this.time += deltaSeconds;
         this.updateObjects(deltaSeconds);
         this.updateGridMap();
+        this._onions = this.objects
+            .filter((object): object is Onion =>
+                object instanceof Onion,
+            );
         this.dispatchCollisionEvents();
     }
 }

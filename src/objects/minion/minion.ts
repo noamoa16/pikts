@@ -26,7 +26,8 @@ import { MinionColor } from "./color";
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
-    public static readonly minionColor: MinionColor = MinionColor.red;
+    protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
+    public get minionColor(){ return (this.constructor as typeof Minion)._MINION_COLOR; }
     protected static readonly _BASE_COLOR: Color3 = new Color3(0, 0.95, 0);
     protected static readonly _FREE_COLOR: Color3 = new Color3(0.5, 0.95, 0.5);
     private get baseColor(){ return (this.constructor as typeof Minion)._BASE_COLOR; }

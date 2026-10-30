@@ -1,3 +1,18 @@
+- Carriableの運搬処理実装
+  - プロンプト：
+    - src/objects/carriable/carriable.ts に、Onionへの移動処理を実装してください。
+      - carriedのstateのときのみOnionへの移動処理を行います。
+      - ターゲットとするOnionを求めるには、getTargetOnionのコメントアウトを解除して用いてください。
+      - 運搬速度を求めるには、calcCarryingSpeedコメントアウトを解除して用いてください。
+      - carriersに変更があった場合は、ターゲットとするOnionや運搬速度を再計算する必要があります。
+      - src/core/gridPathfinding.ts内の関数を用いて、まず最初に現在値が格子点でなければ最も近い格子点に移動し、その後格子点を順に移動していきます。
+- carrying状態になる処理
+  - プロンプト：
+    - Minionのcarrying処理について、特定の1つのCarriableについて、Minion同士の角度 (Carriable位置からMinion位置へのベクトル方向) がなるべく均一になるように、Minionを移動させるようにして
+- プロンプト：
+  - src/game.tsでは、_onionsをupdateごとに更新し、それを他オブジェクトから参照しています。このように、gameで一度だけupdateし、それを参照する形にできそうな関数や変数などは他にありそうですか？
+- Onion, Playerについて、構成部品をpartsディレクトリに移動する
+- Minionのparts作成 (Leaf Minion)
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定
