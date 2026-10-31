@@ -95,7 +95,10 @@ function updateFree(
     deltaSeconds: number,
     actions: MinionStateUpdateActions,
 ): void {
-    const nearby = actions.getNearbyCarriables(1);
+    // 距離1.25以下の運搬物を探す
+    const nearby = actions.getNearbyCarriables(1.25);
+
+    // 距離0.5以下なら運搬開始可能
     const inPickupRange = nearby.find(carriable =>
         toVector2(minion.position.subtract(carriable.position)).length() <= 0.5,
     );
@@ -130,13 +133,18 @@ function updateCarrying(
 ): void {
     actions.stopMovement();
     if (minion.carried) {
-        actions.moveFor(calcCarriableApproachMoveVector(
-            minion.position,
-            minion.carried.position,
-            minion.speed,
-            deltaSeconds,
-            minion.carried.radius + minion.size / 2 + 1 / 32,
-        ));
+        const carriable = minion.carried;
+        const stoppingDistance = carriable.radius + minion.size / 2 + 1 / 32;
+        const targetPosition = carriable.getCarrierFormationPosition(minion, stoppingDistance);
+        if (targetPosition) {
+            actions.moveFor(calcCarriableApproachMoveVector(
+                minion.position,
+                targetPosition,
+                minion.speed,
+                deltaSeconds,
+                0,
+            ), [carriable]);
+        }
     }
     actions.setCollisionsEnabled(true);
 }

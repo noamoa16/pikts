@@ -4,15 +4,19 @@ import {
     DynamicTexture,
     Mesh,
     StandardMaterial,
+    Vector2,
     Vector3,
 } from "#vendor/babylon";
+import { toVector3 } from "../../core/math";
+import { findGridPath, getNearestGridPoint, type GridPoint } from "../../core/gridPathfinding";
 import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Minion, MinionState } from "../minion/minion";
 import { MinionColor, minionColorToString } from "../minion/color";
-// import { Onion } from "../onion/onion";
+import { Player } from "../player/player";
+import { Onion } from "../onion/onion";
 
 export enum CarriableState {
     free,
@@ -28,6 +32,27 @@ export class Carriable extends Entity {
     public get carrierCount(): number { return this.carriers.length; }
     public get radius(): number { return this.size / 2; }
     public get canAcceptCarrier(): boolean { return this.carriers.length < this.maxCarriers; }
+
+    /** 運搬 Minion が円周上で占める、均等配置された位置を返す */
+    public getCarrierFormationPosition(minion: Minion, distance: number): Vector3 | null {
+        const index = this.carriers.indexOf(minion);
+        if(index < 0) return null;
+
+        const firstCarrier = this.carriers[0];
+        const firstDirection = new Vector2(
+            firstCarrier.position.x - this.position.x,
+            firstCarrier.position.y - this.position.y,
+        );
+        const baseAngle = firstDirection.lengthSquared() > 0
+            ? Math.atan2(firstDirection.y, firstDirection.x)
+            : 0;
+        const angle = baseAngle + index * 2 * Math.PI / this.carriers.length;
+        return new Vector3(
+            this.position.x + Math.cos(angle) * distance,
+            this.position.y + Math.sin(angle) * distance,
+            this.position.z,
+        );
+    }
 
     public state: CarriableState = CarriableState.free;
 
@@ -47,13 +72,17 @@ export class Carriable extends Entity {
         this.carrierCountLabel = carrierCountLabel.mesh;
     }
 
-    override update(_: number): void {
+    override update(deltaSeconds: number): void {
         this.carriers = this.carriers.filter(m => m.state == MinionState.carrying);
         if(this.carriers.length >= this.minCarriers){
             this.state = CarriableState.carried;
         }
         else{
             this.state = CarriableState.free;
+        }
+
+        if(this.state === CarriableState.carried){
+            this.moveToOnion(deltaSeconds);
         }
 
         this.updateCarrierCountLabel();
@@ -167,21 +196,77 @@ export class Carriable extends Entity {
         }
     }
 
-    // private calcCarryingSpeed(): number{
-    //     const count = this.carriers.length;
-    //     if(count >= this.minCarriers){
-    //         return (count - this.minCarriers + 1) / this.maxCarriers + 1;
-    //     }
-    //     else{
-    //         return 0;
-    //     }
-    // }
+    private calcCarryingSpeed(): number{
+        const count = this.carriers.length;
+        if(count >= this.minCarriers){
+            return (count - this.minCarriers + 1) / this.maxCarriers + 1;
+        }
+        else{
+            return 0;
+        }
+    }
 
-    // private getTargetOnion(): Onion | null{
-    //     const onions = this.game.onions.filter(
-    //         onion => onion.minionColor == this.getMostCommonCarrierColor()
-    //     );
-    //     if(onions.length > 0) return onions[0];
-    //     else return null;
-    // }
+    private getTargetOnion(): Onion | null{
+        const onions = this.game.onions.filter(
+            onion => onion.minionColor === this.getMostCommonCarrierColor(),
+        );
+        return onions[0] ?? null;
+    }
+
+    private moveToOnion(deltaSeconds: number): void{
+        const target = this.getTargetOnion();
+        if(!target) return;
+
+        const goal = getNearestGridPoint(target.position.x, target.position.y);
+        const start = getNearestGridPoint(
+            this.position.x,
+            this.position.y,
+            goal,
+        );
+        const startDistance = Math.hypot(
+            start.x - this.position.x,
+            start.y - this.position.y,
+        );
+
+        // Grid movement must begin at a grid point. Move toward the nearest
+        // one first, then calculate and follow the grid path on later frames.
+        if(startDistance > 1e-6){
+            this.moveTowardGridPoint(start, deltaSeconds);
+            return;
+        }
+        if(startDistance > 0){
+            this.position = new Vector3(start.x, start.y, this.position.z);
+        }
+
+        const direction = findGridPath(start, goal, this.game.gridMap)?.[0];
+        if(!direction) return;
+
+        const next = { x: start.x + direction.x, y: start.y + direction.y };
+        this.moveTowardGridPoint(next, deltaSeconds);
+    }
+
+    private moveTowardGridPoint(point: GridPoint, deltaSeconds: number): void{
+        const direction = new Vector2(
+            point.x - this.position.x,
+            point.y - this.position.y,
+        );
+        const distance = direction.length();
+        if(distance === 0) return;
+
+        const moveDistance = Math.min(this.calcCarryingSpeed() * deltaSeconds, distance);
+        this.moveFor(
+            toVector3(direction.normalize().scale(moveDistance)),
+            { ignoredEntities: this.carriers },
+        );
+    }
+
+    protected override isBlockedBy(entity: Entity): boolean{
+        if(
+            this.state === CarriableState.carried
+            && (entity instanceof Carriable || entity instanceof Minion || entity instanceof Player)
+        ){
+            return false;
+        }
+        return super.isBlockedBy(entity);
+    }
 }

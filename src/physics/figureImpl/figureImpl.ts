@@ -2,6 +2,7 @@ import { Vector3 } from "#vendor/babylon";
 import { Cylinder, Figure, RectangularPrism, Slope, Sphere } from "../figure";
 import { Cylinder2Cylinder } from "./cylinder2Cylinder";
 import { Cylinder2RectPrism } from "./cylinder2RectPrism";
+import { Cylinder2Slope } from "./cylinder2Slope";
 import { RectPrism2RectPrism } from "./rectPrism2RectPrism";
 import { Sphere2Cylinder } from "./sphere2Cylinder";
 import { Sphere2RectPrism } from "./sphere2RectPrism";
@@ -34,6 +35,9 @@ export function getFigureImpl(figure1: Figure, figure2: Figure): IFigureImpl{
     }
     else if(figure1 instanceof Cylinder && figure2 instanceof RectangularPrism){
         return new Cylinder2RectPrism(figure1, figure2);
+    }
+    else if(figure1 instanceof Cylinder && figure2 instanceof Slope){
+        return new Cylinder2Slope(figure1, figure2);
     }
     throw new Error(`intersects() and space() not implemented for ${figure1.shape} vs ${figure2.shape}`);
 }

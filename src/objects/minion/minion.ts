@@ -294,6 +294,10 @@ export abstract class Minion extends Entity {
         }
     }
 
+    /**
+     * 近くの運搬物を探し、距離が近い順に探す
+     * @param maxDistance - この距離以下の運搬物を探す
+     */
     private getNearbyCarriables(maxDistance: number): Carriable[] {
         const maxDistanceSquared = maxDistance * maxDistance;
         return this.game.objects
