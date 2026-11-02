@@ -12,6 +12,7 @@ export { CreateBox } from "@babylonjs/core/Meshes/Builders/boxBuilder";
 export { CreateCylinder } from "@babylonjs/core/Meshes/Builders/cylinderBuilder";
 export { CreateDisc } from "@babylonjs/core/Meshes/Builders/discBuilder";
 export { CreateLines } from "@babylonjs/core/Meshes/Builders/linesBuilder";
+export { CreateDashedLines } from "@babylonjs/core/Meshes/Builders/linesBuilder";
 export { CreatePlane } from "@babylonjs/core/Meshes/Builders/planeBuilder";
 export { CreateSphere } from "@babylonjs/core/Meshes/Builders/sphereBuilder";
 export { CreateTorus } from "@babylonjs/core/Meshes/Builders/torusBuilder";

@@ -11,8 +11,8 @@ import { createFillLight, createShadowMap, createSunLight } from "../rendering/l
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
 import { Dpad } from "../ui/dpad";
-import { createDemoFloor } from "./demoScene/floor";
-import { createBoundaryWalls } from "./demoScene/walls";
+import { GrassFloor } from "../objects/grassFloor";
+import { BoundaryWall } from "../objects/boundaryWall";
 import { Game } from "../game";
 import { isMoveAction, type Action } from "../actions/action";
 import { RedMinion, YellowMinion, BlueMinion } from "../objects/minion/minions";
@@ -29,7 +29,6 @@ import {
 } from "../objects/carriable/pellets";
 
 const PLAY_AREA = 5;
-const BOUNDS_Z = 0.5;
 const IS_DEV = import.meta.env.DEV;
 
 // let shadowGen: ShadowGenerator;
@@ -43,8 +42,12 @@ export function createDemoScene(engine: Engine): Scene {
 
     createFillLight(game.scene);
     const sunLight = createSunLight(game.scene);
-    createDemoFloor(game, PLAY_AREA);
-    createBoundaryWalls(game, PLAY_AREA, BOUNDS_Z);
+    new GrassFloor(game, new Vector3(0, 0, 0), PLAY_AREA);
+    const wallSize = PLAY_AREA * 2;
+    new BoundaryWall(game, new Vector3(0, PLAY_AREA * 2, 0), wallSize, IS_DEV);
+    new BoundaryWall(game, new Vector3(0, -PLAY_AREA * 2, 0), wallSize, IS_DEV);
+    new BoundaryWall(game, new Vector3(PLAY_AREA * 2, 0, 0), wallSize, IS_DEV);
+    new BoundaryWall(game, new Vector3(-PLAY_AREA * 2, 0, 0), wallSize, IS_DEV);
 
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));

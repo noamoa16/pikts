@@ -219,7 +219,7 @@ export class Carriable extends Entity {
     public calcCarryingSpeed(): number{
         const count = this.carriers.length;
         if(count >= this.minCarriers){
-            return 3 / 4 * ((count - this.minCarriers + 1) / this.maxCarriers + 1);
+            return 1.0 * ((count - this.minCarriers + 1) / this.maxCarriers + 1);
         }
         else{
             return 0;
@@ -272,13 +272,14 @@ export class Carriable extends Entity {
         const target = this.absorbingOnion;
         if(!target) return;
         const moveElapsed = Math.max(0, this.absorbingElapsedSeconds - ABSORBING_WAIT) / ABSORBING_MOVE;
-        const progress = Math.min(moveElapsed, 1);
-        const scale = 1 - progress / 2;
+        const progress = Math.min(moveElapsed, 1); // [0, 1]
+        const lerp = progress ** 2; // 2乗の関数で動かす
+        const scale = 1 - lerp / 2;
         this.mesh.scaling = (this.absorbingBaseScale ?? Vector3.One()).scale(scale);
         this.position = Vector3.Lerp(
             target.absorbingStartPoint,
             target.absorbingEndPoint,
-            progress,
+            lerp,
         );
     }
 

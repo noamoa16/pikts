@@ -8,18 +8,33 @@ import {
     Texture,
     Vector3,
 } from "#vendor/babylon";
-import { Random } from "../../core/random";
-import { Game } from "../../game";
-import { Block } from "../../objects/block";
+import { Random } from "../core/random";
+import { Game } from "../game";
+import { Shape } from "../physics/figure";
+import { Entity } from "./entity";
 
-export function createDemoFloor(game: Game, playArea: number): Block {
-    createGrassFloor(game.scene, playArea);
-    const block = new Block(game, new Vector3(0, 0, -playArea * 2), playArea * 2);
-    block.isVisible = false;
-    return block;
+export class GrassFloor extends Entity {
+    constructor(game: Game, position: Vector3, playArea: number) {
+        const size = playArea * 2;
+        super(
+            game,
+            "floor",
+            Shape.Cube,
+            size,
+            new Vector3(position.x, position.y, position.z - size),
+            { fall: false },
+        );
+
+        this.isVisible = false;
+        createGrassFloor(this.scene, position, playArea);
+    }
+
+    override update(_: number): void {
+        // 何もしない
+    }
 }
 
-function createGrassFloor(scene: Scene, playArea: number): Mesh {
+function createGrassFloor(scene: Scene, position: Vector3, playArea: number): Mesh {
     const size = playArea * 2;
     const floor = CreatePlane(
         "floor",
@@ -29,6 +44,7 @@ function createGrassFloor(scene: Scene, playArea: number): Mesh {
         },
         scene,
     );
+    floor.position = position.clone();
     floor.receiveShadows = true;
     floor.isPickable = false;
     const texture = new DynamicTexture(
