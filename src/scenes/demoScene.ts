@@ -13,22 +13,20 @@ import { Player } from "../objects/player/player";
 import { Dpad } from "../ui/dpad";
 import { createDemoFloor } from "./demoScene/floor";
 import { createBoundaryWalls } from "./demoScene/walls";
-import { RedMinion } from "../objects/minion/redMinion";
 import { Game } from "../game";
 import { isMoveAction, type Action } from "../actions/action";
-import { RedOnion } from "../objects/onion/redOnion";
+import { RedMinion, YellowMinion, BlueMinion } from "../objects/minion/minions";
+import { RedOnion, YellowOnion, BlueOnion } from "../objects/onion/onions";
 import { Slope } from "../objects/slope";
 import { Dir4 } from "../physics/figure";
-import { RedPellet1 } from "../objects/carriable/redPellet1";
-import { RedPellet5 } from "../objects/carriable/redPellet5";
-import { YellowMinion } from "../objects/minion/yellowMinion";
-import { BlueMinion } from "../objects/minion/blueMinion";
-import { YellowOnion } from "../objects/onion/yellowOnion";
-import { BlueOnion } from "../objects/onion/blueOnion";
-import { BluePellet1 } from "../objects/carriable/bluePellet1";
-import { YellowPellet1 } from "../objects/carriable/yellowPellet1";
-import { BluePellet5 } from "../objects/carriable/bluePellet5";
-import { YellowPellet5 } from "../objects/carriable/yellowPellet5";
+import {
+    RedPellet1,
+    RedPellet5,
+    BluePellet1,
+    YellowPellet1,
+    BluePellet5,
+    YellowPellet5,
+} from "../objects/carriable/pellets";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;

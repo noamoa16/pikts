@@ -12,9 +12,6 @@
     - その他のコンストラクタ引数は適切に考えて設定してください。
   - 現状、デバッグモードにおいて、Playerの座標や実行時間が画面下に表示されていますが、src/ui/debug/entityInspector.tsのような形式で表示されるようにし、画面の右上に表示するようにしてください。
   - デバッグモードにおいて、画面の下の方に、following状態であるMinionの総数と、Gameに存在するMinionの総数を表示するようにしてください。
-  - src/scenes/demoScene.tsにおいて、Pelletを継承した6クラスの6ファイルからimportしていますが、6つともpellet.tsからimportできるようにしてください。
-  - src/scenes/demoScene.tsにおいて、Onionを継承した3クラスの3ファイルからimportしていますが、6つともonion.tsからimportできるようにしてください。
-  - src/scenes/demoScene.tsにおいて、Minionを継承した3クラスの3ファイルからimportしていますが、6つともminion.tsからimportできるようにしてください。
 - フィールドを広げる
 - プロンプト：
   - src/game.tsでは、_onionsをupdateごとに更新し、それを他オブジェクトから参照しています。このように、gameで一度だけupdateし、それを参照する形にできそうな関数や変数などは他にありそうですか？
