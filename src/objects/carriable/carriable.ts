@@ -32,7 +32,14 @@ export class Carriable extends Entity {
     protected carriers: Minion[] = [];
     public get carrierCount(): number { return this.carriers.length; }
     public get radius(): number { return this.size / 2; }
-    public get canAcceptCarrier(): boolean { return this.carriers.length < this.maxCarriers; }
+    public get canAcceptCarrier(): boolean {
+        return this.state !== CarriableState.absorbed && this.carriers.length < this.maxCarriers;
+    }
+
+    private absorbingElapsedSeconds = 0;
+    private absorbingBaseRotation: Vector3 | null = null;
+    private absorbingBaseScale: Vector3 | null = null;
+    private absorbingOnion: Onion | null = null;
 
     /** 運搬 Minion が円周上で占める、均等配置された位置を返す */
     public getCarrierFormationPosition(minion: Minion, distance: number): Vector3 | null {
@@ -74,6 +81,12 @@ export class Carriable extends Entity {
     }
 
     override update(deltaSeconds: number): void {
+        if(this.state === CarriableState.absorbed){
+            this.updateAbsorbing(deltaSeconds);
+            this.updateCarrierCountLabel();
+            return;
+        }
+
         this.carriers = this.carriers.filter(m => m.state == MinionState.carrying);
         if(this.carriers.length >= this.minCarriers){
             this.state = CarriableState.carried;
@@ -84,6 +97,12 @@ export class Carriable extends Entity {
 
         if(this.state === CarriableState.carried){
             this.moveToOnion(deltaSeconds);
+            this.absorbIfNearOnion();
+        }
+        else{
+            // Carriables only move under gravity while they are free. Their
+            // carrier controls their position while being carried.
+            super.update(deltaSeconds);
         }
 
         this.updateCarrierCountLabel();
@@ -212,6 +231,55 @@ export class Carriable extends Entity {
             onion => onion.minionColor === this.getMostCommonCarrierColor(),
         );
         return onions[0] ?? null;
+    }
+
+    private absorbIfNearOnion(): void {
+        const target = this.getTargetOnion();
+        if(!target) return;
+        const distanceSquared = (this.position.x - target.position.x) ** 2
+            + (this.position.y - target.position.y) ** 2;
+        if(distanceSquared > 0.5 * 0.5) return;
+
+        for(const carrier of this.carriers){
+            carrier.carried = null;
+            carrier.becomeFree();
+        }
+        this.carriers = [];
+        this.state = CarriableState.absorbed;
+        this.absorbingElapsedSeconds = 0;
+        this.absorbingBaseRotation = this.rotation.clone();
+        this.absorbingBaseScale = this.mesh.scaling.clone();
+        this.absorbingOnion = target;
+    }
+
+    private updateAbsorbing(deltaSeconds: number): void {
+        const ABSORBING_WAIT = 0.5;
+        const ABSORBING_MOVE = 1.0;
+        const elapsed = this.absorbingElapsedSeconds;
+        this.absorbingElapsedSeconds += deltaSeconds;
+
+        if(this.absorbingElapsedSeconds >= ABSORBING_WAIT + ABSORBING_MOVE){
+            this.game.removeObject(this);
+            return;
+        }
+
+        const baseRotation = this.absorbingBaseRotation ?? this.rotation;
+        const wobble = Math.sin(this.absorbingElapsedSeconds * Math.PI * 8) * 0.08;
+        this.rotation = new Vector3(baseRotation.x + wobble, baseRotation.y, baseRotation.z + wobble * 0.5);
+
+        if(elapsed < ABSORBING_WAIT && this.absorbingElapsedSeconds <= ABSORBING_WAIT) return;
+
+        const target = this.absorbingOnion;
+        if(!target) return;
+        const moveElapsed = Math.max(0, this.absorbingElapsedSeconds - ABSORBING_WAIT) / ABSORBING_MOVE;
+        const progress = Math.min(moveElapsed, 1);
+        const scale = 1 - progress / 2;
+        this.mesh.scaling = (this.absorbingBaseScale ?? Vector3.One()).scale(scale);
+        this.position = Vector3.Lerp(
+            target.absorbingStartPoint,
+            target.absorbingEndPoint,
+            progress,
+        );
     }
 
     private moveToOnion(deltaSeconds: number): void{

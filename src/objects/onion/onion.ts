@@ -25,7 +25,7 @@ export abstract class Onion extends Entity {
 
     public get absorbingStartPoint() { return this.groundingPosition.clone(); }
     public get absorbingEndPoint() {
-        return this.groundingPosition.add(new Vector3(0, 0, this.size * 3 / 16));
+        return this.groundingPosition.add(new Vector3(0, 0, this.size * 1 / 2));
     }
 
     constructor(game: Game, position: Vector3) {

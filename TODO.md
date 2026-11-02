@@ -1,9 +1,4 @@
 - プロンプト：
-  - Carriableが、carried状態かつOnionの真下(Onionの中心から距離0.5以下)になれば、運搬中のMinionを全て解放(freeにする)して、そのCarriableの状態をabsorbedに変更してください。
-    - absorbed状態では運搬は不可能です。
-    - Carriableは、absorbed状態では以下の行動を行ったあと、消滅します。
-      - 揺れながら1秒間その場で待機
-      - 揺れながら、absorbingStartPointからabsorbingEndPointまで1秒かけて移動する
   - src/scenes/demoScene/floor.ts, src/scenes/demoScene/walls.ts について、Entity型を継承する形に変更し、src/objects以下に移動してください。
     - ファイル名とクラス名は適切な名前を考えてください。
     - wallsは、現状はcreateBoundaryWallsで4つの壁を配置していますが、壁オブジェクトを4つ生成して配置する形にしてください。
@@ -12,6 +7,9 @@
     - その他のコンストラクタ引数は適切に考えて設定してください。
   - 現状、デバッグモードにおいて、Playerの座標や実行時間が画面下に表示されていますが、src/ui/debug/entityInspector.tsのような形式で表示されるようにし、画面の右上に表示するようにしてください。
   - デバッグモードにおいて、画面の下の方に、following状態であるMinionの総数と、Gameに存在するMinionの総数を表示するようにしてください。
+- CylinderのgroundingPositionの計算修正
+  - size / 2 ではなく height / 2 だけ座標を下げるようにする必要がある
+  - プロンプト：Carriableが重力の影響を受けるようにしてください。
 - フィールドを広げる
 - プロンプト：
   - src/game.tsでは、_onionsをupdateごとに更新し、それを他オブジェクトから参照しています。このように、gameで一度だけupdateし、それを参照する形にできそうな関数や変数などは他にありそうですか？

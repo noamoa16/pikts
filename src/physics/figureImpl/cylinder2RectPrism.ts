@@ -88,11 +88,9 @@ export class Cylinder2RectPrism implements IFigureImpl {
                 }
                 const t1 = min[2] / dir.z;
                 const t2 = max[2] / dir.z;
-                if(t1 >= 0){
-                    return { contactDistance: t1 };
-                }
-                if(t2 >= 0){
-                    return { contactDistance: t2 };
+                const contactDistances = [t1, t2].filter(t => t >= 0);
+                if(contactDistances.length > 0){
+                    return { contactDistance: Math.min(...contactDistances) };
                 }
             }
 

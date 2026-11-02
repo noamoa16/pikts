@@ -61,8 +61,17 @@ export class Game {
     private updateObjects(deltaSeconds: number): void {
         this.cacheFigure();
         this.frameTimerUpdate.measure(() => {
-            this.objects.forEach(object => object.update(deltaSeconds));
+            for(const object of [...this.objects]){
+                if(this.objects.includes(object)) object.update(deltaSeconds);
+            }
         });
+    }
+
+    public removeObject(object: Entity): void {
+        const index = this.objects.indexOf(object);
+        if(index < 0) return;
+        this.objects.splice(index, 1);
+        object.mesh.dispose(false, true);
     }
 
     private createGridObstaclePoints(): GridPoint[] {
