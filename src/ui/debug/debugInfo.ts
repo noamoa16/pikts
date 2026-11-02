@@ -1,9 +1,10 @@
 import { Engine } from "#vendor/babylon";
 
 export class DebugInfo {
-    private label: HTMLDivElement | null = null;
+    private panel: HTMLDivElement | null = null;
+    private info: HTMLPreElement | null = null;
+    private minionCount: HTMLDivElement | null = null;
     constructor(engine: Engine | null) {
-        this.label = null;
         if(!engine){
             return;
         }
@@ -11,34 +12,60 @@ export class DebugInfo {
         if (!(parent instanceof HTMLDivElement)) {
             return;
         }
-        this.label = document.createElement("div");
-        Object.assign(this.label.style, {
+        this.panel = document.createElement("div");
+        Object.assign(this.panel.style, {
+            position: "absolute",
+            top: "12px",
+            right: "12px",
+            padding: "10px 12px",
+            borderRadius: "8px",
+            background: "rgba(5, 8, 22, 0.82)",
+            color: "#f7f6d8",
+            fontSize: "13px",
+            lineHeight: "1.5",
+            fontFamily: "monospace",
+            pointerEvents: "none",
+        } satisfies Partial<CSSStyleDeclaration>);
+        this.info = document.createElement("pre");
+        Object.assign(this.info.style, {
+            margin: "0",
+            whiteSpace: "pre",
+        } satisfies Partial<CSSStyleDeclaration>);
+        this.info.textContent = "Loading ...";
+        this.panel.append(this.info);
+        this.minionCount = document.createElement("div");
+        Object.assign(this.minionCount.style, {
             position: "absolute",
             left: "50%",
             bottom: "20px",
             transform: "translateX(-50%)",
             padding: "8px 12px",
-            borderRadius: "999px",
-            background: "rgba(5, 8, 22, 0.78)",
+            borderRadius: "8px",
+            background: "rgba(5, 8, 22, 0.82)",
             color: "#f7f6d8",
-            fontSize: "14px",
-            lineHeight: "1",
-            letterSpacing: "0.04em",
+            fontSize: "13px",
+            lineHeight: "1.5",
+            fontFamily: "monospace",
             pointerEvents: "none",
             whiteSpace: "nowrap",
         } satisfies Partial<CSSStyleDeclaration>);
-        this.label.textContent = "Loading ...";
-        parent.append(this.label);
+        parent.append(this.panel, this.minionCount);
     }
     get valid(){
-        return this.label !== null;
+        return this.info !== null;
     }
     set text(value: string){
-        if(this.label){
-            this.label.textContent = value;
+        if(this.info){
+            this.info.textContent = value;
+        }
+    }
+    set minionCountText(value: string){
+        if(this.minionCount){
+            this.minionCount.textContent = value;
         }
     }
     public remove(){
-        this.label?.remove();
+        this.panel?.remove();
+        this.minionCount?.remove();
     }
 }

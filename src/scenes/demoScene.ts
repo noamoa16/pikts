@@ -16,6 +16,7 @@ import { BoundaryWall } from "../objects/boundaryWall";
 import { Game } from "../game";
 import { isMoveAction, type Action } from "../actions/action";
 import { RedMinion, YellowMinion, BlueMinion } from "../objects/minion/minions";
+import { Minion, MinionState } from "../objects/minion/minion";
 import { RedOnion, YellowOnion, BlueOnion } from "../objects/onion/onions";
 import { Slope } from "../objects/slope";
 import { Dir4 } from "../physics/figure";
@@ -121,10 +122,15 @@ export function createDemoScene(engine: Engine): Scene {
         // デバッグ出力
         if (debugInfo.valid) {
             const position = player.groundingPosition;
-            const playerInfo = `Player: x=${position.x.toFixed(2)} y=${position.y.toFixed(2)} z=${position.z.toFixed(2)}`;
-            const fpsInfoUpdate = `Update: ${game.frameTimerUpdate.averageTime.toFixed(2)} ms`;
-            const fpsInfoCollision = `Collision: ${game.frameTimerCollision.averageTime.toFixed(2)} ms`;
-            debugInfo.text = `${playerInfo}, ${fpsInfoUpdate}, ${fpsInfoCollision}`;
+            debugInfo.text = [
+                "Player",
+                `Position: x=${position.x.toFixed(2)} y=${position.y.toFixed(2)} z=${position.z.toFixed(2)}`,
+                `Update: ${game.frameTimerUpdate.averageTime.toFixed(2)} ms`,
+                `Collision: ${game.frameTimerCollision.averageTime.toFixed(2)} ms`,
+            ].join("\n");
+            const minions = game.objects.filter((object): object is Minion => object instanceof Minion);
+            const followingMinions = minions.filter(minion => minion.state === MinionState.following).length;
+            debugInfo.minionCountText = `Following Minions: ${followingMinions}  Total Minions: ${minions.length}`;
         }
         entityInspector?.update();
     });
