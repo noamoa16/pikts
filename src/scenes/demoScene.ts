@@ -19,10 +19,16 @@ import { isMoveAction, type Action } from "../actions/action";
 import { RedOnion } from "../objects/onion/redOnion";
 import { Slope } from "../objects/slope";
 import { Dir4 } from "../physics/figure";
-import { Pellet1 } from "../objects/carriable/pellet1";
-import { Pellet5 } from "../objects/carriable/pellet5";
+import { RedPellet1 } from "../objects/carriable/redPellet1";
+import { RedPellet5 } from "../objects/carriable/redPellet5";
 import { YellowMinion } from "../objects/minion/yellowMinion";
 import { BlueMinion } from "../objects/minion/blueMinion";
+import { YellowOnion } from "../objects/onion/yellowOnion";
+import { BlueOnion } from "../objects/onion/blueOnion";
+import { BluePellet1 } from "../objects/carriable/bluePellet1";
+import { YellowPellet1 } from "../objects/carriable/yellowPellet1";
+import { BluePellet5 } from "../objects/carriable/bluePellet5";
+import { YellowPellet5 } from "../objects/carriable/yellowPellet5";
 
 const PLAY_AREA = 5;
 const BOUNDS_Z = 0.5;
@@ -44,16 +50,22 @@ export function createDemoScene(engine: Engine): Scene {
 
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));
-    new Block(game, new Vector3(2, 1, 0));
+    new Block(game, new Vector3(3, 1, 0));
     new Slope(game, new Vector3(-2, -3, 0), 1, Dir4.Right);
     new Block(game, new Vector3(-0.5, -3, 0));
     new Slope(game, new Vector3(2.5, -3, 0), 1, Dir4.Right);
-    for(let i = -2.5; i <= -1.5; i += 0.5) new RedMinion(game, new Vector3(i, 0, 0));
-    for(let i = -2.5; i <= -1.5; i += 0.5) new YellowMinion(game, new Vector3(i, 0.5, 0));
-    for(let i = -2.5; i <= -1.5; i += 0.5) new BlueMinion(game, new Vector3(i, 1, 0));
+    for(let i = -2; i <= -0.5; i += 0.5) new RedMinion(game, new Vector3(i, 0, 0));
+    for(let i = -2; i <= -0.5; i += 0.5) new YellowMinion(game, new Vector3(i, 0.5, 0));
+    for(let i = -2; i <= -0.5; i += 0.5) new BlueMinion(game, new Vector3(i, 1, 0));
     new RedOnion(game, new Vector3(-3, 3, 0));
-    new Pellet1(game, new Vector3(-3, -1, 0));
-    new Pellet5(game, new Vector3(-3, 1, 0));
+    new YellowOnion(game, new Vector3(-1, 3, 0));
+    new BlueOnion(game, new Vector3(1, 3, 0));
+    new RedPellet1(game, new Vector3(-3, -1, 0));
+    new RedPellet5(game, new Vector3(-3, 1, 0));
+    new BluePellet1(game, new Vector3(3, 0, 1));
+    new YellowPellet1(game, new Vector3(3, 1, 1));
+    new BluePellet5(game, new Vector3(3, -1, 0));
+    new YellowPellet5(game, new Vector3(3, -2, 0));
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);

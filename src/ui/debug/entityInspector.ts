@@ -157,6 +157,7 @@ export class EntityInspector {
             `State: ${CarriableState[entity.state]}`,
             `Carriers: ${entity.carrierCount} (${entity.minCarriers}~${entity.maxCarriers})`,
             `Color: ${minionColorToString(entity.getMostCommonCarrierColor())}`,
+            `Speed: ${entity.calcCarryingSpeed()}`,
             `Position: x=${x} y=${y} z=${z}`,
         ].join("\n");
     }

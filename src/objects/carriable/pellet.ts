@@ -10,11 +10,14 @@ import { Color } from "../../rendering/color";
 import { Carriable } from "./carriable";
 
 export class Pellet extends Carriable {
+    protected static readonly _BASE_COLOR: Color3 = new Color3(0, 1, 0);
+    private get baseColor(){ return (this.constructor as typeof Pellet)._BASE_COLOR; }
+
     constructor(game: Game, position: Vector3, public readonly num: number) {
         super(game, position, (num + 3) * 3 / 32);
         const material = this.mesh.material;
         if(material instanceof StandardMaterial){
-            Color.set(material, new Color3(1, 0, 0));
+            Color.set(material, this.baseColor);
             material.alpha = 0.5;
         }
 

@@ -21,6 +21,7 @@ import { Onion } from "../onion/onion";
 export enum CarriableState {
     free,
     carried,
+    absorbed,
 }
 
 export class Carriable extends Entity {
@@ -196,10 +197,10 @@ export class Carriable extends Entity {
         }
     }
 
-    private calcCarryingSpeed(): number{
+    public calcCarryingSpeed(): number{
         const count = this.carriers.length;
         if(count >= this.minCarriers){
-            return (count - this.minCarriers + 1) / this.maxCarriers + 1;
+            return 3 / 4 * ((count - this.minCarriers + 1) / this.maxCarriers + 1);
         }
         else{
             return 0;

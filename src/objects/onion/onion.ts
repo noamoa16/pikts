@@ -23,6 +23,11 @@ export abstract class Onion extends Entity {
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Onion)._MINION_COLOR; }
 
+    public get absorbingStartPoint() { return this.groundingPosition.clone(); }
+    public get absorbingEndPoint() {
+        return this.groundingPosition.add(new Vector3(0, 0, this.size * 3 / 16));
+    }
+
     constructor(game: Game, position: Vector3) {
         super(game, "onion", Shape.Sphere, Onion._SIZE, position, { fall: false });
         this.isVisible = false;
