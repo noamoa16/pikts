@@ -24,11 +24,14 @@ export abstract class Entity {
     // 位置
     public get position(): Vector3 { return this.mesh.position; }
     protected set position(value: Vector3) { this.mesh.position = value; }
+    private get groundingOffset(): number {
+        return this.shape === Shape.Cylinder ? this.size / 8 : this.size / 2;
+    }
     public get groundingPosition(): Vector3 {
-        return this.mesh.position.subtract(new Vector3(0, 0, this.size / 2));
+        return this.mesh.position.subtract(new Vector3(0, 0, this.groundingOffset));
     }
     protected set groundingPosition(value: Vector3) {
-        this.mesh.position = value.add(new Vector3(0, 0, this.size / 2));
+        this.mesh.position = value.add(new Vector3(0, 0, this.groundingOffset));
     }
 
     // 回転

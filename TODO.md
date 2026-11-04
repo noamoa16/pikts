@@ -1,9 +1,5 @@
-- プロンプト：
-  - 現状、デバッグモードにおいて、Playerの座標や実行時間が画面下に表示されていますが、src/ui/debug/entityInspector.tsのような形式で表示されるようにし、画面の右上に表示するようにしてください。
-  - デバッグモードにおいて、画面の下の方に、following状態であるMinionの総数と、Gameに存在するMinionの総数を表示するようにしてください。
-- CylinderのgroundingPositionの計算修正
-  - size / 2 ではなく height / 2 だけ座標を下げるようにする必要がある
-  - プロンプト：Carriableが重力の影響を受けるようにしてください。
+- Minion数表示パネルの修正
+- Carriableの重力計算がおかしいので修正
 - フィールドを広げる
 - プロンプト：
   - src/game.tsでは、_onionsをupdateごとに更新し、それを他オブジェクトから参照しています。このように、gameで一度だけupdateし、それを参照する形にできそうな関数や変数などは他にありそうですか？
