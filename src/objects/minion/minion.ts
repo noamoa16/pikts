@@ -180,6 +180,9 @@ export abstract class Minion extends Entity {
         const ignoredEntities: Carriable[] = [];
 
         for (const carriable of carriables) {
+            // 運搬中は、運んでいる物との距離だけを保つ。他の運搬物は通り抜ける。
+            if (this.state === MinionState.carrying && carriable !== this.carried) continue;
+
             const diff = toVector2(this.position.subtract(carriable.position));
             const distance = diff.length();
             const minDistance = carriable.radius + this.size / 2 + PROXIMITY_MARGIN;
@@ -250,6 +253,13 @@ export abstract class Minion extends Entity {
     }
 
     protected override isBlockedBy(entity: Entity): boolean {
+        // 運搬中は他の運搬物、Minion、Playerを通り抜ける
+        if(
+            this.state === MinionState.carrying
+            && (entity instanceof Carriable || entity instanceof Minion || entity instanceof Player)
+        ){
+            return false;
+        }
         // 投げ状態であれば、他のMinionを無視して移動する
         if(this.state === MinionState.thrown && entity instanceof Minion){
             return false;

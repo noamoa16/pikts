@@ -1,6 +1,4 @@
 - プロンプト：
-  - carrying状態のMinionは、他のCarriable,Minion,Playerを貫通して移動できるようにしてください。
-  - Carriableに重力が働くようにしてください。src/scenes/demoScene.ts ではBluePellet1が宙に浮いていますが、落下するようにしたいです。
   - Carriableについて、z座標も考慮して運搬経路を計算するようにしてください。現状、src/scenes/demoScene.ts では YellowPellet1 が Blockの上にありますが、z座標を考えていないため、有効な経路がないと判断して運搬ができません。z座標を考えれば運搬ができるようになるはずです。
   - Minionに対して、パーツ "plant" を追加してください。
     - Minionのジョブにあります。
@@ -19,6 +17,7 @@
       - 色が異なる場合、栄養価は、色が同じ場合をxとして ceil(x/2) です。(pellet1: 1, pellet5: 3 になるはず)
     - Pellet以外のCarriableも追加予定であることに注意してください。
       - 基本的にはPelletの色が一致する場合の栄養価を使うようにして、Pelletだけ特殊化するのが良いでしょう。
+- Carriableに集まるMinionの角度はmax carriersに合わせる
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

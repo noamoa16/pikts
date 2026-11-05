@@ -82,8 +82,9 @@ export class Cylinder2RectPrism implements IFigureImpl {
             }
 
             if (A === 0){
-                // x,y座標の条件を満たさないときはスキップ
-                if(C === 0 || dir.z === 0){
+                // 垂直移動中は水平距離が一定。円柱と直方体が水平に
+                // 重ならない場合、z方向に進んでも接触しない。
+                if(C >= 0 || dir.z === 0){
                     return null;
                 }
                 const t1 = min[2] / dir.z;
