@@ -1,12 +1,10 @@
 import type { Engine } from "#vendor/babylon";
 import type { Game } from "../../game";
-import { Minion, MinionState } from "../../objects/minion/minion";
 import type { Player } from "../../objects/player/player";
 
 export class PlayerDebugInfo {
     private readonly panel: HTMLDivElement | null = null;
     private readonly info: HTMLPreElement | null = null;
-    private readonly minionCount: HTMLDivElement | null = null;
 
     constructor(
         private readonly game: Game,
@@ -44,27 +42,9 @@ export class PlayerDebugInfo {
         info.textContent = "Loading ...";
         panel.append(info);
 
-        const minionCount = document.createElement("div");
-        Object.assign(minionCount.style, {
-            position: "absolute",
-            left: "50%",
-            bottom: "20px",
-            transform: "translateX(-50%)",
-            padding: "8px 12px",
-            borderRadius: "8px",
-            background: "rgba(5, 8, 22, 0.82)",
-            color: "#f7f6d8",
-            fontSize: "13px",
-            lineHeight: "1.5",
-            fontFamily: "monospace",
-            pointerEvents: "none",
-            whiteSpace: "nowrap",
-        } satisfies Partial<CSSStyleDeclaration>);
-
-        parent.append(panel, minionCount);
+        parent.append(panel);
         this.panel = panel;
         this.info = info;
-        this.minionCount = minionCount;
     }
 
     public update(): void {
@@ -80,15 +60,9 @@ export class PlayerDebugInfo {
             `Collision: ${this.game.frameTimerCollision.averageTime.toFixed(2)} ms`,
         ].join("\n");
 
-        const minions = this.game.objects.filter((object): object is Minion => object instanceof Minion);
-        const followingMinions = minions.filter(minion => minion.state === MinionState.following).length;
-        if (this.minionCount) {
-            this.minionCount.textContent = `${followingMinions}, ${minions.length}`;
-        }
     }
 
     public remove(): void {
         this.panel?.remove();
-        this.minionCount?.remove();
     }
 }
