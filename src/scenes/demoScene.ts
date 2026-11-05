@@ -5,8 +5,8 @@ import {
     Scene,
     Vector3,
 } from "#vendor/babylon";
-import { DebugInfo } from "../ui/debug/debugInfo";
 import { EntityInspector } from "../ui/debug/entityInspector";
+import { PlayerDebugInfo } from "../ui/debug/playerDebugInfo";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
@@ -16,7 +16,6 @@ import { BoundaryWall } from "../objects/boundaryWall";
 import { Game } from "../game";
 import { isMoveAction, type Action } from "../actions/action";
 import { RedMinion, YellowMinion, BlueMinion } from "../objects/minion/minions";
-import { Minion, MinionState } from "../objects/minion/minion";
 import { RedOnion, YellowOnion, BlueOnion } from "../objects/onion/onions";
 import { Slope } from "../objects/slope";
 import { Dir4 } from "../physics/figure";
@@ -71,7 +70,7 @@ export function createDemoScene(engine: Engine): Scene {
 
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
-    const debugInfo = new DebugInfo(game.isDevelopment ? engine : null);
+    const playerDebugInfo = new PlayerDebugInfo(game, player, game.isDevelopment ? engine : null);
     const entityInspector = game.isDevelopment ? new EntityInspector(game, engine) : null;
     const handleNonMovementAction = (action: Action, pressed: boolean) => {
         switch (action) {
@@ -120,19 +119,7 @@ export function createDemoScene(engine: Engine): Scene {
         game.camera.update(deltaSeconds, player.position);
         player.whistle.update(deltaSeconds, game.objects);
 
-        // デバッグ出力
-        if (debugInfo.valid) {
-            const position = player.groundingPosition;
-            debugInfo.text = [
-                "Player",
-                `Position: x=${position.x.toFixed(2)} y=${position.y.toFixed(2)} z=${position.z.toFixed(2)}`,
-                `Update: ${game.frameTimerUpdate.averageTime.toFixed(2)} ms`,
-                `Collision: ${game.frameTimerCollision.averageTime.toFixed(2)} ms`,
-            ].join("\n");
-            const minions = game.objects.filter((object): object is Minion => object instanceof Minion);
-            const followingMinions = minions.filter(minion => minion.state === MinionState.following).length;
-            debugInfo.minionCountText = `${followingMinions}, ${minions.length}`;
-        }
+        playerDebugInfo.update();
         entityInspector?.update();
     });
 
@@ -145,7 +132,7 @@ export function createDemoScene(engine: Engine): Scene {
     // Sceneが破棄されたらイベントを無効化
     game.scene.onDisposeObservable.add(() => {
         window.removeEventListener("resize", onResize);
-        debugInfo.remove();
+        playerDebugInfo.remove();
         player.removeEvents();
         dpad.remove();
     });

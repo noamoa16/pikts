@@ -1,6 +1,4 @@
 - プロンプト：
-  - IS_DEV を Game が持つようにしてください。変数名も適切なものにして。
-  - src/scenes/demoScene.ts におけるプレイヤーについてのデバッグ出力処理を src/ui/debug 下に移動してください。
   - debugInfo.minionCountText で followingMinions, minions.length を表示していますが、箱を2つにして、それぞれの数値を表示するように変更して
   - src/scenes/demoScene.ts における game.camera.update, player.whistle.update, entityInspector?.update を game.update 内に含めるようにしてください。EntityInspector も Game内で持つようにできるはず。
   - carrying状態のMinionは、他のCarriable,Minion,Playerを貫通して移動できるようにしてください。
