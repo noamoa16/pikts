@@ -7,11 +7,26 @@ import {
 } from "#vendor/babylon";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
+import { MinionColor } from "../minion/color";
 import { Carriable } from "./carriable";
 
 export class Pellet extends Carriable {
     protected static readonly _BASE_COLOR: Color3 = new Color3(0, 1, 0);
     private get baseColor(){ return (this.constructor as typeof Pellet)._BASE_COLOR; }
+
+    public override get nutrition(): number {
+        const carrierColor = this.getMostCommonCarrierColor();
+        const baseColor = this.baseColor;
+        const matchesBaseColor = carrierColor === MinionColor.red
+            ? baseColor.r > 0 && baseColor.g === 0 && baseColor.b === 0
+            : carrierColor === MinionColor.yellow
+                ? baseColor.r > 0 && baseColor.g > 0 && baseColor.b === 0
+                : carrierColor === MinionColor.blue
+                    ? baseColor.r === 0 && baseColor.g === 0 && baseColor.b > 0
+                    : false;
+
+        return matchesBaseColor ? super.nutrition : Math.ceil(super.nutrition / 2);
+    }
 
     constructor(game: Game, position: Vector3, public readonly num: number) {
         super(game, position, (num + 3) * 3 / 32);

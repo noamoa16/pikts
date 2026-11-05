@@ -25,8 +25,10 @@ export enum CarriableState {
 }
 
 export class Carriable extends Entity {
+    protected static readonly _NUTRITION: number = 1;
     protected static readonly _MIN_CARRIERS: number = 1;
     protected static readonly _MAX_CARRIERS: number = 1;
+    public get nutrition(): number { return (this.constructor as typeof Carriable)._NUTRITION; }
     public get minCarriers(){ return (this.constructor as typeof Carriable)._MIN_CARRIERS; }
     public get maxCarriers(){ return (this.constructor as typeof Carriable)._MAX_CARRIERS; }
     protected carriers: Minion[] = [];
