@@ -22,6 +22,7 @@ import {
 import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
 import { MinionColor } from "./color";
+import { Plant } from "./parts/plant";
 
 export { MinionState } from "./state";
 
@@ -76,6 +77,9 @@ export abstract class Minion extends Entity {
         const material = new StandardMaterial(`${this.name}.material`, this.scene);
         material.backFaceCulling = false;
         this.mesh.material = material;
+
+        // 葉っぱパーツ
+        new Plant(this.scene, this);
     }
 
     override update(deltaSeconds: number): void {
