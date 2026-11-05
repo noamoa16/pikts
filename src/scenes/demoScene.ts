@@ -29,7 +29,6 @@ import {
     YellowPellet5,
 } from "../objects/carriable/pellets";
 
-const PLAY_AREA = 5;
 const IS_DEV = import.meta.env.DEV;
 
 // let shadowGen: ShadowGenerator;
@@ -43,12 +42,13 @@ export function createDemoScene(engine: Engine): Scene {
 
     createFillLight(game.scene);
     const sunLight = createSunLight(game.scene);
+
+    const PLAY_AREA = 10;
+    new GrassFloor(game, new Vector3(-PLAY_AREA, 0, 0), PLAY_AREA);
     new GrassFloor(game, new Vector3(0, 0, 0), PLAY_AREA);
-    const wallSize = PLAY_AREA * 2;
-    new BoundaryWall(game, new Vector3(0, PLAY_AREA * 2, 0), wallSize, IS_DEV);
-    new BoundaryWall(game, new Vector3(0, -PLAY_AREA * 2, 0), wallSize, IS_DEV);
-    new BoundaryWall(game, new Vector3(PLAY_AREA * 2, 0, 0), wallSize, IS_DEV);
-    new BoundaryWall(game, new Vector3(-PLAY_AREA * 2, 0, 0), wallSize, IS_DEV);
+    new BoundaryWall(game, new Vector3(0, PLAY_AREA, 0), PLAY_AREA, IS_DEV);
+    new BoundaryWall(game, new Vector3(0, -PLAY_AREA, 0), PLAY_AREA, IS_DEV);
+    new BoundaryWall(game, new Vector3(PLAY_AREA, 0, 0), PLAY_AREA, IS_DEV);
 
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));
@@ -56,9 +56,9 @@ export function createDemoScene(engine: Engine): Scene {
     new Slope(game, new Vector3(-2, -3, 0), 1, Dir4.Right);
     new Block(game, new Vector3(-0.5, -3, 0));
     new Slope(game, new Vector3(2.5, -3, 0), 1, Dir4.Right);
-    for(let i = -2; i <= -0.5; i += 0.5) new RedMinion(game, new Vector3(i, 0, 0));
-    for(let i = -2; i <= -0.5; i += 0.5) new YellowMinion(game, new Vector3(i, 0.5, 0));
-    for(let i = -2; i <= -0.5; i += 0.5) new BlueMinion(game, new Vector3(i, 1, 0));
+    for(let i = -2; i <= -0.5; i += 0.25) new RedMinion(game, new Vector3(i, 0, 0));
+    for(let i = -2; i <= -0.5; i += 0.25) new YellowMinion(game, new Vector3(i, 0.5, 0));
+    for(let i = -2; i <= -0.5; i += 0.25) new BlueMinion(game, new Vector3(i, 1, 0));
     new RedOnion(game, new Vector3(-3, 3, 0));
     new YellowOnion(game, new Vector3(-1, 3, 0));
     new BlueOnion(game, new Vector3(1, 3, 0));
@@ -66,8 +66,11 @@ export function createDemoScene(engine: Engine): Scene {
     new RedPellet5(game, new Vector3(-3, 1, 0));
     new BluePellet1(game, new Vector3(3, 0, 1));
     new YellowPellet1(game, new Vector3(3, 1, 1));
-    new BluePellet5(game, new Vector3(3, -1, 0));
     new YellowPellet5(game, new Vector3(3, -2, 0));
+
+    new Block(game, new Vector3(-5, -1, 0));
+    new BluePellet5(game, new Vector3(-6, -4, 0));
+
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const debugInfo = new DebugInfo(IS_DEV ? engine : null);
@@ -130,7 +133,7 @@ export function createDemoScene(engine: Engine): Scene {
             ].join("\n");
             const minions = game.objects.filter((object): object is Minion => object instanceof Minion);
             const followingMinions = minions.filter(minion => minion.state === MinionState.following).length;
-            debugInfo.minionCountText = `Following Minions: ${followingMinions}  Total Minions: ${minions.length}`;
+            debugInfo.minionCountText = `${followingMinions}, ${minions.length}`;
         }
         entityInspector?.update();
     });

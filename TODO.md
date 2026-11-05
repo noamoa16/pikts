@@ -1,9 +1,28 @@
-- Minion数表示パネルの修正
-- Carriableの重力計算がおかしいので修正
-- フィールドを広げる
 - プロンプト：
-  - src/game.tsでは、_onionsをupdateごとに更新し、それを他オブジェクトから参照しています。このように、gameで一度だけupdateし、それを参照する形にできそうな関数や変数などは他にありそうですか？
-- Minionのparts作成 (Leaf Minion)
+  - IS_DEV を Game が持つようにしてください。変数名も適切なものにして。
+  - src/scenes/demoScene.ts におけるプレイヤーについてのデバッグ出力処理を src/ui/debug 下に移動してください。
+  - debugInfo.minionCountText で followingMinions, minions.length を表示していますが、箱を2つにして、それぞれの数値を表示するように変更して
+  - src/scenes/demoScene.ts における game.camera.update, player.whistle.update, entityInspector?.update を game.update 内に含めるようにしてください。EntityInspector も Game内で持つようにできるはず。
+  - carrying状態のMinionは、他のCarriable,Minion,Playerを貫通して移動できるようにしてください。
+  - Carriableに重力が働くようにしてください。src/scenes/demoScene.ts ではBluePellet1が宙に浮いていますが、落下するようにしたいです。
+  - Carriableについて、z座標も考慮して運搬経路を計算するようにしてください。現状、src/scenes/demoScene.ts では YellowPellet1 が Blockの上にありますが、z座標を考えていないため、有効な経路がないと判断して運搬ができません。z座標を考えれば運搬ができるようになるはずです。
+  - Minionに対して、パーツ "plant" を追加してください。
+    - Minionのジョブにあります。
+    - 色は緑色です。
+    - 形状は、Minionの最上部座標を原点として、
+    (0 <= z <= 1 and x^2 + y^2 <= 0.125) or (1 <= z <= 2 and (z - 1.5)^2 + (x/2)^2 <= 0.25 and |y| <= 0.125) です。(1 <= z <= 2 and x = y = 0) に深い緑色で線があります。座標はあくまでも形状を表現するための目安です。サイズは適切にスケーリングしてください。
+    - 当たり判定はありません。
+  - src/scenes/demoScene.ts について、将来的に、オブジェクトの名前と座標をyamlファイルから読み込むようにしたいです。文字列からオブジェクトを生成する処理が必要になるのですが、どのような実装にするのが良さそうですか？まだ実装はしないでください。
+  - Carriableに栄養価を表すフィールドを追加してください。
+    - 栄養価はpublic read可能で、クラスごとに固定値です。
+    - 栄養価はabsorbing処理のときに使う予定です。使える状態を整備するのが今回の目標です。
+    - 名前はnutritionが良さそうですかね？
+    - Pelletは、色によって栄養価が異なります。
+      - _BASE_COLORとgetMostCommonCarrierColorの結果が一致する場合 (完全一致ではなく、赤黄青が一致するかで判断すべきです) は栄養価が高くなります。
+      - 色が同じ場合、pellet1: 2, pellet5: 5
+      - 色が異なる場合、栄養価は、色が同じ場合をxとして ceil(x/2) です。(pellet1: 1, pellet5: 3 になるはず)
+    - Pellet以外のCarriableも追加予定であることに注意してください。
+      - 基本的にはPelletの色が一致する場合の栄養価を使うようにして、Pelletだけ特殊化するのが良いでしょう。
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

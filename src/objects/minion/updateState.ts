@@ -95,8 +95,8 @@ function updateFree(
     deltaSeconds: number,
     actions: MinionStateUpdateActions,
 ): void {
-    // 距離1.25以下の運搬物を探す
-    const nearby = actions.getNearbyCarriables(1.25);
+    // 距離1以下の運搬物を探す
+    const nearby = actions.getNearbyCarriables(1);
 
     // 距離0.5以下なら運搬開始可能
     const inPickupRange = nearby.find(carriable =>

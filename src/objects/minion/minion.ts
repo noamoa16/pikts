@@ -298,19 +298,21 @@ export abstract class Minion extends Entity {
      * 近くの運搬物を探し、距離が近い順に探す
      * @param maxDistance - この距離以下の運搬物を探す
      */
-    private getNearbyCarriables(maxDistance: number): Carriable[] {
-        const maxDistanceSquared = maxDistance * maxDistance;
+    private getNearbyCarriables(_maxDistance: number): Carriable[] {
+        const maxDistance = _maxDistance;
         return this.game.objects
             .filter((object): object is Carriable =>
                 object instanceof Carriable && object.canAcceptCarrier,
             )
             .map(carriable => ({
                 carriable,
-                distanceSquared: (carriable.position.x - this.position.x) ** 2
-                    + (carriable.position.y - this.position.y) ** 2,
+                distance: Math.sqrt(
+                    (carriable.position.x - this.position.x) ** 2 +
+                    (carriable.position.y - this.position.y) ** 2
+                ) - carriable.radius,
             }))
-            .filter(candidate => candidate.distanceSquared <= maxDistanceSquared)
-            .sort((a, b) => a.distanceSquared - b.distanceSquared)
+            .filter(candidate => candidate.distance <= maxDistance)
+            .sort((a, b) => a.distance - b.distance)
             .map(candidate => candidate.carriable);
     }
     

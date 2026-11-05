@@ -14,8 +14,7 @@ import { Shape } from "../physics/figure";
 import { Entity } from "./entity";
 
 export class GrassFloor extends Entity {
-    constructor(game: Game, position: Vector3, playArea: number) {
-        const size = playArea * 2;
+    constructor(game: Game, position: Vector3, size: number) {
         super(
             game,
             "floor",
@@ -26,7 +25,7 @@ export class GrassFloor extends Entity {
         );
 
         this.isVisible = false;
-        createGrassFloor(this.scene, position, playArea);
+        createGrassFloor(this.scene, position, size);
     }
 
     override update(_: number): void {
@@ -34,8 +33,7 @@ export class GrassFloor extends Entity {
     }
 }
 
-function createGrassFloor(scene: Scene, position: Vector3, playArea: number): Mesh {
-    const size = playArea * 2;
+function createGrassFloor(scene: Scene, position: Vector3, size: number): Mesh {
     const floor = CreatePlane(
         "floor",
         {
