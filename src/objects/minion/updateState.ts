@@ -137,13 +137,19 @@ function updateCarrying(
         const stoppingDistance = carriable.radius + minion.size / 2 + 1 / 32;
         const targetPosition = carriable.getCarrierFormationPosition(minion, stoppingDistance);
         if (targetPosition) {
-            actions.moveFor(calcCarriableApproachMoveVector(
+            const move = calcCarriableApproachMoveVector(
                 minion.position,
                 targetPosition,
                 minion.speed,
                 deltaSeconds,
                 0,
-            ), [carriable]);
+            );
+            const heightDifference = targetPosition.z - minion.position.z;
+            move.z = Math.sign(heightDifference) * Math.min(
+                minion.speed * deltaSeconds,
+                Math.abs(heightDifference),
+            );
+            actions.moveFor(move, [carriable]);
         }
     }
     actions.setCollisionsEnabled(true);

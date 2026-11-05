@@ -58,7 +58,7 @@ export class Carriable extends Entity {
         return new Vector3(
             this.position.x + Math.cos(angle) * distance,
             this.position.y + Math.sin(angle) * distance,
-            this.position.z,
+            this.groundingPosition.z + minion.size / 2,
         );
     }
 
@@ -95,13 +95,15 @@ export class Carriable extends Entity {
             this.state = CarriableState.free;
         }
 
+        let absorbed = false;
         if(this.state === CarriableState.carried){
             this.moveToOnion(deltaSeconds);
-            this.absorbIfNearOnion();
+            absorbed = this.absorbIfNearOnion();
         }
-        else{
-            // Carriables only move under gravity while they are free. Their
-            // carrier controls their position while being carried.
+
+        // Carriables keep falling while being carried; the carriers control
+        // horizontal movement, while collision and gravity resolve height.
+        if(!absorbed){
             super.update(deltaSeconds);
         }
 
@@ -233,12 +235,12 @@ export class Carriable extends Entity {
         return onions[0] ?? null;
     }
 
-    private absorbIfNearOnion(): void {
+    private absorbIfNearOnion(): boolean {
         const target = this.getTargetOnion();
-        if(!target) return;
+        if(!target) return false;
         const distanceSquared = (this.position.x - target.position.x) ** 2
             + (this.position.y - target.position.y) ** 2;
-        if(distanceSquared > 0.5 * 0.5) return;
+        if(distanceSquared > 0.5 * 0.5) return false;
 
         for(const carrier of this.carriers){
             carrier.carried = null;
@@ -250,6 +252,7 @@ export class Carriable extends Entity {
         this.absorbingBaseRotation = this.rotation.clone();
         this.absorbingBaseScale = this.mesh.scaling.clone();
         this.absorbingOnion = target;
+        return true;
     }
 
     private updateAbsorbing(deltaSeconds: number): void {
@@ -308,7 +311,13 @@ export class Carriable extends Entity {
             this.position = new Vector3(start.x, start.y, this.position.z);
         }
 
-        const direction = findGridPath(start, goal, this.game.gridMap)?.[0];
+        const direction = findGridPath(
+            start,
+            goal,
+            this.game.gridMap,
+            this.groundingPosition.z,
+            this.size / 2,
+        )?.[0];
         if(!direction) return;
 
         const next = { x: start.x + direction.x, y: start.y + direction.y };

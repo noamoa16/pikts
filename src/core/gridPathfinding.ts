@@ -4,6 +4,12 @@ export interface GridPoint {
     readonly y: number;
 }
 
+/** A blocked cell and the vertical interval occupied by its obstacle. */
+export interface GridObstacle extends GridPoint {
+    readonly minZ?: number;
+    readonly maxZ?: number;
+}
+
 /** Inclusive, finite bounds for a grid map. */
 export interface GridBounds {
     readonly minX: number;
@@ -15,7 +21,7 @@ export interface GridBounds {
 /** Cells occupied by pathfinding obstacles, such as Blocks and Slopes. */
 export interface GridMap {
     readonly bounds: GridBounds;
-    readonly blocked: readonly GridPoint[];
+    readonly blocked: readonly GridObstacle[];
 }
 
 /** One of the eight possible grid moves. */
@@ -85,6 +91,8 @@ export function findGridPath(
     start: GridPoint,
     goal: GridPoint,
     map: GridMap,
+    altitude = 0,
+    height = 0,
 ): GridDirection[] | null {
     const { bounds } = map;
     if (
@@ -100,7 +108,12 @@ export function findGridPath(
         return null;
     }
 
-    const blocked = new Set(map.blocked.map(key));
+    const blocked = new Set(map.blocked
+        .filter(obstacle => {
+            if (obstacle.minZ === undefined || obstacle.maxZ === undefined) return true;
+            return altitude < obstacle.maxZ && altitude + height > obstacle.minZ;
+        })
+        .map(key));
     const startKey = key(start);
     const goalKey = key(goal);
     if (blocked.has(startKey) || blocked.has(goalKey)) return null;

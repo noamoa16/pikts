@@ -8,7 +8,7 @@ import { MainCamera } from "./rendering/camera";
 import { Block } from "./objects/block";
 import { Slope as SlopeEntity } from "./objects/slope";
 import { Dir4, Figure, Slope as SlopeFigure } from "./physics/figure";
-import { type GridBounds, type GridMap, type GridPoint } from "./core/gridPathfinding";
+import { type GridBounds, type GridMap, type GridObstacle } from "./core/gridPathfinding";
 import { Onion } from "./objects/onion/onion";
 import { EntityInspector } from "./ui/debug/entityInspector";
 import { MinionCountDisplay } from "./ui/minionCountDisplay";
@@ -85,16 +85,15 @@ export class Game {
         object.mesh.dispose(false, true);
     }
 
-    private createGridObstaclePoints(): GridPoint[] {
-        const points = new Map<string, GridPoint>();
+    private createGridObstaclePoints(): GridObstacle[] {
+        const points = new Map<string, GridObstacle>();
         for (const object of this.objects) {
             if (!(object instanceof Block || object instanceof SlopeEntity)) continue;
-            // This path map describes the ground-level x/y plane. The large
-            // Block used as the demo floor is below that plane and is ignored.
-            if (Math.abs(object.groundingPosition.z) > 1e-6) continue;
 
             let halfX = object.size / 2;
             let halfY = object.size / 2;
+            let minZ = object.position.z - object.size / 2;
+            let maxZ = object.position.z + object.size / 2;
             if (object instanceof SlopeEntity && object.figure instanceof SlopeFigure) {
                 const figure = object.figure;
                 if (figure.upward === Dir4.Right || figure.upward === Dir4.Left) {
@@ -104,6 +103,8 @@ export class Game {
                     halfX = figure.width / 2;
                     halfY = figure.length / 2;
                 }
+                minZ = figure.center.z - figure.height / 2;
+                maxZ = figure.center.z + figure.height / 2;
             }
 
             const minX = Math.ceil(object.position.x - halfX - 1e-6);
@@ -112,8 +113,8 @@ export class Game {
             const maxY = Math.floor(object.position.y + halfY + 1e-6);
             for (let x = minX; x <= maxX; x++) {
                 for (let y = minY; y <= maxY; y++) {
-                    const point = { x, y };
-                    points.set(`${x},${y}`, point);
+                    const point = { x, y, minZ, maxZ };
+                    points.set(`${x},${y},${minZ},${maxZ}`, point);
                 }
             }
         }
