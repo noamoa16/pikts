@@ -12,6 +12,7 @@ import { type GridBounds, type GridMap, type GridPoint } from "./core/gridPathfi
 import { Onion } from "./objects/onion/onion";
 
 export class Game {
+    public readonly isDevelopment = import.meta.env.DEV;
     public readonly objects: Entity[] = [];
     public readonly camera: MainCamera;
     public readonly frameTimerUpdate = new FrameTimer(30);

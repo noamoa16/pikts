@@ -29,8 +29,6 @@ import {
     YellowPellet5,
 } from "../objects/carriable/pellets";
 
-const IS_DEV = import.meta.env.DEV;
-
 // let shadowGen: ShadowGenerator;
 
 export function createDemoScene(engine: Engine): Scene {
@@ -46,9 +44,9 @@ export function createDemoScene(engine: Engine): Scene {
     const PLAY_AREA = 10;
     new GrassFloor(game, new Vector3(-PLAY_AREA, 0, 0), PLAY_AREA);
     new GrassFloor(game, new Vector3(0, 0, 0), PLAY_AREA);
-    new BoundaryWall(game, new Vector3(0, PLAY_AREA, 0), PLAY_AREA, IS_DEV);
-    new BoundaryWall(game, new Vector3(0, -PLAY_AREA, 0), PLAY_AREA, IS_DEV);
-    new BoundaryWall(game, new Vector3(PLAY_AREA, 0, 0), PLAY_AREA, IS_DEV);
+    new BoundaryWall(game, new Vector3(0, PLAY_AREA, 0), PLAY_AREA, game.isDevelopment);
+    new BoundaryWall(game, new Vector3(0, -PLAY_AREA, 0), PLAY_AREA, game.isDevelopment);
+    new BoundaryWall(game, new Vector3(PLAY_AREA, 0, 0), PLAY_AREA, game.isDevelopment);
 
     // オブジェクト生成
     const player = new Player(game, new Vector3(0, 0, 0));
@@ -73,8 +71,8 @@ export function createDemoScene(engine: Engine): Scene {
 
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
-    const debugInfo = new DebugInfo(IS_DEV ? engine : null);
-    const entityInspector = IS_DEV ? new EntityInspector(game, engine) : null;
+    const debugInfo = new DebugInfo(game.isDevelopment ? engine : null);
+    const entityInspector = game.isDevelopment ? new EntityInspector(game, engine) : null;
     const handleNonMovementAction = (action: Action, pressed: boolean) => {
         switch (action) {
             case "whistle":
