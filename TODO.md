@@ -1,6 +1,4 @@
 - プロンプト：
-  - debugInfo.minionCountText で followingMinions, minions.length を表示していますが、箱を2つにして、それぞれの数値を表示するように変更して
-  - src/scenes/demoScene.ts における game.camera.update, player.whistle.update, entityInspector?.update を game.update 内に含めるようにしてください。EntityInspector も Game内で持つようにできるはず。
   - carrying状態のMinionは、他のCarriable,Minion,Playerを貫通して移動できるようにしてください。
   - Carriableに重力が働くようにしてください。src/scenes/demoScene.ts ではBluePellet1が宙に浮いていますが、落下するようにしたいです。
   - Carriableについて、z座標も考慮して運搬経路を計算するようにしてください。現状、src/scenes/demoScene.ts では YellowPellet1 が Blockの上にありますが、z座標を考えていないため、有効な経路がないと判断して運搬ができません。z座標を考えれば運搬ができるようになるはずです。

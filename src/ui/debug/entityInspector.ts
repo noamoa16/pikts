@@ -1,5 +1,5 @@
-import { Color3, HighlightLayer, type Engine } from "#vendor/babylon";
-import { Game } from "../../game";
+import { Color3, HighlightLayer } from "#vendor/babylon";
+import type { Game } from "../../game";
 import { Carriable, CarriableState } from "../../objects/carriable/carriable";
 import { minionColorToString } from "../../objects/minion/color";
 import { Minion, MinionState } from "../../objects/minion/minion";
@@ -18,9 +18,9 @@ export class EntityInspector {
 
     constructor(
         private readonly game: Game,
-        engine: Engine,
+        canvas: HTMLCanvasElement | null,
     ) {
-        this.canvas = engine.getRenderingCanvas();
+        this.canvas = canvas;
         this.panel = this.createPanel(this.canvas?.parentElement ?? null);
         this.info = this.panel?.querySelector("pre") ?? null;
         this.copyButton = this.panel?.querySelector("button") ?? null;

@@ -10,11 +10,15 @@ import { Slope as SlopeEntity } from "./objects/slope";
 import { Dir4, Figure, Slope as SlopeFigure } from "./physics/figure";
 import { type GridBounds, type GridMap, type GridPoint } from "./core/gridPathfinding";
 import { Onion } from "./objects/onion/onion";
+import { EntityInspector } from "./ui/debug/entityInspector";
+import { MinionCountDisplay } from "./ui/minionCountDisplay";
 
 export class Game {
     public readonly isDevelopment = import.meta.env.DEV;
     public readonly objects: Entity[] = [];
     public readonly camera: MainCamera;
+    public readonly minionCountDisplay: MinionCountDisplay;
+    public readonly entityInspector: EntityInspector | null;
     public readonly frameTimerUpdate = new FrameTimer(30);
     public readonly frameTimerCollision = new FrameTimer(30);
 
@@ -42,6 +46,12 @@ export class Game {
 
     constructor(public readonly scene: Scene){
         this.camera = new MainCamera(this.scene);
+        const canvas = this.scene.getEngine().getRenderingCanvas();
+        this.minionCountDisplay = new MinionCountDisplay(this, canvas);
+        this.entityInspector = this.isDevelopment
+            ? new EntityInspector(this, canvas)
+            : null;
+        this.scene.onDisposeObservable.add(() => this.minionCountDisplay.remove());
     }
 
     private cacheFigure(){
@@ -167,5 +177,13 @@ export class Game {
                 object instanceof Onion,
             );
         this.dispatchCollisionEvents();
+
+        const player = this.objects.find((object): object is Player => object instanceof Player);
+        if (player) {
+            this.camera.update(deltaSeconds, player.position);
+            player.whistle.update(deltaSeconds, this.objects);
+        }
+        this.minionCountDisplay.update();
+        this.entityInspector?.update();
     }
 }

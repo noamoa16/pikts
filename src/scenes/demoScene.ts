@@ -5,9 +5,7 @@ import {
     Scene,
     Vector3,
 } from "#vendor/babylon";
-import { EntityInspector } from "../ui/debug/entityInspector";
 import { PlayerDebugInfo } from "../ui/debug/playerDebugInfo";
-import { MinionCountDisplay } from "../ui/minionCountDisplay";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
@@ -72,8 +70,6 @@ export function createDemoScene(engine: Engine): Scene {
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const playerDebugInfo = new PlayerDebugInfo(game, player, game.isDevelopment ? engine : null);
-    const minionCountDisplay = new MinionCountDisplay(game, engine);
-    const entityInspector = game.isDevelopment ? new EntityInspector(game, engine) : null;
     const handleNonMovementAction = (action: Action, pressed: boolean) => {
         switch (action) {
             case "whistle":
@@ -118,12 +114,8 @@ export function createDemoScene(engine: Engine): Scene {
     game.scene.onBeforeRenderObservable.add(() => {
         const deltaSeconds = Math.min(engine.getDeltaTime() / 1000, 1 / Game.TARGET_FPS);
         game.update(deltaSeconds);
-        game.camera.update(deltaSeconds, player.position);
-        player.whistle.update(deltaSeconds, game.objects);
 
         playerDebugInfo.update();
-        minionCountDisplay.update();
-        entityInspector?.update();
     });
 
     // 画面がリサイズされたら
@@ -136,7 +128,6 @@ export function createDemoScene(engine: Engine): Scene {
     game.scene.onDisposeObservable.add(() => {
         window.removeEventListener("resize", onResize);
         playerDebugInfo.remove();
-        minionCountDisplay.remove();
         player.removeEvents();
         dpad.remove();
     });

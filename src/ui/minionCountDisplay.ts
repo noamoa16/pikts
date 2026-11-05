@@ -1,4 +1,3 @@
-import type { Engine } from "#vendor/babylon";
 import type { Game } from "../game";
 import { Minion, MinionState } from "../objects/minion/minion";
 
@@ -6,8 +5,8 @@ export class MinionCountDisplay {
     private readonly container: HTMLDivElement | null = null;
     private readonly counts: [HTMLDivElement, HTMLDivElement] | null = null;
 
-    constructor(private readonly game: Game, engine: Engine) {
-        const parent = engine.getRenderingCanvas()?.parentElement;
+    constructor(private readonly game: Game, canvas: HTMLCanvasElement | null) {
+        const parent = canvas?.parentElement;
         if (!(parent instanceof HTMLDivElement)) {
             return;
         }
