@@ -1,10 +1,5 @@
 - プロンプト：
-  - MinionColorについて、MinionColor から Color3 型への変換関数を作成してください。
-    - 出力のColor3の各要素は0または1です。
-    - RedPellet1 の _BASE_COLOR の定義にその関数が使えるはずです。
-    - Minion の _BASE_COLOR, _FREE_COLOR の定義に、その関数の出力を加工すれば使えるはずです。RedMinion などで オーバーライドする必要もなくなるはずです。
-    - Onion の _BASE_COLOR の定義に、その関数の出力を加工すれば使えるはずです。RedOnion などで オーバーライドする必要もなくなるはずです。
-    - Pellet の nutrition の計算が簡単にできるはずです。
+  - Playerが移動するとPlayerの向きが変わる処理があったのですが、何故か変わらなくなってしまいました。何故？直して
   - playerDebugInfo という名前は変えた方が良いと思いませんか？
   - src/ui/debug/playerDebugInfo.ts, src/ui/debug/entityInspector.ts について、position と rotation を編集できるようにしてください。編集した場合、実際に position や rotation が変更されます。
   - Minion移動時に、移動方向に合わせてMinionのrotation.zを変更する処理を追加してください。現状、Playerはそれを行っているので参考にしてください。Playerのrotation.z変更処理も含め、Entityの関数として定義して共通化した方がいいかもしれません。

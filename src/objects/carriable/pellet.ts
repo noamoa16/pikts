@@ -7,7 +7,7 @@ import {
 } from "#vendor/babylon";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
-import { MinionColor } from "../minion/color";
+import { minionColorToColor3 } from "../minion/color";
 import { Carriable } from "./carriable";
 
 export class Pellet extends Carriable {
@@ -17,13 +17,8 @@ export class Pellet extends Carriable {
     public override get nutrition(): number {
         const carrierColor = this.getMostCommonCarrierColor();
         const baseColor = this.baseColor;
-        const matchesBaseColor = carrierColor === MinionColor.red
-            ? baseColor.r > 0 && baseColor.g === 0 && baseColor.b === 0
-            : carrierColor === MinionColor.yellow
-                ? baseColor.r > 0 && baseColor.g > 0 && baseColor.b === 0
-                : carrierColor === MinionColor.blue
-                    ? baseColor.r === 0 && baseColor.g === 0 && baseColor.b > 0
-                    : false;
+        const matchesBaseColor = carrierColor !== null
+            && minionColorToColor3(carrierColor).equals(baseColor);
 
         return matchesBaseColor ? super.nutrition : Math.ceil(super.nutrition / 2);
     }

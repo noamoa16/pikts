@@ -21,7 +21,7 @@ import {
 } from "./throw";
 import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
-import { MinionColor } from "./color";
+import { MinionColor, minionColorToColor3 } from "./color";
 import { Plant } from "./parts/plant";
 
 export { MinionState } from "./state";
@@ -29,10 +29,18 @@ export { MinionState } from "./state";
 export abstract class Minion extends Entity {
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Minion)._MINION_COLOR; }
-    protected static readonly _BASE_COLOR: Color3 = new Color3(0, 0.95, 0);
-    protected static readonly _FREE_COLOR: Color3 = new Color3(0.5, 0.95, 0.5);
-    private get baseColor(){ return (this.constructor as typeof Minion)._BASE_COLOR; }
-    private get freeColor(){ return (this.constructor as typeof Minion)._FREE_COLOR; }
+    private get baseColor(): Color3 {
+        const color = minionColorToColor3(this.minionColor);
+        return new Color3(color.r * 0.95, color.g * 0.95, color.b * 0.95);
+    }
+    private get freeColor(): Color3 {
+        const color = minionColorToColor3(this.minionColor);
+        return new Color3(
+            color.r > 0 ? 0.95 : 0.5,
+            color.g > 0 ? 0.95 : 0.5,
+            color.b > 0 ? 0.95 : 0.5,
+        );
+    }
     public state: MinionState = MinionState.free;
     public follower: Player | null = null;
     public carried: Carriable | null = null;
