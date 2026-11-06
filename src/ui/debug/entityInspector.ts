@@ -140,26 +140,29 @@ export class EntityInspector {
     }
 
     private formatInfo(entity: InspectedEntity): string {
+        const { x, y, z } = entity.groundingPosition;
+        const { x: rx, y: ry, z: rz } = entity.rotation;
         if (entity instanceof Minion) {
-            const { x, y, z } = entity.groundingPosition;
             return [
                 `${entity.constructor.name} #${entity.id}`,
                 `State: ${MinionState[entity.state]}`,
-                `Position: x=${x}`,
-                `          y=${y}`,
-                `          z=${z}`,
+                `Position: x=${x} y=${y} z=${z}`,
+                `Rotation: x=${rx.toFixed(4)} y=${ry.toFixed(4)} z=${rz.toFixed(4)}`,
             ].join("\n");
         }
-
-        const { x, y, z } = entity.groundingPosition;
-        return [
-            `${entity.constructor.name} #${entity.id}`,
-            `State: ${CarriableState[entity.state]}`,
-            `Carriers: ${entity.carrierCount} (${entity.minCarriers}~${entity.maxCarriers})`,
-            `Color: ${minionColorToString(entity.getMostCommonCarrierColor())}`,
-            `Speed: ${entity.calcCarryingSpeed()}`,
-            `Position: x=${x} y=${y} z=${z}`,
-        ].join("\n");
+        else if(entity instanceof Carriable){
+            return [
+                `${entity.constructor.name} #${entity.id}`,
+                `State: ${CarriableState[entity.state]}`,
+                `Carriers: ${entity.carrierCount} (${entity.minCarriers}~${entity.maxCarriers})`,
+                `Color: ${minionColorToString(entity.getMostCommonCarrierColor())}`,
+                `Speed: ${entity.calcCarryingSpeed()}`,
+                `Position: x=${x} y=${y} z=${z}`,
+            ].join("\n");
+        }
+        else{
+            return "Never";
+        }
     }
 
     private pickEntityAt(x: number, y: number): InspectedEntity | null {

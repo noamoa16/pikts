@@ -52,6 +52,13 @@ export function normalizeAngle(angle: number, { includePi = false } = {}): numbe
     }
     return a;
 }
+export function normalizeAngles(angles: Vector3, { includePi = false } = {}): Vector3 {
+    return new Vector3(
+        normalizeAngle(angles.x, { includePi }),
+        normalizeAngle(angles.y, { includePi }),
+        normalizeAngle(angles.z, { includePi }),
+    );
+}
 
 function normalizeZero(value: number): number {
     if(Math.abs(value) < Number.EPSILON){

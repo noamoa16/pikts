@@ -85,7 +85,11 @@ export abstract class Minion extends Entity {
     override update(deltaSeconds: number): void {
         super.update(deltaSeconds);
         updateMinionState(this, deltaSeconds, this.stateUpdateActions);
-        if ([MinionState.free, MinionState.following, MinionState.carrying].includes(this.state)) {
+        if ([
+                MinionState.free,
+                MinionState.following,
+                MinionState.carrying,
+            ].includes(this.state)) {
             this.separateFromNearbyCarriables(deltaSeconds);
         }
 
@@ -320,9 +324,8 @@ export abstract class Minion extends Entity {
             )
             .map(carriable => ({
                 carriable,
-                distance: Math.sqrt(
-                    (carriable.position.x - this.position.x) ** 2 +
-                    (carriable.position.y - this.position.y) ** 2
+                distance: Vector3.DistanceSquared(
+                    carriable.position, this.position,
                 ) - carriable.radius,
             }))
             .filter(candidate => candidate.distance <= maxDistance)

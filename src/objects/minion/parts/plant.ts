@@ -43,6 +43,7 @@ export class Plant {
         );
         leaf.parent = minion.mesh;
         leaf.position = root.add(new Vector3(0, 0, scale * 1.5));
+        leaf.rotation.x = Math.PI / 2;
         leaf.scaling = new Vector3(scale, scale * 0.125, scale * 0.5);
         leaf.isPickable = false;
         leaf.checkCollisions = false;

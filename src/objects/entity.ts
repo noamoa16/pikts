@@ -3,7 +3,7 @@ import {
 } from "#vendor/babylon";
 import { Dir4, Figure, Shape, Sphere, Slope } from "../physics/figure";
 import { Game } from "../game";
-import { clearLow16Bits, hashInt32 } from "../core/math";
+import { clearLow16Bits, hashInt32, normalizeAngles } from "../core/math";
 import { Sphere2Slope } from "../physics/figureImpl/sphere2Slope";
 import { createEntityFigure, createEntityShape } from "./entityShape";
 
@@ -35,8 +35,12 @@ export abstract class Entity {
     }
 
     // 回転
-    public get rotation(): Vector3 { return this.mesh.rotation; }
-    protected set rotation(value: Vector3) { this.mesh.rotation = value; }
+    public get rotation(): Vector3 {
+        return normalizeAngles(this.mesh.rotation);
+    }
+    protected set rotation(value: Vector3) {
+        this.mesh.rotation = normalizeAngles(value);
+    }
 
     // サイズ
     private _size: number = 1;

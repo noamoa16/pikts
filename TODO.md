@@ -1,5 +1,31 @@
-- Carriableに集まるMinionの角度はmax carriersに合わせる
-- MinionのPlantのサイズ感調整
+- プロンプト：
+  - MinionColorについて、MinionColor から Color3 型への変換関数を作成してください。
+    - 出力のColor3の各要素は0または1です。
+    - RedPellet1 の _BASE_COLOR の定義にその関数が使えるはずです。
+    - Minion の _BASE_COLOR, _FREE_COLOR の定義に、その関数の出力を加工すれば使えるはずです。RedMinion などで オーバーライドする必要もなくなるはずです。
+    - Onion の _BASE_COLOR の定義に、その関数の出力を加工すれば使えるはずです。RedOnion などで オーバーライドする必要もなくなるはずです。
+    - Pellet の nutrition の計算が簡単にできるはずです。
+  - playerDebugInfo という名前は変えた方が良いと思いませんか？
+  - src/ui/debug/playerDebugInfo.ts, src/ui/debug/entityInspector.ts について、position と rotation を編集できるようにしてください。編集した場合、実際に position や rotation が変更されます。
+  - Minion移動時に、移動方向に合わせてMinionのrotation.zを変更する処理を追加してください。現状、Playerはそれを行っているので参考にしてください。Playerのrotation.z変更処理も含め、Entityの関数として定義して共通化した方がいいかもしれません。
+  - Minion が Carriable から離れすぎたら (距離が Carriable の半径 + 0.5 を超えたら)、運搬をやめて Minion の state を free に変更し、Carriable の carriers からも除外してください。
+  - Carriable について、updateAbsorbingでremoveObjectされる際に、特定の処理を実行するようにしてください。特定の処理では Minion が増えます。
+    - 増えるMinionの色はonionの色と同じです。
+    - 増えるMinionの数はその Carriable の nutrition の値です。
+    - 増えるMinionのstateはseedです。(seedのstateは現状存在しないので新たに追加してください)
+      - seedのstateでは、absorbingStartPoint を原点、absorbingEndPoint　を　(0, 0, h)、Onionの半径を r としたときに、関数 z = h * (1 - (a/r)^2) and x = a * cosθ and y = a * sinθ の形に沿うように、(0, 0, h) から (r * cosθ, r * sinθ, 0) まで等速で移動します。θは [0, 2π) の一様ランダムな実数で、新たに増えるMinionごとに最初に一度だけ決定される定数です。
+        - seedのstateでは、rotaiton の x, y は (sinθ * (π/2 - arctan(2ha/r^2)), -cosθ * (π/2 - arctan(2ha/r^2))) です。a は 0 から r まで動きます。
+        - (r * cosθ, r * sinθ, 0) まで移動が完了したら free の state になります。そのとき、rotaiton の x, y は 0 にします。
+  - demoScene において、(0, 0, 0)の GrassFloor から(-PLAY_AREA, 0, 0) の GrassFloor に移動する際に、多くのMinionがその2つの境界付近で引っかかって移動が止まってしまいます。Player は問題なく移動できます。何故ですか？
+- Minion について、現状は seed -> free で state が遷移していますが、seed -> buried -> free の順で遷移するように変更してください。
+  - buried の状態では、Onion の absorbingStartPoint を原点とした場合、z座標は0になります。(groundingPosition ではなく position)
+  - Player が buried 状態の Minionの 半径 0.5 以内で 投げのボタンを押すと、
+    - Minion の state が following になり、Minion の groundingPosition.z が 0、velocity.y が 1 になる
+      - absorbingStartPoint を原点とした場合に合わせているので注意。absorbingStartPointは実際には原点ではないかもしれません。
+    - この操作は Player の 投げ操作よりも優先されます。
+    - Player の 半径 0.5 以内 に buried 状態の Minion が存在する場合は、dpad の hold の文字が pick に変わります。
+  - EntityInspector, PlayerDebugInfo で共通している処理を上手くまとめてください。別ファイルを用意しても構いません。
+  - minion.ts の行数が多いので減らしたいのですが、何か減らす案はある？リファクタリングやファイル分割？
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定
