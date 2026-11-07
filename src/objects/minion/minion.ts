@@ -44,6 +44,11 @@ export abstract class Minion extends Entity {
     public state: MinionState = MinionState.free;
     public follower: Player | null = null;
     public carried: Carriable | null = null;
+    private seedStartPoint: Vector3 | null = null;
+    private seedHeight = 0;
+    private seedRadius = 0;
+    private seedTheta = 0;
+    private seedElapsedSeconds = 0;
 
     /**
      * Minionの更新時アクション
@@ -92,6 +97,12 @@ export abstract class Minion extends Entity {
     }
 
     override update(deltaSeconds: number): void {
+        if (this.state === MinionState.seed) {
+            this.updateSeed(deltaSeconds);
+            this.updateColor();
+            return;
+        }
+
         super.update(deltaSeconds);
         const positionBeforeStateUpdate = this.position.clone();
         updateMinionState(this, deltaSeconds, this.stateUpdateActions);
@@ -107,6 +118,10 @@ export abstract class Minion extends Entity {
             this.rotateToDirection(this.position.subtract(positionBeforeStateUpdate), deltaSeconds);
         }
 
+        this.updateColor();
+    }
+
+    private updateColor(): void {
         // 色
         const material = this.mesh.material;
         if(material){
@@ -116,6 +131,76 @@ export abstract class Minion extends Entity {
                 { metallicity: 0.1, luminance: 0.3 },
             );
         }
+    }
+
+    /** Onion から生まれた直後の軌道を設定する */
+    public becomeSeed(startPoint: Vector3, endPoint: Vector3, radius: number): void {
+        this.state = MinionState.seed;
+        this.seedStartPoint = startPoint.clone();
+        this.seedHeight = endPoint.z - startPoint.z;
+        this.seedRadius = Math.max(0, radius);
+        this.seedTheta = Random.uniform(0, 2 * Math.PI);
+        this.seedElapsedSeconds = 0;
+        this.velocity = Vector3.Zero();
+        this.checkCollisions = false;
+        this.groundingPosition = endPoint.clone();
+        this.rotation.x = Math.sin(this.seedTheta) * Math.PI / 2;
+        this.rotation.y = -Math.cos(this.seedTheta) * Math.PI / 2;
+    }
+
+    private updateSeed(deltaSeconds: number): void {
+        const startPoint = this.seedStartPoint;
+        if (!startPoint) {
+            this.becomeFree();
+            return;
+        }
+
+        this.seedElapsedSeconds += Math.max(0, deltaSeconds);
+        const totalLength = this.getSeedArcLength();
+        const distance = Math.min(this.seedElapsedSeconds * this.speed, totalLength);
+        let low = 0;
+        let high = this.seedRadius;
+        // Invert the curve's arc length so the seed moves at a constant speed.
+        for (let i = 0; i < 24; i++) {
+            const middle = (low + high) / 2;
+            if (this.getSeedArcLengthAt(middle) < distance) low = middle;
+            else high = middle;
+        }
+        const a = distance >= totalLength ? this.seedRadius : (low + high) / 2;
+        const theta = this.seedTheta;
+        const k = this.seedRadius > 0
+            ? 2 * this.seedHeight / (this.seedRadius * this.seedRadius)
+            : 0;
+        const tilt = Math.PI / 2 - Math.atan(k * a);
+        const radialFraction = this.seedRadius > 0 ? a / this.seedRadius : 0;
+        this.groundingPosition = new Vector3(
+            startPoint.x + a * Math.cos(theta),
+            startPoint.y + a * Math.sin(theta),
+            startPoint.z + this.seedHeight * (1 - radialFraction ** 2),
+        );
+        this.rotation.x = Math.sin(theta) * tilt;
+        this.rotation.y = -Math.cos(theta) * tilt;
+        this.velocity = Vector3.Zero();
+
+        if (distance >= totalLength) {
+            this.rotation.x = 0;
+            this.rotation.y = 0;
+            this.seedStartPoint = null;
+            this.state = MinionState.free;
+            this.checkCollisions = true;
+            this.separateFromOverlappingMinions();
+        }
+    }
+
+    private getSeedArcLength(): number {
+        return this.getSeedArcLengthAt(this.seedRadius);
+    }
+
+    private getSeedArcLengthAt(a: number): number {
+        if (this.seedRadius <= 0 || this.seedHeight === 0) return a;
+        const k = 2 * this.seedHeight / (this.seedRadius * this.seedRadius);
+        const ka = k * a;
+        return 0.5 * (a * Math.sqrt(1 + ka * ka) + Math.asinh(ka) / k);
     }
 
     protected moveFor(
@@ -144,6 +229,7 @@ export abstract class Minion extends Entity {
             [MinionState.held]: this.baseColor,
             [MinionState.thrown]: this.baseColor,
             [MinionState.carrying]: this.baseColor,
+            [MinionState.seed]: this.baseColor,
         }[this.state];
     }
 
@@ -425,5 +511,16 @@ export abstract class Minion extends Entity {
             cursorVector: this.follower.cursor.unrotatedPosition,
         });
         this.follower = null;
+    }
+}
+
+/** Carriable の吸収から生成する、色を指定できる Minion */
+export class SeedMinion extends Minion {
+    constructor(game: Game, position: Vector3, private readonly seedColor: MinionColor) {
+        super(game, position);
+    }
+
+    override get minionColor(): MinionColor {
+        return this.seedColor;
     }
 }

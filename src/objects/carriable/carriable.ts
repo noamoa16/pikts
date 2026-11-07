@@ -13,7 +13,7 @@ import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
-import { Minion, MinionState } from "../minion/minion";
+import { Minion, MinionState, SeedMinion } from "../minion/minion";
 import { MinionColor, minionColorToString } from "../minion/color";
 import { Player } from "../player/player";
 import { Onion } from "../onion/onion";
@@ -42,6 +42,7 @@ export class Carriable extends Entity {
     private absorbingBaseRotation: Vector3 | null = null;
     private absorbingBaseScale: Vector3 | null = null;
     private absorbingOnion: Onion | null = null;
+    private absorbingNutrition = 0;
 
     /** 運搬 Minion が円周上で占める、均等配置された位置を返す */
     public getCarrierFormationPosition(minion: Minion, distance: number): Vector3 | null {
@@ -252,6 +253,7 @@ export class Carriable extends Entity {
             carrier.carried = null;
             carrier.becomeFree();
         }
+        this.absorbingNutrition = this.nutrition;
         this.carriers = [];
         this.state = CarriableState.absorbed;
         this.absorbingElapsedSeconds = 0;
@@ -268,6 +270,7 @@ export class Carriable extends Entity {
         this.absorbingElapsedSeconds += deltaSeconds;
 
         if(this.absorbingElapsedSeconds >= ABSORBING_WAIT + ABSORBING_MOVE){
+            this.spawnSeedMinions();
             this.game.removeObject(this);
             return;
         }
@@ -292,6 +295,19 @@ export class Carriable extends Entity {
             target.absorbingEndPoint,
             lerp,
         );
+    }
+
+    private spawnSeedMinions(): void {
+        const onion = this.absorbingOnion;
+        if (!onion) return;
+
+        const startPoint = onion.absorbingStartPoint;
+        const endPoint = onion.absorbingEndPoint;
+        const radius = onion.size / 2;
+        for (let i = 0; i < this.absorbingNutrition; i++) {
+            const minion = new SeedMinion(this.game, endPoint, onion.minionColor);
+            minion.becomeSeed(startPoint, endPoint, radius);
+        }
     }
 
     private moveToOnion(deltaSeconds: number): void{
