@@ -18,7 +18,7 @@ export class PlayerDebugOverlay {
             return;
         }
 
-        const parent = engine.getRenderingCanvas()?.parentElement;
+        const parent = engine.getRenderingCanvas()?.parentElement ?? null;
         const panel = createDebugPanel(parent, "right");
         if (!panel) return;
 

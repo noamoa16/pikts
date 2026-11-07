@@ -1,7 +1,6 @@
 import {
     Color3,
     StandardMaterial,
-    Vector2,
     Vector3,
 } from "#vendor/babylon";
 import { Shape, Sphere } from "../../physics/figure";
@@ -9,10 +8,8 @@ import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Player } from "../player/player";
-import { rotate2D, toVector2, toVector3 } from "../../core/math";
 import { Cursor } from "../player/parts/cursor";
 import { MinionState } from "./state";
-import { calcSeparationDirection } from "./movement";
 import { updateMinionState, type MinionStateUpdateActions } from "./updateState";
 import {
     calcHeldPosition,
@@ -23,6 +20,11 @@ import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
 import { MinionColor, minionColorToColor3 } from "./color";
 import { Plant } from "./parts/plant";
+import {
+    separateFromNearbyCarriables,
+    separateFromOverlappingEntities,
+    separateFromOverlappingMinions,
+} from "./separation";
 
 export { MinionState } from "./state";
 
@@ -56,7 +58,9 @@ export abstract class Minion extends Entity {
      */
     private readonly stateUpdateActions: MinionStateUpdateActions = {
         moveFor: (direction, ignoredEntities) => { this.moveFor(direction, { ignoredEntities }); },
-        separateFromOverlappingEntities: deltaSeconds => this.separateFromOverlappingEntities(deltaSeconds),
+        separateFromOverlappingEntities: deltaSeconds => separateFromOverlappingEntities(
+            this, this.game.objects, deltaSeconds,
+        ),
         getNearbyCarriables: maxDistance => this.getNearbyCarriables(maxDistance),
         tryBecomeCarrying: carriable => this.tryBecomeCarrying(carriable),
         stopCarrying: () => this.stopCarrying(),
@@ -114,7 +118,7 @@ export abstract class Minion extends Entity {
                 MinionState.following,
                 MinionState.carrying,
             ].includes(this.state)) {
-            this.separateFromNearbyCarriables(deltaSeconds);
+            separateFromNearbyCarriables(this, this.game.objects, deltaSeconds);
         }
 
         if (this.state !== MinionState.thrown && this.state !== MinionState.held) {
@@ -222,7 +226,7 @@ export abstract class Minion extends Entity {
         return 0.5 * (a * Math.sqrt(1 + ka * ka) + Math.asinh(ka) / k);
     }
 
-    protected moveFor(
+    public override moveFor(
         dir: Vector3,
         options: { ignoredEntities?: readonly Entity[]; strict?: boolean } = {}
     ): Vector3 {
@@ -253,131 +257,10 @@ export abstract class Minion extends Entity {
         }[this.state];
     }
 
-    /** 他の Figure と (x, y) 座標が重複するのを避けるように動く */
-    private separateFromOverlappingEntities(deltaSeconds: number){
-        const VELOCITY = 0.5;
-        const DISTANCE_DELTA = 0.01;
-        const MIN_DISTANCE_SQ = 0.000001;
-        const MAX_ANGLE = Math.PI / 8;
-        let dir = new Vector2();
-        const ignoredEntities: Entity[] = [];
-        for(const object of this.game.objects){
-            if(!this.isAvoidanceTarget(object)) continue;
-
-            const figure = object.figure;
-            const extendedFigure = this.figure.scaled(1 + DISTANCE_DELTA);
-            const diff = this.position.subtract(figure.center);
-            // 衝突 or 衝突寸前
-            if(extendedFigure.intersects(figure)){
-                let diff2d = toVector2(diff);
-                const distanceSq2d = diff2d.lengthSquared();
-                if(distanceSq2d < MIN_DISTANCE_SQ){
-                    if(!(object instanceof Minion)) continue;
-                    diff2d = calcSeparationDirection(this, object);
-                    // MIN_DISTANCE だけ離す
-                    dir.addInPlace(diff2d.scale(Math.pow(MIN_DISTANCE_SQ, -1 / 2)));
-                }
-                else{
-                    // 引力 r / |r|^3 を加える (引力係数は1)
-                    dir.addInPlace(diff2d.scale(Math.pow(distanceSq2d, -3 / 2)));
-                }
-                if(object instanceof Minion){
-                    ignoredEntities.push(object);
-                }
-            }
-        }
-        if(dir.lengthSquared() > 0){
-            dir = dir.normalize().scale(VELOCITY * deltaSeconds);
-
-            // Minionごとにベクトルを少しずらして重ならないようにする
-            const angle = Random.uniform(-MAX_ANGLE, MAX_ANGLE);
-            dir = rotate2D(dir, angle);
-            this.moveFor(toVector3(dir), { ignoredEntities });
-        }
-    }
-
-    /** 運搬物にめり込んだ Minion を、運搬物から離れる方向へ移動させる */
-    private separateFromNearbyCarriables(deltaSeconds: number): void {
-        const PROXIMITY_MARGIN = 1 / 32;
-        const SEPARATION_SPEED = 0.5;
-        const MIN_DISTANCE_SQ = 0.000001;
-        const carriables = this.game.objects.filter(
-            (object): object is Carriable => object instanceof Carriable,
-        );
-        let direction = new Vector2();
-        const ignoredEntities: Carriable[] = [];
-
-        for (const carriable of carriables) {
-            // 運搬中は、運んでいる物との距離だけを保つ。他の運搬物は通り抜ける。
-            if (this.state === MinionState.carrying && carriable !== this.carried) continue;
-
-            const diff = toVector2(this.position.subtract(carriable.position));
-            const distance = diff.length();
-            const minDistance = carriable.radius + this.size / 2 + PROXIMITY_MARGIN;
-            if (distance >= minDistance) continue;
-
-            if (distance * distance < MIN_DISTANCE_SQ) {
-                diff.copyFrom(calcSeparationDirection(this, carriable));
-            }
-            // 重なりが深いほど強く離れる方向に寄与させる
-            direction.addInPlace(diff.normalize().scale(minDistance - distance));
-            ignoredEntities.push(carriable);
-        }
-
-        if (direction.lengthSquared() === 0) return;
-        const move = direction.normalize().scale(SEPARATION_SPEED * deltaSeconds);
-        this.moveFor(toVector3(move), { ignoredEntities });
-    }
-
-    private isAvoidanceTarget(object: Entity): boolean {
-        if(object === this) return false;
-        if(object instanceof Minion){
-            return [MinionState.following, MinionState.free].includes(object.state);
-        }
-        return object instanceof Player;
-    }
-
-    private separateFromOverlappingMinions(): void {
-        const MOVE_DISTANCE = this.size + 0.01;
-        const MIN_DISTANCE_SQ = 0.000001;
-        const MAX_ATTEMPTS = 12;
-
-        for(let attempt = 0; attempt < MAX_ATTEMPTS; attempt++){
-            const overlaps = this.getOverlappingMinions();
-            if(overlaps.length === 0) return;
-
-            let dir = new Vector2();
-            for(const minion of overlaps){
-                const diff2d = toVector2(this.position.subtract(minion.position));
-                if(diff2d.lengthSquared() < MIN_DISTANCE_SQ){
-                    dir.addInPlace(calcSeparationDirection(this, minion));
-                }
-                else{
-                    dir.addInPlace(diff2d.normalize());
-                }
-            }
-            if(dir.lengthSquared() === 0) return;
-
-            const angleStep = Math.ceil(attempt / 2) * Math.PI / 8;
-            const angle = attempt === 0 ? 0 : angleStep * (attempt % 2 === 0 ? 1 : -1);
-            const moveVector = rotate2D(dir.normalize(), angle).scale(MOVE_DISTANCE);
-            this.moveFor(toVector3(moveVector), { ignoredEntities: overlaps });
-        }
-    }
-
-    private getOverlappingMinions(): Minion[] {
-        return this.game.objects.filter((object): object is Minion => {
-            if(object === this) return false;
-            if(!(object instanceof Minion)) return false;
-            if(![MinionState.following, MinionState.free].includes(object.state)) return false;
-            return this.figure.intersects(object.figure);
-        });
-    }
-
     public becomeFree(){
         this.state = MinionState.free;
         this.velocity = Vector3.Zero();
-        this.separateFromOverlappingMinions();
+        separateFromOverlappingMinions(this, this.game.objects);
     }
 
     protected override isBlockedBy(entity: Entity): boolean {
