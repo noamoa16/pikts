@@ -1,5 +1,4 @@
 - プロンプト：
-  - Playerが移動するとPlayerの向きが変わる処理があったのですが、何故か変わらなくなってしまいました。何故？直して
   - playerDebugInfo という名前は変えた方が良いと思いませんか？
   - src/ui/debug/playerDebugInfo.ts, src/ui/debug/entityInspector.ts について、position と rotation を編集できるようにしてください。編集した場合、実際に position や rotation が変更されます。
   - Minion移動時に、移動方向に合わせてMinionのrotation.zを変更する処理を追加してください。現状、Playerはそれを行っているので参考にしてください。Playerのrotation.z変更処理も含め、Entityの関数として定義して共通化した方がいいかもしれません。
@@ -21,6 +20,7 @@
     - Player の 半径 0.5 以内 に buried 状態の Minion が存在する場合は、dpad の hold の文字が pick に変わります。
   - EntityInspector, PlayerDebugInfo で共通している処理を上手くまとめてください。別ファイルを用意しても構いません。
   - minion.ts の行数が多いので減らしたいのですが、何か減らす案はある？リファクタリングやファイル分割？
+- 投げ中のMinionが回転するようにする
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

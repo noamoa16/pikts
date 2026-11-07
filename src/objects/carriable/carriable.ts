@@ -270,7 +270,9 @@ export class Carriable extends Entity {
 
         const baseRotation = this.absorbingBaseRotation ?? this.rotation;
         const wobble = Math.sin(this.absorbingElapsedSeconds * Math.PI * 8) * 0.08;
-        this.rotation = new Vector3(baseRotation.x + wobble, baseRotation.y, baseRotation.z + wobble * 0.5);
+        this.rotation.x = baseRotation.x + wobble;
+        this.rotation.y = baseRotation.y;
+        this.rotation.z = baseRotation.z + wobble * 0.5;
 
         if(elapsed < ABSORBING_WAIT && this.absorbingElapsedSeconds <= ABSORBING_WAIT) return;
 

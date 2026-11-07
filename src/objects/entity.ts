@@ -3,7 +3,7 @@ import {
 } from "#vendor/babylon";
 import { Dir4, Figure, Shape, Sphere, Slope } from "../physics/figure";
 import { Game } from "../game";
-import { clearLow16Bits, hashInt32, normalizeAngles } from "../core/math";
+import { clearLow16Bits, hashInt32, normalizeAngle, normalizeAngles } from "../core/math";
 import { Sphere2Slope } from "../physics/figureImpl/sphere2Slope";
 import { createEntityFigure, createEntityShape } from "./entityShape";
 
@@ -35,8 +35,23 @@ export abstract class Entity {
     }
 
     // 回転
+    private rotationViewTarget: Vector3 | null = null;
+    private rotationView: Vector3 | null = null;
     public get rotation(): Vector3 {
-        return normalizeAngles(this.mesh.rotation);
+        const target = this.mesh.rotation;
+        if (this.rotationViewTarget !== target || !this.rotationView) {
+            this.rotationViewTarget = target;
+            this.rotationView = new Proxy(target, {
+                set(target, property, value): boolean {
+                    const normalizedValue =
+                        property === "x" || property === "y" || property === "z"
+                            ? normalizeAngle(value)
+                            : value;
+                    return Reflect.set(target, property, normalizedValue, target);
+                },
+            });
+        }
+        return this.rotationView!;
     }
     protected set rotation(value: Vector3) {
         this.mesh.rotation = normalizeAngles(value);
