@@ -29,6 +29,16 @@ export class Cylinder2RectPrism implements IFigureImpl {
         // 既に衝突している
         if(this.intersects()) return 0;
 
+        // 円柱の上下端が直方体の面に接しているだけなら、水平移動では衝突しない。
+        // 下で z 範囲を円柱の高さ分だけ広げると境界も含まれるため、先に除外する。
+        const verticalReach = this.cylinder.height / 2 + this.rectPrism.edgeLengths.z / 2;
+        const verticalCenterDistance = Math.abs(
+            this.rectPrism.center.z - this.cylinder.center.z,
+        );
+        if(_dir.z === 0 && verticalCenterDistance >= verticalReach){
+            return Infinity;
+        }
+
         // xy平面上の円と直方体の衝突を考えればよい
         // 円：中心が原点、半径が r
         // 直方体：中心が c、長さが (l.x, l.y, l.z)

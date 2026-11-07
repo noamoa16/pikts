@@ -7,6 +7,8 @@ import { atan, clearLow16Bits, hashInt32, normalizeAngle, normalizeAngles, toVec
 import { Sphere2Slope } from "../physics/figureImpl/sphere2Slope";
 import { createEntityFigure, createEntityShape } from "./entityShape";
 
+const GROUND_CLAMP_TOLERANCE = 1e-6;
+
 /** 実体を持つオブジェクト */
 export abstract class Entity {
     
@@ -208,6 +210,16 @@ export abstract class Entity {
             if(distance > 0){
                 this.position.addInPlace(new Vector3(0, 0, distance));
             }
+        }
+
+        const groundingPosition = this.groundingPosition;
+        if (
+            groundingPosition.z < 0
+            && groundingPosition.z >= -GROUND_CLAMP_TOLERANCE
+        ) {
+            groundingPosition.z = 0;
+            this.groundingPosition = groundingPosition;
+            this.velocity.z = 0;
         }
     }
 
