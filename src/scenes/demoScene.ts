@@ -82,10 +82,10 @@ export function createDemoScene(engine: Engine): Scene {
                 break;
             case "hold":
                 if (pressed) {
-                    player.tryHoldMinion();
+                    player.handleHoldPressed();
                 }
                 else {
-                    player.tryReleaseMinion();
+                    player.handleHoldReleased();
                 }
                 break;
             default:
@@ -114,6 +114,7 @@ export function createDemoScene(engine: Engine): Scene {
     game.scene.onBeforeRenderObservable.add(() => {
         const deltaSeconds = Math.min(engine.getDeltaTime() / 1000, 1 / Game.TARGET_FPS);
         game.update(deltaSeconds);
+        dpad.setHoldPrompt(player.hasNearbyBuriedMinion());
 
         playerDebugOverlay.update();
     });

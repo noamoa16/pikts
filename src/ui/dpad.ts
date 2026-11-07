@@ -14,6 +14,7 @@ export class Dpad {
     private readonly container: HTMLDivElement;
     private readonly buttons = new Map<Action, HTMLButtonElement>();
     private readonly buttonStates = new Map<Action, ButtonState>();
+    private holdDescription: HTMLSpanElement | null = null;
 
     constructor(engine: Engine, onPressed: OnPressed) {
         const parent = engine.getRenderingCanvas()?.parentElement;
@@ -126,7 +127,9 @@ export class Dpad {
             button.append(content);
         }
         else if(action === "hold") {
-            const content = Dpad.createButtonText("Enter", "(hold)");
+            const content = Dpad.createButtonText("Enter", "(hold)", element => {
+                this.holdDescription = element;
+            });
             button.append(content);
         }
         else {
@@ -269,6 +272,7 @@ export class Dpad {
     private static createButtonText(
         keyLabel: string,
         description: string,
+        onDescriptionCreated?: (element: HTMLSpanElement) => void,
     ): HTMLSpanElement {
         const content = Dpad.createButtonTextBase('#000');
 
@@ -284,6 +288,7 @@ export class Dpad {
 
         const descriptionElement = document.createElement("span");
         descriptionElement.textContent = description;
+        onDescriptionCreated?.(descriptionElement);
 
         const fontSizeCoeff = Math.min(2.0 / Math.max(description.length, 1), 0.25)
         Object.assign(descriptionElement.style, {
@@ -312,6 +317,10 @@ export class Dpad {
             "--dpad-offset",
             `${offset}px`,
         );
+    }
+
+    public setHoldPrompt(pick: boolean): void {
+        if (this.holdDescription) this.holdDescription.textContent = pick ? "(pick)" : "(hold)";
     }
 
     public remove() {

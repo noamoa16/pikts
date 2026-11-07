@@ -24,6 +24,7 @@ export class Player extends Entity {
     public readonly whistle: Whistle;
 
     private holdingMinion: Minion | null = null;
+    private pickedBuriedMinionOnHoldPress = false;
 
     constructor(game: Game, position: Vector3) {
         super(game, "player", Shape.Sphere, 0.5, position, { fall: true });
@@ -100,6 +101,44 @@ export class Player extends Entity {
         this.holdingMinion = this.getHoldableMinion();
         if(!this.holdingMinion) return;
         this.holdingMinion.becomeHeld(this);
+    }
+    public tryPickNearbyBuriedMinion(): boolean {
+        const PICKUP_DISTANCE = 1;
+        let candidate: Minion | null = null;
+        let nearestDistanceSq = PICKUP_DISTANCE * PICKUP_DISTANCE;
+        for (const object of this.game.objects) {
+            if (!(object instanceof Minion) || object.state !== MinionState.buried) continue;
+            const distanceSq = toVector2(this.position.subtract(object.position)).lengthSquared();
+            if (distanceSq <= nearestDistanceSq) {
+                nearestDistanceSq = distanceSq;
+                candidate = object;
+            }
+        }
+        if (!candidate) return false;
+        candidate.becomePickedFromBuried(this);
+        return true;
+    }
+
+    public handleHoldPressed(): void {
+        this.pickedBuriedMinionOnHoldPress = this.tryPickNearbyBuriedMinion();
+        if (!this.pickedBuriedMinionOnHoldPress) this.tryHoldMinion();
+    }
+
+    public handleHoldReleased(): void {
+        if (this.pickedBuriedMinionOnHoldPress) {
+            this.pickedBuriedMinionOnHoldPress = false;
+            return;
+        }
+        this.tryReleaseMinion();
+    }
+
+    public hasNearbyBuriedMinion(): boolean {
+        const PICKUP_DISTANCE = 0.5;
+        return this.game.objects.some(object =>
+            object instanceof Minion
+            && object.state === MinionState.buried
+            && toVector2(this.position.subtract(object.position)).lengthSquared() <= PICKUP_DISTANCE * PICKUP_DISTANCE,
+        );
     }
     public tryReleaseMinion(){
         if(!this.holdingMinion) return;

@@ -49,6 +49,7 @@ export abstract class Minion extends Entity {
     private seedRadius = 0;
     private seedTheta = 0;
     private seedElapsedSeconds = 0;
+    private buriedOrigin: Vector3 | null = null;
 
     /**
      * Minionの更新時アクション
@@ -97,8 +98,10 @@ export abstract class Minion extends Entity {
     }
 
     override update(deltaSeconds: number): void {
-        if (this.state === MinionState.seed) {
-            this.updateSeed(deltaSeconds);
+        if (this.state === MinionState.seed || this.state === MinionState.buried) {
+            if (this.state === MinionState.seed) {
+                this.updateSeed(deltaSeconds);
+            }
             this.updateColor();
             return;
         }
@@ -137,6 +140,7 @@ export abstract class Minion extends Entity {
     public becomeSeed(startPoint: Vector3, endPoint: Vector3, radius: number): void {
         this.state = MinionState.seed;
         this.seedStartPoint = startPoint.clone();
+        this.buriedOrigin = startPoint.clone();
         this.seedHeight = endPoint.z - startPoint.z;
         this.seedRadius = Math.max(0, radius);
         this.seedTheta = Random.uniform(0, 2 * Math.PI);
@@ -151,7 +155,7 @@ export abstract class Minion extends Entity {
     private updateSeed(deltaSeconds: number): void {
         const startPoint = this.seedStartPoint;
         if (!startPoint) {
-            this.becomeFree();
+            this.becomeBuried();
             return;
         }
 
@@ -186,10 +190,25 @@ export abstract class Minion extends Entity {
             this.rotation.x = 0;
             this.rotation.y = 0;
             this.seedStartPoint = null;
-            this.state = MinionState.free;
-            this.checkCollisions = true;
-            this.separateFromOverlappingMinions();
+            this.becomeBuried();
         }
+    }
+
+    private becomeBuried(): void {
+        this.state = MinionState.buried;
+        this.velocity = Vector3.Zero();
+        this.checkCollisions = false;
+        if (this.buriedOrigin) this.position.z = this.buriedOrigin.z;
+    }
+
+    public becomePickedFromBuried(player: Player): void {
+        if (this.state !== MinionState.buried) return;
+        this.carried = null;
+        this.state = MinionState.following;
+        this.follower = player;
+        this.position.z += this.size * 3 / 2;
+        this.velocity = new Vector3(0, 0, 3);
+        this.checkCollisions = true;
     }
 
     private getSeedArcLength(): number {
@@ -230,6 +249,7 @@ export abstract class Minion extends Entity {
             [MinionState.thrown]: this.baseColor,
             [MinionState.carrying]: this.baseColor,
             [MinionState.seed]: this.baseColor,
+            [MinionState.buried]: this.baseColor,
         }[this.state];
     }
 
