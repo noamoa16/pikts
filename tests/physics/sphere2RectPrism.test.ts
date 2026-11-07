@@ -72,4 +72,23 @@ describe("Figure.space", () => {
         expect(moving.space(stationary, new Vector3(1, 0, 0))).toBe(Infinity);
         expect(stationary.space(moving, new Vector3(-1, 0, 0))).toBe(Infinity);
     });
+
+    it("隣接する2個の立方体の上を球が通過できる", () => {
+        const radius = 0.0625;
+        const moving = new Sphere(new Vector3(-1, 0, 0.5 + radius), radius);
+        const cubes = [
+            new Cube(new Vector3(0, 0, 0), 1),
+            new Cube(new Vector3(1, 0, 0), 1),
+        ];
+        const direction = new Vector3(1, 0, 0);
+        const step = 0.01;
+
+        for (let stepIndex = 0; stepIndex < 300; stepIndex += 1) {
+            const availableDistance = Math.min(
+                ...cubes.map(cube => moving.space(cube, direction)),
+            );
+            expect(availableDistance).toBe(Infinity);
+            moving.center.x += step;
+        }
+    });
 });

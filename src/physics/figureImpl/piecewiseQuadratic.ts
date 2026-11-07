@@ -32,11 +32,16 @@ export function findFirstContactDistance(
 
         // For a*t^2 + 2*b*t + c, the discriminant divided by four is b^2-a*c.
         const discriminant = b * b - a * c;
-        if (discriminant < 0 || (!allowTangency && discriminant === 0)) {
+        const discriminantScale = Math.abs(b * b) + Math.abs(a * c);
+        const discriminantTolerance = 8 * Number.EPSILON * discriminantScale;
+        if (
+            discriminant < -discriminantTolerance
+            || (!allowTangency && discriminant <= discriminantTolerance)
+        ) {
             continue;
         }
 
-        const firstRoot = (-b - Math.sqrt(discriminant)) / a;
+        const firstRoot = (-b - Math.sqrt(Math.max(0, discriminant))) / a;
         return Math.max(start, firstRoot);
     }
 
