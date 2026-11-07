@@ -3,7 +3,7 @@ import {
 } from "#vendor/babylon";
 import { Dir4, Figure, Shape, Sphere, Slope } from "../physics/figure";
 import { Game } from "../game";
-import { clearLow16Bits, hashInt32, normalizeAngle, normalizeAngles } from "../core/math";
+import { atan, clearLow16Bits, hashInt32, normalizeAngle, normalizeAngles, toVector2 } from "../core/math";
 import { Sphere2Slope } from "../physics/figureImpl/sphere2Slope";
 import { createEntityFigure, createEntityShape } from "./entityShape";
 
@@ -155,6 +155,23 @@ export abstract class Entity {
             this.position.addInPlace(moveVec);
         }
         return this.position.subtract(prevPosition);
+    }
+
+    /** 水平方向の移動に合わせて向きを滑らかに変える */
+    protected rotateToDirection(direction: Vector3, deltaSeconds: number): void {
+        if (deltaSeconds <= 0 || (direction.x === 0 && direction.y === 0)) return;
+
+        const currentTheta = this.rotation.z;
+        const targetTheta = atan(toVector2(direction));
+        const diffTheta = normalizeAngle(
+            targetTheta - currentTheta,
+            { includePi: Math.cos(currentTheta) >= 0 },
+        );
+        const ROTATION_SPEED = 2.5;
+        this.rotation.z = currentTheta + Math.sign(diffTheta) * Math.min(
+            Math.PI * deltaSeconds * ROTATION_SPEED,
+            Math.abs(diffTheta),
+        );
     }
 
     public update(deltaSeconds: number): void {

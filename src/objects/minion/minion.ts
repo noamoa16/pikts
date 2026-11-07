@@ -92,6 +92,7 @@ export abstract class Minion extends Entity {
 
     override update(deltaSeconds: number): void {
         super.update(deltaSeconds);
+        const positionBeforeStateUpdate = this.position.clone();
         updateMinionState(this, deltaSeconds, this.stateUpdateActions);
         if ([
                 MinionState.free,
@@ -99,6 +100,10 @@ export abstract class Minion extends Entity {
                 MinionState.carrying,
             ].includes(this.state)) {
             this.separateFromNearbyCarriables(deltaSeconds);
+        }
+
+        if (this.state !== MinionState.thrown && this.state !== MinionState.held) {
+            this.rotateToDirection(this.position.subtract(positionBeforeStateUpdate), deltaSeconds);
         }
 
         // 色

@@ -4,7 +4,7 @@ import {
     Vector3,
 } from "#vendor/babylon";
 import { PlayerAction } from "../../actions/action";
-import { atan, normalizeAngle, rotate2D, toVector2, toVector3 } from "../../core/math";
+import { rotate2D, toVector2, toVector3 } from "../../core/math";
 import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
@@ -74,20 +74,7 @@ export class Player extends Entity {
             this.velocity.y = actualHorizontalDisplacement.y / deltaSeconds;
         }
 
-        // 向きを変える
-        if(!horizontalDisplacement.equals(Vector3.Zero())){
-            const currentTheta = this.rotation.z;
-            const targetTheta = atan(toVector2(horizontalDisplacement));
-            const diffThera = normalizeAngle(
-                targetTheta - currentTheta,
-                { includePi: (Math.cos(currentTheta) >= 0) },
-            );
-            const ROTATION_SPEED = 2.5;
-            this.rotation.z = currentTheta + Math.sign(diffThera) * Math.min(
-                Math.PI * deltaSeconds * ROTATION_SPEED,
-                Math.abs(diffThera),
-            );
-        }
+        this.rotateToDirection(horizontalDisplacement, deltaSeconds);
 
         this.cursor.update();
         this.cursor.moveFor(toVector2(horizontalDisplacement), deltaSeconds);

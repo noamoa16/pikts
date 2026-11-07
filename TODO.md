@@ -1,5 +1,4 @@
 - プロンプト：
-  - Minion移動時に、移動方向に合わせてMinionのrotation.zを変更する処理を追加してください。現状、Playerはそれを行っているので参考にしてください。Playerのrotation.z変更処理も含め、Entityの関数として定義して共通化した方がいいかもしれません。
   - Minion が Carriable から離れすぎたら (距離が Carriable の半径 + 0.5 を超えたら)、運搬をやめて Minion の state を free に変更し、Carriable の carriers からも除外してください。
   - Carriable について、updateAbsorbingでremoveObjectされる際に、特定の処理を実行するようにしてください。特定の処理では Minion が増えます。
     - 増えるMinionの色はonionの色と同じです。
