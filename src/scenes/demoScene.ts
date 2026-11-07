@@ -5,7 +5,7 @@ import {
     Scene,
     Vector3,
 } from "#vendor/babylon";
-import { PlayerDebugInfo } from "../ui/debug/playerDebugInfo";
+import { PlayerDebugOverlay } from "../ui/debug/playerDebugOverlay";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
@@ -69,7 +69,7 @@ export function createDemoScene(engine: Engine): Scene {
 
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
-    const playerDebugInfo = new PlayerDebugInfo(game, player, game.isDevelopment ? engine : null);
+    const playerDebugOverlay = new PlayerDebugOverlay(game, player, game.isDevelopment ? engine : null);
     const handleNonMovementAction = (action: Action, pressed: boolean) => {
         switch (action) {
             case "whistle":
@@ -115,7 +115,7 @@ export function createDemoScene(engine: Engine): Scene {
         const deltaSeconds = Math.min(engine.getDeltaTime() / 1000, 1 / Game.TARGET_FPS);
         game.update(deltaSeconds);
 
-        playerDebugInfo.update();
+        playerDebugOverlay.update();
     });
 
     // 画面がリサイズされたら
@@ -127,7 +127,7 @@ export function createDemoScene(engine: Engine): Scene {
     // Sceneが破棄されたらイベントを無効化
     game.scene.onDisposeObservable.add(() => {
         window.removeEventListener("resize", onResize);
-        playerDebugInfo.remove();
+        playerDebugOverlay.remove();
         player.removeEvents();
         dpad.remove();
     });

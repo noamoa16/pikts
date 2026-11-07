@@ -3,6 +3,8 @@ import type { Game } from "../../game";
 import { Carriable, CarriableState } from "../../objects/carriable/carriable";
 import { minionColorToString } from "../../objects/minion/color";
 import { Minion, MinionState } from "../../objects/minion/minion";
+import { createDebugInfo, createDebugPanel } from "./debugPanel";
+import { TransformEditor } from "./transformEditor";
 
 type InspectedEntity = Minion | Carriable;
 
@@ -11,6 +13,7 @@ export class EntityInspector {
     private readonly panel: HTMLDivElement | null;
     private readonly info: HTMLPreElement | null;
     private readonly copyButton: HTMLButtonElement | null;
+    private readonly transformEditor: TransformEditor;
     private readonly highlightLayer: HighlightLayer;
     private pointerPosition: { x: number; y: number } | null = null;
     private highlightedEntity: InspectedEntity | null = null;
@@ -21,6 +24,7 @@ export class EntityInspector {
         canvas: HTMLCanvasElement | null,
     ) {
         this.canvas = canvas;
+        this.transformEditor = new TransformEditor(() => this.pinnedEntity ?? this.highlightedEntity);
         this.panel = this.createPanel(this.canvas?.parentElement ?? null);
         this.info = this.panel?.querySelector("pre") ?? null;
         this.copyButton = this.panel?.querySelector("button") ?? null;
@@ -33,27 +37,12 @@ export class EntityInspector {
     }
 
     private createPanel(parent: HTMLElement | null): HTMLDivElement | null {
-        if (!(parent instanceof HTMLDivElement)) {
-            return null;
-        }
-        const panel = document.createElement("div");
-        Object.assign(panel.style, {
-            position: "absolute",
-            top: "12px",
-            left: "12px",
-            padding: "10px 12px",
-            borderRadius: "8px",
-            background: "rgba(5, 8, 22, 0.82)",
-            color: "#f7f6d8",
-            fontSize: "13px",
-            lineHeight: "1.5",
-            fontFamily: "monospace",
-            pointerEvents: "auto",
-        } satisfies Partial<CSSStyleDeclaration>);
-        const info = document.createElement("pre");
+        const panel = createDebugPanel(parent, "left");
+        if (!panel) return null;
+
+        const info = createDebugInfo();
         Object.assign(info.style, {
             margin: "0 0 8px",
-            whiteSpace: "pre",
             userSelect: "text",
             cursor: "text",
         } satisfies Partial<CSSStyleDeclaration>);
@@ -61,9 +50,12 @@ export class EntityInspector {
         copyButton.type = "button";
         copyButton.textContent = "Copy";
         copyButton.addEventListener("click", this.onCopyClick);
-        panel.append(info, copyButton);
+        panel.append(
+            info,
+            this.transformEditor.element,
+            copyButton,
+        );
         panel.hidden = true;
-        parent.append(panel);
         return panel;
     }
 
@@ -136,18 +128,15 @@ export class EntityInspector {
         }
 
         this.info!.textContent = this.formatInfo(entity);
+        this.transformEditor.update();
         this.panel.hidden = false;
     }
 
     private formatInfo(entity: InspectedEntity): string {
-        const { x, y, z } = entity.groundingPosition;
-        const { x: rx, y: ry, z: rz } = entity.rotation;
         if (entity instanceof Minion) {
             return [
                 `${entity.constructor.name} #${entity.id}`,
                 `State: ${MinionState[entity.state]}`,
-                `Position: x=${x} y=${y} z=${z}`,
-                `Rotation: x=${rx.toFixed(4)} y=${ry.toFixed(4)} z=${rz.toFixed(4)}`,
             ].join("\n");
         }
         else if(entity instanceof Carriable){
@@ -157,7 +146,6 @@ export class EntityInspector {
                 `Carriers: ${entity.carrierCount} (${entity.minCarriers}~${entity.maxCarriers})`,
                 `Color: ${minionColorToString(entity.getMostCommonCarrierColor())}`,
                 `Speed: ${entity.calcCarryingSpeed()}`,
-                `Position: x=${x} y=${y} z=${z}`,
             ].join("\n");
         }
         else{
