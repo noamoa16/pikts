@@ -220,6 +220,10 @@ export class Carriable extends Entity {
         }
     }
 
+    public removeCarrier(minion: Minion): void {
+        this.carriers = this.carriers.filter(carrier => carrier !== minion);
+    }
+
     public calcCarryingSpeed(): number{
         const count = this.carriers.length;
         if(count >= this.minCarriers){

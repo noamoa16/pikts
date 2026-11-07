@@ -53,6 +53,7 @@ export abstract class Minion extends Entity {
         separateFromOverlappingEntities: deltaSeconds => this.separateFromOverlappingEntities(deltaSeconds),
         getNearbyCarriables: maxDistance => this.getNearbyCarriables(maxDistance),
         tryBecomeCarrying: carriable => this.tryBecomeCarrying(carriable),
+        stopCarrying: () => this.stopCarrying(),
         stopSelfMovement: () => {
             this.velocity.x = 0;
             this.velocity.y = 0;
@@ -323,6 +324,13 @@ export abstract class Minion extends Entity {
         else{
             return false;
         }
+    }
+
+    private stopCarrying(): void {
+        const carriable = this.carried;
+        this.carried = null;
+        carriable?.removeCarrier(this);
+        this.becomeFree();
     }
 
     /**

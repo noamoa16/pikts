@@ -18,6 +18,7 @@ export type MinionStateUpdateActions = {
     setCollisionsEnabled(enabled: boolean): void;
     getNearbyCarriables(maxDistance: number): Carriable[];
     tryBecomeCarrying(carriable: Carriable): boolean;
+    stopCarrying(): void;
     stopSelfMovement(): void;
     stopMovement(): void;
 };
@@ -134,6 +135,13 @@ function updateCarrying(
     actions.stopMovement();
     if (minion.carried) {
         const carriable = minion.carried;
+        const distance = toVector2(minion.position.subtract(carriable.position)).length();
+        if (distance > carriable.radius + 0.5) {
+            actions.stopCarrying();
+            actions.setCollisionsEnabled(true);
+            return;
+        }
+
         const stoppingDistance = carriable.radius + minion.size / 2 + 1 / 32;
         const targetPosition = carriable.getCarrierFormationPosition(minion, stoppingDistance);
         if (targetPosition) {

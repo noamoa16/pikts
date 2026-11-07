@@ -1,5 +1,4 @@
 - プロンプト：
-  - Minion が Carriable から離れすぎたら (距離が Carriable の半径 + 0.5 を超えたら)、運搬をやめて Minion の state を free に変更し、Carriable の carriers からも除外してください。
   - Carriable について、updateAbsorbingでremoveObjectされる際に、特定の処理を実行するようにしてください。特定の処理では Minion が増えます。
     - 増えるMinionの色はonionの色と同じです。
     - 増えるMinionの数はその Carriable の nutrition の値です。
