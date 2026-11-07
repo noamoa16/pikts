@@ -1,5 +1,8 @@
 import { Vector2, Vector3 } from "#vendor/babylon";
 import { atan, toVector2 } from "../../core/math";
+import { Sphere } from "../../physics/figure";
+import type { Entity } from "../entity";
+import { Player } from "../player/player";
 
 const HELD_DIFF_HORIZONTAL = 1 / 4;
 const HELD_DIFF_VERTICAL = 1 / 8;
@@ -26,6 +29,58 @@ export function calcThrownInitialPosition(playerPosition: Vector3, playerRotatio
         THROWN_DIFF_HORIZONTAL * Math.sin(playerRotation),
         THROWN_DIFF_VERTICAL,
     ));
+}
+
+/** 指定位置に Minion が衝突せず出現できるかを判定する */
+export function canMinionSpawnAt(
+    position: Vector3,
+    minionId: number,
+    minionSize: number,
+    entities: readonly Entity[],
+): boolean {
+    const candidate = new Sphere(position, minionSize / 2);
+    return entities.every(entity => {
+        if (entity.id === minionId) return true;
+        if (entity instanceof Player) return true;
+        if (!entity.checkCollisions) return true;
+        return !candidate.intersects(entity.figure);
+    });
+}
+
+/** 衝突を避けられる Minion の投擲初期位置を探す */
+export function calcThrownSafeInitialPosition(options: {
+    playerPosition: Vector3;
+    playerRotation: number;
+    cursorPosition: Vector2;
+    playerSpeed: number;
+    gravityZ: number;
+    thrownMaxHeight: number;
+    minionSize: number;
+    cursorDistance: number;
+    canSpawnAt(position: Vector3): boolean;
+}): Vector3 {
+    const {
+        playerPosition, playerRotation, cursorPosition, playerSpeed,
+        gravityZ, thrownMaxHeight, minionSize, cursorDistance, canSpawnAt,
+    } = options;
+    const initialVelocity = calcThrownInitialVelocity(
+        cursorPosition,
+        Vector3.Zero(),
+        playerSpeed,
+        gravityZ,
+        thrownMaxHeight,
+    );
+    let candidate = calcThrownInitialPosition(playerPosition, playerRotation);
+    if (canSpawnAt(candidate)) return candidate;
+
+    const STEP = 1 / 64;
+    const MAX_TRAVEL = cursorDistance + minionSize;
+    let traveled = 0;
+    while (traveled < MAX_TRAVEL && !canSpawnAt(candidate)) {
+        candidate = candidate.subtract(initialVelocity.scale(STEP));
+        traveled += STEP;
+    }
+    return candidate;
 }
 
 export function calcThrownInitialVelocity(

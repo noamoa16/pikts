@@ -3,7 +3,7 @@ import {
     StandardMaterial,
     Vector3,
 } from "#vendor/babylon";
-import { Shape, Sphere } from "../../physics/figure";
+import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
 import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
@@ -13,13 +13,15 @@ import { MinionState } from "./state";
 import { updateMinionState, type MinionStateUpdateActions } from "./updateState";
 import {
     calcHeldPosition,
-    calcThrownInitialPosition,
+    calcThrownSafeInitialPosition,
     calcThrownInitialVelocity,
+    canMinionSpawnAt,
 } from "./throw";
 import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
 import { MinionColor, minionColorToColor3 } from "./color";
 import { Plant } from "./parts/plant";
+import { SeedMotion } from "./seedMotion";
 import {
     separateFromNearbyCarriables,
     separateFromOverlappingEntities,
@@ -46,12 +48,7 @@ export abstract class Minion extends Entity {
     public state: MinionState = MinionState.free;
     public follower: Player | null = null;
     public carried: Carriable | null = null;
-    private seedStartPoint: Vector3 | null = null;
-    private seedHeight = 0;
-    private seedRadius = 0;
-    private seedTheta = 0;
-    private seedElapsedSeconds = 0;
-    private buriedOrigin: Vector3 | null = null;
+    private readonly seedMotion = new SeedMotion();
 
     /**
      * Minionの更新時アクション
@@ -143,66 +140,35 @@ export abstract class Minion extends Entity {
     /** Onion から生まれた直後の軌道を設定する */
     public becomeSeed(startPoint: Vector3, endPoint: Vector3, radius: number): void {
         this.state = MinionState.seed;
-        this.seedStartPoint = startPoint.clone();
-        this.buriedOrigin = startPoint.clone();
-        this.seedHeight = endPoint.z - startPoint.z;
-        this.seedRadius = Math.max(0, radius);
-        this.seedTheta = Random.uniform(0, 2 * Math.PI);
-        this.seedElapsedSeconds = 0;
+        this.seedMotion.start(startPoint, endPoint, radius);
         this.velocity = Vector3.Zero();
         this.checkCollisions = false;
         this.groundingPosition = endPoint.clone();
-        this.rotation.x = Math.sin(this.seedTheta) * Math.PI / 2;
-        this.rotation.y = -Math.cos(this.seedTheta) * Math.PI / 2;
+        const rotation = this.seedMotion.initialRotation();
+        this.rotation.x = rotation.x;
+        this.rotation.y = rotation.y;
     }
 
     private updateSeed(deltaSeconds: number): void {
-        const startPoint = this.seedStartPoint;
-        if (!startPoint) {
+        const update = this.seedMotion.update(deltaSeconds, this.speed);
+        if (!update) {
             this.becomeBuried();
             return;
         }
-
-        this.seedElapsedSeconds += Math.max(0, deltaSeconds);
-        const totalLength = this.getSeedArcLength();
-        const distance = Math.min(this.seedElapsedSeconds * this.speed, totalLength);
-        let low = 0;
-        let high = this.seedRadius;
-        // Invert the curve's arc length so the seed moves at a constant speed.
-        for (let i = 0; i < 24; i++) {
-            const middle = (low + high) / 2;
-            if (this.getSeedArcLengthAt(middle) < distance) low = middle;
-            else high = middle;
-        }
-        const a = distance >= totalLength ? this.seedRadius : (low + high) / 2;
-        const theta = this.seedTheta;
-        const k = this.seedRadius > 0
-            ? 2 * this.seedHeight / (this.seedRadius * this.seedRadius)
-            : 0;
-        const tilt = Math.PI / 2 - Math.atan(k * a);
-        const radialFraction = this.seedRadius > 0 ? a / this.seedRadius : 0;
-        this.groundingPosition = new Vector3(
-            startPoint.x + a * Math.cos(theta),
-            startPoint.y + a * Math.sin(theta),
-            startPoint.z + this.seedHeight * (1 - radialFraction ** 2),
-        );
-        this.rotation.x = Math.sin(theta) * tilt;
-        this.rotation.y = -Math.cos(theta) * tilt;
+        this.groundingPosition = update.position;
+        this.rotation.x = update.rotationX;
+        this.rotation.y = update.rotationY;
         this.velocity = Vector3.Zero();
 
-        if (distance >= totalLength) {
-            this.rotation.x = 0;
-            this.rotation.y = 0;
-            this.seedStartPoint = null;
-            this.becomeBuried();
-        }
+        if (update.finished) this.becomeBuried();
     }
 
     private becomeBuried(): void {
         this.state = MinionState.buried;
         this.velocity = Vector3.Zero();
         this.checkCollisions = false;
-        if (this.buriedOrigin) this.position.z = this.buriedOrigin.z;
+        const buriedOriginZ = this.seedMotion.buriedOriginZ;
+        if (buriedOriginZ !== null) this.position.z = buriedOriginZ;
     }
 
     public becomePickedFromBuried(player: Player): void {
@@ -213,17 +179,6 @@ export abstract class Minion extends Entity {
         this.position.z += this.size * 3 / 2;
         this.velocity = new Vector3(0, 0, 3);
         this.checkCollisions = true;
-    }
-
-    private getSeedArcLength(): number {
-        return this.getSeedArcLengthAt(this.seedRadius);
-    }
-
-    private getSeedArcLengthAt(a: number): number {
-        if (this.seedRadius <= 0 || this.seedHeight === 0) return a;
-        const k = 2 * this.seedHeight / (this.seedRadius * this.seedRadius);
-        const ka = k * a;
-        return 0.5 * (a * Math.sqrt(1 + ka * ka) + Math.asinh(ka) / k);
     }
 
     public override moveFor(
@@ -343,50 +298,25 @@ export abstract class Minion extends Entity {
             .map(candidate => candidate.carriable);
     }
     
-    /**
-     * 指定した位置に Minion が瞬間移動可能か
-     */
-    private canSpawnAt(position: Vector3): boolean{
-        const candidate = new Sphere(position, this.size / 2);
-        return this.game.objects.every(object => {
-            if(object.id === this.id) return true;
-            if(object instanceof Player) return true;
-            if(!object.checkCollisions) return true;
-            return !candidate.intersects(object.figure);
-        });
-    }
-    /**
-     * Minionを投げる際の、Minionの安全な初期位置
-     */
-    private calcThrownSafeInitialPosition(): Vector3{
+    /** Minionを投げる際の安全な初期位置 */
+    private calcThrownSafeInitialPosition(): Vector3 {
         if(!this.follower){
             throw new Error("Player should not be null");
         }
 
-        const playerPos = this.follower.position;
-        const playerRot = this.follower.rotation.z;
-        const initialVelocity = calcThrownInitialVelocity(
-            this.follower.cursor.unrotatedPosition,
-            Vector3.Zero(),
-            Player.SPEED,
-            this.scene.gravity.z,
-            this.thrownMaxHeight,
-        );
-        let candidate = calcThrownInitialPosition(playerPos, playerRot);
-
-        if(this.canSpawnAt(candidate)){
-            return candidate;
-        }
-
-        const STEP = 1 / 64;
-        const MAX_TRAVEL = Cursor.CURSOR_DISTANCE + this.size;
-        let traveled = 0;
-        while(traveled < MAX_TRAVEL && !this.canSpawnAt(candidate)){
-            candidate = candidate.subtract(initialVelocity.scale(STEP));
-            traveled += STEP;
-        }
-
-        return candidate;
+        return calcThrownSafeInitialPosition({
+            playerPosition: this.follower.position,
+            playerRotation: this.follower.rotation.z,
+            cursorPosition: this.follower.cursor.unrotatedPosition,
+            playerSpeed: Player.SPEED,
+            gravityZ: this.scene.gravity.z,
+            thrownMaxHeight: this.thrownMaxHeight,
+            minionSize: this.size,
+            cursorDistance: Cursor.CURSOR_DISTANCE,
+            canSpawnAt: position => canMinionSpawnAt(
+                position, this.id, this.size, this.game.objects,
+            ),
+        });
     }
     public becomeThrown(){
         this.state = MinionState.thrown;
