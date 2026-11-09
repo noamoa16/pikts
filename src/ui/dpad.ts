@@ -1,6 +1,6 @@
 import type { Engine } from "#vendor/babylon";
 import { Action } from "../actions/action";
-import { clamp } from "../core/math";
+import { getViewportUiScale } from "./viewportScale";
 
 type OnPressed = (action: Action, pressed: boolean) => void;
 type PressSource = "pointer" | "keyboard";
@@ -10,13 +10,18 @@ type ButtonState = {
     keyboard: boolean;
 };
 
+type DebugControls = {
+    onCarrySpeed2xChange: (enabled: boolean) => void;
+    onAddMinions: () => void;
+};
+
 export class Dpad {
     private readonly container: HTMLDivElement;
     private readonly buttons = new Map<Action, HTMLButtonElement>();
     private readonly buttonStates = new Map<Action, ButtonState>();
     private holdDescription: HTMLSpanElement | null = null;
 
-    constructor(engine: Engine, onPressed: OnPressed) {
+    constructor(engine: Engine, onPressed: OnPressed, debugControls?: DebugControls) {
         const parent = engine.getRenderingCanvas()?.parentElement;
         if (!(parent instanceof HTMLDivElement)) {
             throw new Error('parent is not HTMLDivElement');
@@ -70,8 +75,87 @@ export class Dpad {
         );
         this.container.append(rightContainer);
 
+        if (debugControls) {
+            this.container.append(this.createDebugControls(debugControls));
+        }
+
         parent.append(this.container);
         this.adjustLayout();
+    }
+
+    private createDebugControls(controls: DebugControls): HTMLDivElement {
+        const panel = document.createElement("div");
+        Object.assign(panel.style, {
+            position: "absolute",
+            right: "calc(var(--dpad-offset) + var(--dpad-button-size) * 3 + 12px)",
+            bottom: "var(--dpad-offset)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+            gap: "5px",
+            width: "max-content",
+            maxWidth: "min(200px, 38vw)",
+            zIndex: "10",
+            font: "600 12px/1.2 sans-serif",
+            color: "#111",
+            touchAction: "manipulation",
+        } satisfies Partial<CSSStyleDeclaration>);
+
+        const toggleLabel = document.createElement("label");
+        Object.assign(toggleLabel.style, {
+            display: "flex",
+            alignItems: "center",
+            justifyContent: "space-between",
+            gap: "7px",
+            padding: "7px 9px",
+            border: "2px solid #111",
+            borderRadius: "4px",
+            background: "rgba(238, 246, 255, 0.96)",
+            cursor: "pointer",
+            userSelect: "none",
+        } satisfies Partial<CSSStyleDeclaration>);
+        const toggleText = document.createElement("span");
+        toggleText.textContent = "Carry Speed 2x";
+        const toggleStatus = document.createElement("span");
+        toggleStatus.textContent = "OFF";
+        toggleStatus.setAttribute("aria-hidden", "true");
+        const toggle = document.createElement("input");
+        toggle.type = "checkbox";
+        toggle.checked = false;
+        toggle.setAttribute("role", "switch");
+        toggle.setAttribute("aria-checked", "false");
+        toggle.setAttribute("aria-label", "Carry Speed 2x");
+        Object.assign(toggle.style, {
+            width: "16px",
+            height: "16px",
+            margin: "0",
+            flex: "none",
+            accentColor: "#1d6fce",
+        } satisfies Partial<CSSStyleDeclaration>);
+        toggle.addEventListener("change", () => {
+            toggleStatus.textContent = toggle.checked ? "ON" : "OFF";
+            toggle.setAttribute("aria-checked", String(toggle.checked));
+            controls.onCarrySpeed2xChange(toggle.checked);
+        });
+        toggleLabel.append(toggleText, toggleStatus, toggle);
+
+        const addMinions = document.createElement("button");
+        addMinions.type = "button";
+        addMinions.textContent = "Add Minion 5";
+        Object.assign(addMinions.style, {
+            padding: "7px 9px",
+            border: "2px solid #111",
+            borderRadius: "4px",
+            background: "rgba(238, 246, 255, 0.96)",
+            color: "#111",
+            font: "inherit",
+            cursor: "pointer",
+            touchAction: "manipulation",
+        } satisfies Partial<CSSStyleDeclaration>);
+        addMinions.addEventListener("click", controls.onAddMinions);
+
+        panel.append(toggleLabel, addMinions);
+        return panel;
     }
 
     public setKeyboardPressed(action: Action, pressed: boolean): void {
@@ -305,8 +389,7 @@ export class Dpad {
     }
 
     public adjustLayout() {
-        const shortestSide = Math.min(window.innerWidth, window.innerHeight);
-        const buttonSize = clamp(Math.round(shortestSide * 0.12), 48, 96);
+        const buttonSize = getViewportUiScale() * 96;
         const offset = Math.max(16, Math.round(buttonSize * 0.4));
 
         this.container.style.setProperty(

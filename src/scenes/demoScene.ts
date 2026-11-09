@@ -14,6 +14,7 @@ import { GrassFloor } from "../objects/grassFloor";
 import { BoundaryWall } from "../objects/boundaryWall";
 import { Game } from "../game";
 import { isMoveAction, type Action } from "../actions/action";
+import { Minion } from "../objects/minion/minion";
 import { RedMinion, YellowMinion, BlueMinion } from "../objects/minion/minions";
 import { RedOnion, YellowOnion, BlueOnion } from "../objects/onion/onions";
 import { Slope } from "../objects/slope";
@@ -101,7 +102,21 @@ export function createDemoScene(engine: Engine): Scene {
             else {
                 handleNonMovementAction(action, pressed);
             }
-        }
+        },
+        game.isDevelopment ? {
+            onCarrySpeed2xChange: enabled => {
+                game.debugCarrySpeed2x = enabled;
+            },
+            onAddMinions: () => {
+                const minionCount = game.objects.filter(object => object instanceof Minion).length;
+                if (minionCount > 200) return;
+
+                const spawnPosition = player.position.add(new Vector3(0, 0, 2));
+                for (let i = 0; i < 5; i++) new RedMinion(game, spawnPosition.clone());
+                for (let i = 0; i < 5; i++) new YellowMinion(game, spawnPosition.clone());
+                for (let i = 0; i < 5; i++) new BlueMinion(game, spawnPosition.clone());
+            },
+        } : undefined,
     );
     player.setKeyboardActionHandler((action, pressed) => {
         dpad.setKeyboardPressed(action, pressed);

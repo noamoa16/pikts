@@ -5,6 +5,7 @@ import { minionColorToString } from "../../objects/minion/color";
 import { Minion, MinionState } from "../../objects/minion/minion";
 import { createDebugInfo, createDebugPanel } from "./debugPanel";
 import { TransformEditor } from "./transformEditor";
+import { getViewportUiScale } from "../viewportScale";
 
 type InspectedEntity = Minion | Carriable;
 
@@ -30,6 +31,8 @@ export class EntityInspector {
         this.copyButton = this.panel?.querySelector("button") ?? null;
         this.highlightLayer = new HighlightLayer("entity-debug-highlight", game.scene);
 
+        this.adjustLayout();
+        window.addEventListener("resize", this.adjustLayout);
         this.canvas?.addEventListener("pointermove", this.onPointerMove);
         this.canvas?.addEventListener("pointerleave", this.onPointerLeave);
         document.addEventListener("pointerdown", this.onPointerDown);
@@ -62,6 +65,12 @@ export class EntityInspector {
     private readonly onCopyClick = (): void => {
         if (this.info?.textContent) {
             void navigator.clipboard.writeText(this.info.textContent);
+        }
+    };
+
+    private readonly adjustLayout = (): void => {
+        if (this.panel) {
+            this.panel.style.zoom = getViewportUiScale().toString();
         }
     };
 
@@ -185,6 +194,7 @@ export class EntityInspector {
     }
 
     public remove(): void {
+        window.removeEventListener("resize", this.adjustLayout);
         this.canvas?.removeEventListener("pointermove", this.onPointerMove);
         this.canvas?.removeEventListener("pointerleave", this.onPointerLeave);
         document.removeEventListener("pointerdown", this.onPointerDown);

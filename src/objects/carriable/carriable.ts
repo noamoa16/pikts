@@ -157,7 +157,8 @@ export class Carriable extends Entity {
     public calcCarryingSpeed(): number{
         const count = this.carriers.length;
         if(count >= this.minCarriers){
-            return 1.0 * ((count - this.minCarriers + 1) / this.maxCarriers + 1);
+            const baseSpeed = 1.0 * ((count - this.minCarriers + 1) / this.maxCarriers + 1);
+            return baseSpeed * (this.game.isDevelopment && this.game.debugCarrySpeed2x ? 2 : 1);
         }
         else{
             return 0;

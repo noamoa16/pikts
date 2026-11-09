@@ -1,14 +1,13 @@
 import {
     Color3,
     CreateDisc,
-    GlowLayer,
     Mesh,
     StandardMaterial,
-    type Scene,
     Vector3,
 } from "#vendor/babylon";
 import { Game } from "../../game";
 import { Shape } from "../../physics/figure";
+import { getGlowLayer } from "../../rendering/glowLayer";
 import { Entity } from "../entity";
 import { MinionColor, minionColorToColor3 } from "../minion/color";
 import { Base } from "./parts/base";
@@ -16,7 +15,6 @@ import { Pillar } from "./parts/pillar";
 
 export abstract class Onion extends Entity {
     protected static readonly _SIZE = 2.5;
-    private static readonly glowLayers = new WeakMap<Scene, GlowLayer>();
 
     private get baseColor(): Color3 {
         const color = minionColorToColor3(this.minionColor);
@@ -61,12 +59,7 @@ export abstract class Onion extends Entity {
         groundCircleMaterial.alpha = 0.25;
         groundCircle.material = groundCircleMaterial;
 
-        let glowLayer = Onion.glowLayers.get(this.scene);
-        if (!glowLayer) {
-            glowLayer = new GlowLayer("onion-glow", this.scene);
-            Onion.glowLayers.set(this.scene, glowLayer);
-        }
-        glowLayer.addIncludedOnlyMesh(groundCircle);
+        getGlowLayer(this.scene).addIncludedOnlyMesh(groundCircle);
 
         // 球体作成
         new Base(this.scene, this, this.baseColor);

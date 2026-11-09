@@ -49,6 +49,7 @@ export abstract class Minion extends Entity {
     public follower: Player | null = null;
     public carried: Carriable | null = null;
     private readonly seedMotion = new SeedMotion();
+    private readonly plant: Plant;
 
     /**
      * Minionの更新時アクション
@@ -95,7 +96,7 @@ export abstract class Minion extends Entity {
         this.mesh.material = material;
 
         // 葉っぱパーツ
-        new Plant(this.scene, this);
+        this.plant = new Plant(this.scene, this);
     }
 
     override update(deltaSeconds: number): void {
@@ -126,6 +127,12 @@ export abstract class Minion extends Entity {
     }
 
     private updateColor(): void {
+        this.plant.setBuriedGlow(
+            this.state === MinionState.buried
+                ? minionColorToColor3(this.minionColor)
+                : null,
+        );
+
         // 色
         const material = this.mesh.material;
         if(material){

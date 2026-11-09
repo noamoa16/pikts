@@ -1,5 +1,6 @@
 import type { Game } from "../game";
 import { Minion, MinionState } from "../objects/minion/minion";
+import { getViewportUiScale } from "./viewportScale";
 
 export class MinionCountDisplay {
     private readonly container: HTMLDivElement | null = null;
@@ -44,6 +45,8 @@ export class MinionCountDisplay {
 
         this.container = container;
         this.counts = counts as [HTMLDivElement, HTMLDivElement];
+        this.adjustLayout();
+        window.addEventListener("resize", this.adjustLayout);
     }
 
     public update(): void {
@@ -57,6 +60,13 @@ export class MinionCountDisplay {
     }
 
     public remove(): void {
+        window.removeEventListener("resize", this.adjustLayout);
         this.container?.remove();
     }
+
+    private readonly adjustLayout = (): void => {
+        if (this.container) {
+            this.container.style.zoom = getViewportUiScale().toString();
+        }
+    };
 }

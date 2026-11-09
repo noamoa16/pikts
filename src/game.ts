@@ -15,6 +15,8 @@ import { MinionCountDisplay } from "./ui/minionCountDisplay";
 
 export class Game {
     public readonly isDevelopment = import.meta.env.DEV;
+    /** 開発時の運搬速度チート */
+    public debugCarrySpeed2x = false;
     public readonly objects: Entity[] = [];
     public readonly camera: MainCamera;
     public readonly minionCountDisplay: MinionCountDisplay;

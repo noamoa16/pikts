@@ -3,6 +3,7 @@ import type { Game } from "../../game";
 import type { Player } from "../../objects/player/player";
 import { createDebugInfo, createDebugPanel } from "./debugPanel";
 import { TransformEditor } from "./transformEditor";
+import { getViewportUiScale } from "../viewportScale";
 
 export class PlayerDebugOverlay {
     private readonly panel: HTMLDivElement | null = null;
@@ -30,6 +31,8 @@ export class PlayerDebugOverlay {
 
         this.panel = panel;
         this.info = info;
+        this.adjustLayout();
+        window.addEventListener("resize", this.adjustLayout);
     }
 
     public update(): void {
@@ -46,6 +49,13 @@ export class PlayerDebugOverlay {
     }
 
     public remove(): void {
+        window.removeEventListener("resize", this.adjustLayout);
         this.panel?.remove();
     }
+
+    private readonly adjustLayout = (): void => {
+        if (this.panel) {
+            this.panel.style.zoom = getViewportUiScale().toString();
+        }
+    };
 }
