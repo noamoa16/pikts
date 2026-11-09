@@ -14,6 +14,82 @@ export function clamp(value: number, min: number, max: number): number {
     return Math.max(min, Math.min(value, max));
 }
 
+/** Solve a*x^2 + b*x + c = 0 and return its real roots in ascending order. */
+export function solveQuadratic(a: number, b: number, c: number): number[] {
+    if (a === 0) return b === 0 ? [] : [-c / b];
+    const discriminant = b * b - 4 * a * c;
+    if (discriminant < 0) return [];
+    const sqrtDiscriminant = Math.sqrt(discriminant);
+    const first = (-b - sqrtDiscriminant) / (2 * a);
+    const second = (-b + sqrtDiscriminant) / (2 * a);
+    return first <= second ? [first, second] : [second, first];
+}
+
+/** Solve a*x^3 + b*x^2 + c*x + d = 0 and return its real roots. */
+export function solveCubic(a: number, b: number, c: number, d: number): number[] {
+    if (a === 0) return solveQuadratic(b, c, d);
+    const A = b / a;
+    const B = c / a;
+    const C = d / a;
+    const p = B - A * A / 3;
+    const q = 2 * A * A * A / 27 - A * B / 3 + C;
+    const discriminant = q * q / 4 + p * p * p / 27;
+    const shift = A / 3;
+    let roots: number[];
+    if (discriminant > 0) {
+        const sqrtDiscriminant = Math.sqrt(discriminant);
+        roots = [
+            Math.cbrt(-q / 2 + sqrtDiscriminant)
+            + Math.cbrt(-q / 2 - sqrtDiscriminant)
+            - shift,
+        ];
+    } else if (p === 0) {
+        roots = [-shift];
+    } else {
+        const radius = 2 * Math.sqrt(-p / 3);
+        const angle = Math.acos(Math.max(-1, Math.min(1,
+            (3 * q / (2 * p)) * Math.sqrt(-3 / p),
+        ))) / 3;
+        roots = [0, 1, 2].map(i => radius * Math.cos(angle - 2 * Math.PI * i / 3) - shift);
+    }
+    return roots.sort((x, y) => x - y);
+}
+
+/** Solve a*x^4 + b*x^3 + c*x^2 + d*x + e = 0 and return its real roots. */
+export function solveQuartic(a: number, b: number, c: number, d: number, e: number): number[] {
+    if (a === 0) return solveCubic(b, c, d, e);
+    const A = b / a;
+    const B = c / a;
+    const C = d / a;
+    const D = e / a;
+    const p = B - 3 * A * A / 8;
+    const q = C - A * B / 2 + A * A * A / 8;
+    const r = D - A * C / 4 + A * A * B / 16 - 3 * A * A * A * A / 256;
+    const shift = A / 4;
+    const roots: number[] = [];
+
+    if (Math.abs(q) <= Number.EPSILON * (Math.abs(p) + Math.abs(r) + 1)) {
+        for (const ySquared of solveQuadratic(1, p, r)) {
+            if (ySquared >= 0) {
+                const y = Math.sqrt(ySquared);
+                roots.push(y - shift, -y - shift);
+            }
+        }
+        return roots.sort((x, y) => x - y);
+    }
+
+    // z = alpha^2 is a positive root of the resolvent cubic.
+    const positiveResolventRoots = solveCubic(1, 2 * p, p * p - 4 * r, -q * q)
+        .filter(value => value > 0);
+    if (positiveResolventRoots.length === 0) return roots;
+    const alpha = Math.sqrt(Math.max(...positiveResolventRoots));
+    const beta = (p + alpha * alpha - q / alpha) / 2;
+    const gamma = (p + alpha * alpha + q / alpha) / 2;
+    for (const y of solveQuadratic(1, alpha, beta)) roots.push(y - shift);
+    for (const y of solveQuadratic(1, -alpha, gamma)) roots.push(y - shift);
+    return roots.sort((x, y) => x - y);
+}
+
 /**
  * double（IEEE‑754 64bit）の下位 16bit をクリアする
  *

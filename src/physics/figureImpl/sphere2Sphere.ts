@@ -1,4 +1,5 @@
 import { Vector3 } from "#vendor/babylon";
+import { solveQuadratic } from "../../core/math";
 import { Sphere } from "../figure";
 import { IFigureImpl } from "./figureImpl";
 
@@ -21,12 +22,9 @@ export class Sphere2Sphere implements IFigureImpl {
         const b = d.dot(u);
         const c = d.lengthSquared() - R * R;
 
-        const disc = b * b - c; // D/4 = b^2 - ac = |d * u|^2 - |d|^2 + R^2
-        if (disc <= 0) return Infinity; // 接触しない
-
-        const sqrtDisc = Math.sqrt(disc);
-        const t1 = b - sqrtDisc; // 接触開始時刻
-        const t2 = b + sqrtDisc; // 接触終了時刻
+        const roots = solveQuadratic(1, -2 * b, c);
+        if (roots.length < 2 || roots[0] === roots[1]) return Infinity; // 接触しない
+        const [t1, t2] = roots; // 接触開始時刻と終了時刻
 
         if (t1 >= 0) return t1;
 

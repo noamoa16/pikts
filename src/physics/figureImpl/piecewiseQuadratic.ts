@@ -1,3 +1,5 @@
+import { solveQuadratic } from "../../core/math";
+
 export type QuadraticCoefficients = {
     /** Coefficient of t^2. */
     a: number;
@@ -41,7 +43,9 @@ export function findFirstContactDistance(
             continue;
         }
 
-        const firstRoot = (-b - Math.sqrt(Math.max(0, discriminant))) / a;
+        const roots = solveQuadratic(a, 2 * b, c);
+        const firstRoot = roots[0];
+        if (firstRoot === undefined) continue;
         return Math.max(start, firstRoot);
     }
 

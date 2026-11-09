@@ -76,8 +76,33 @@ export abstract class Entity {
     protected prevVelocity: Vector3 = Vector3.Zero();
 
     // 形状
+    private figureCache: {
+        shape: Shape;
+        position: Vector3;
+        x: number;
+        y: number;
+        z: number;
+        size: number;
+        figure: Figure;
+    } | null = null;
     public get figure(): Figure {
-        return createEntityFigure(this.shape, this.position, this.size);
+        const position = this.position;
+        const { x, y, z } = position;
+        const size = this.size;
+        const cached = this.figureCache;
+        if (
+            cached
+            && cached.shape === this.shape
+            && cached.position === position // 古い参照を返したくないので
+            && cached.x === x && cached.y === y && cached.z === z
+            && cached.size === size
+        ) {
+            return cached.figure;
+        }
+
+        const figure = createEntityFigure(this.shape, position, size);
+        this.figureCache = { shape: this.shape, position, x, y, z, size, figure };
+        return figure;
     }
 
     // 衝突判定

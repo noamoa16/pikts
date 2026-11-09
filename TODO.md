@@ -1,9 +1,4 @@
 - プロンプト：
-  - src/physics/figure.ts について、dir4ToVector3 や dir4ToVector2 で毎回固定の Vector を new していますが、これは重いかもしれません。改善案はありますか？
-  - Entity.figure について、createEntityFigureは重いので、計算結果をキャッシュするようにしてください。引数 (this.shape, this.position, this.size) に変化がなければ、結果を使い回せます。
-  - Sphere2Slope.spaceFull について、straightRect に対する space が Infinity であれば、diagonalRect に対する space を計算する必要がありません。straightRect に対する space が Infinity であれば、diagonalRect に対する space の計算をスキップするようにしてください。
-    - Math.max(a, b) は、a が Infinity であっても b の計算をスキップしない認識ですが、今回はスキップするようにしたいです。
-  - Sphere2Cylinder.space について、三分探索するのは重いため、距離関数を時間区間で分けて解く方法に変えてください。関連する単体テストが全て通ればOKです。
   - 画面サイズに合わせて、PlayerDebugOverlay, EntityInspector, MinionCountDisplay もスケーリングするようにしてください。dpadのように。
     - dpadのように、これ以上小さくならない最小サイズもあると嬉しい
   - debug時のチートモードを実装していきたいです。
@@ -29,6 +24,7 @@
   - 投げ中のMinionが回転するようにしてください。投げ中の移動方向に合うように回転します。
     - xy平面でx方向に投げれば、時計回り回転になるイメージです。
   - ゲーム画面を録画する機能を付けたいと考えています。実現可能性と方法について検討してください。実装はまだしないでください。
+- Sphere2Cylinder の理解と整理
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

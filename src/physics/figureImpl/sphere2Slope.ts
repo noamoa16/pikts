@@ -94,6 +94,9 @@ export class Sphere2Slope implements IFigureImpl {
         const straightRect = this.slope.rectPrism();
         straightRect.center = center.clone();
         const originSphere = new Sphere(Vector3.Zero(), this.sphere.radius);
+        const straightSpace = new Sphere2RectPrism(originSphere, straightRect).space(_dir);
+        if(straightSpace === Infinity) return straightSpace;
+
         const SQRT5 = Math.sqrt(5);
         const SQRT1_5 = 1 / SQRT5;
         const diagonalRect = new RectangularPrism(
@@ -114,7 +117,7 @@ export class Sphere2Slope implements IFigureImpl {
             -_dir.x + 2 * _dir.z,
         );
         return Math.max(
-            new Sphere2RectPrism(originSphere, straightRect).space(_dir),
+            straightSpace,
             new Sphere2RectPrism(originSphere, diagonalRect).space(_dirForDiag),
         );
     }

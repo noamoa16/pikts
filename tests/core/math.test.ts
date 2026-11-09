@@ -7,6 +7,9 @@ import {
     hashInt32,
     normalizeAngle,
     rotate2D,
+    solveCubic,
+    solveQuadratic,
+    solveQuartic,
     toVector2,
     toVector3,
 } from "../../src/core/math";
@@ -23,6 +26,22 @@ describe("core/math", () => {
         expect(clamp(5, 0, 10)).toBe(5);
         expect(clamp(-1, 0, 10)).toBe(0);
         expect(clamp(11, 0, 10)).toBe(10);
+    });
+
+    it("二次方程式の実数解を返し、次数が下がる場合も扱う", () => {
+        expect(solveQuadratic(1, -3, 2)).toEqual([1, 2]);
+        expect(solveQuadratic(1, 0, 1)).toEqual([]);
+        expect(solveQuadratic(0, 2, -4)).toEqual([2]);
+    });
+
+    it("三次方程式の実数解を返し、二次方程式へ退化する場合も扱う", () => {
+        solveCubic(1, -6, 11, -6).forEach((root, i) => expect(root).toBeCloseTo(i + 1));
+        expect(solveCubic(0, 1, -3, 2)).toEqual([1, 2]);
+    });
+
+    it("四次方程式の実数解を返し、三次方程式へ退化する場合も扱う", () => {
+        expect(solveQuartic(1, -10, 35, -50, 24)).toEqual([1, 2, 3, 4]);
+        solveQuartic(0, 1, -6, 11, -6).forEach((root, i) => expect(root).toBeCloseTo(i + 1));
     });
 
     it("clearLow16Bits は下位16bitをクリアする", () => {

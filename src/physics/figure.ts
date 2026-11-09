@@ -25,20 +25,20 @@ export enum Dir4 {
     Back,
 }
 export function dir4ToVector3(dir: Dir4): Vector3 {
-    return {
-        [Dir4.Right]: new Vector3(1, 0, 0),
-        [Dir4.Left]: new Vector3(-1, 0, 0),
-        [Dir4.Front]: new Vector3(0, 1, 0),
-        [Dir4.Back]: new Vector3(0, -1, 0),
-    }[dir];
+    switch (dir) {
+        case Dir4.Right: return new Vector3(1, 0, 0);
+        case Dir4.Left: return new Vector3(-1, 0, 0);
+        case Dir4.Front: return new Vector3(0, 1, 0);
+        case Dir4.Back: return new Vector3(0, -1, 0);
+    }
 }
 export function dir4ToVector2(dir: Dir4): Vector2 {
-    return {
-        [Dir4.Right]: new Vector2(1, 0),
-        [Dir4.Left]: new Vector2(-1, 0),
-        [Dir4.Front]: new Vector2(0, 1),
-        [Dir4.Back]: new Vector2(0, -1),
-    }[dir];
+    switch (dir) {
+        case Dir4.Right: return new Vector2(1, 0);
+        case Dir4.Left: return new Vector2(-1, 0);
+        case Dir4.Front: return new Vector2(0, 1);
+        case Dir4.Back: return new Vector2(0, -1);
+    }
 }
 export function rotateByDir4(v: Vector3, dir: Dir4): Vector3 {
     v = v.clone();
