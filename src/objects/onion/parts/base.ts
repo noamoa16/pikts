@@ -9,7 +9,7 @@ export class Base {
             { diameter: onion.size / 4 },
             scene,
         );
-        base.parent = onion.mesh;
+        base.parent = onion.partsMesh;
         base.position = new Vector3(0, 0, onion.size * 3 / 16);
         const baseMaterial = new StandardMaterial(`${onion.name}.base.material`, scene);
         baseMaterial.backFaceCulling = false;

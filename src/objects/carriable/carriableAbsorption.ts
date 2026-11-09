@@ -36,8 +36,9 @@ export class CarriableAbsorption {
 
         // Onion に吸収される
         if(this.elapsedSeconds >= ABSORBING_WAIT + ABSORBING_MOVE){
-            this.spawnSeedMinions();
+            this.onion?.jump();
             this.game.removeObject(this.carriable);
+            void this.spawnSeedMinions();
             return;
         }
 
@@ -66,9 +67,11 @@ export class CarriableAbsorption {
     /**
      * 栄養価に応じて、Minionを生成する
      */
-    private spawnSeedMinions(): void {
+    private async spawnSeedMinions(): Promise<void> {
         const onion = this.onion;
         if(!onion) return;
+
+        await this.sleep(1_000);
 
         const startPoint = onion.absorbingStartPoint;
         const endPoint = onion.absorbingEndPoint;
@@ -80,6 +83,14 @@ export class CarriableAbsorption {
                 onion.minionColor,
             );
             minion.becomeSeed(startPoint, endPoint, radius);
+
+            if(i < this.nutrition - 1){
+                await this.sleep(100);
+            }
         }
+    }
+
+    private sleep(milliseconds: number): Promise<void> {
+        return new Promise(resolve => setTimeout(resolve, milliseconds));
     }
 }

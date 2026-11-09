@@ -24,6 +24,10 @@ export abstract class Onion extends Entity {
             color.b > 0 ? 0.95 : 0.2,
         );
     }
+    private readonly parts: Mesh;
+    private jumpTime: number | null = null;
+    private static readonly JUMP_INITIAL_VELOCITY = 1.5;
+    private static readonly JUMP_GRAVITY = 5;
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Onion)._MINION_COLOR; }
 
@@ -36,6 +40,10 @@ export abstract class Onion extends Entity {
         super(game, "onion", Shape.Sphere, Onion._SIZE, position, { fall: false });
         this.isVisible = false;
         this.mesh.checkCollisions = false;
+
+        // Onion 本体の座標や当たり判定を変えず、見た目のパーツだけ動かす。
+        this.parts = new Mesh(`${this.name}.parts`, this.scene);
+        this.parts.parent = this.mesh;
 
         // 地面の発光円
         const groundCircle = CreateDisc(
@@ -70,7 +78,30 @@ export abstract class Onion extends Entity {
         }
     }
 
-    override update(_: number): void {
-        // 何もしない
+    override update(deltaSeconds: number): void {
+        if(this.jumpTime === null) return;
+
+        this.jumpTime += deltaSeconds;
+        const velocity = Onion.JUMP_INITIAL_VELOCITY;
+        const gravity = Onion.JUMP_GRAVITY;
+        const duration = 2 * velocity / gravity;
+        if(this.jumpTime >= duration){
+            this.jumpTime = null;
+            this.parts.position.z = 0;
+            return;
+        }
+        this.parts.position.z = velocity * this.jumpTime - gravity * this.jumpTime ** 2 / 2;
     }
+
+    /** Carriable が届いたときにパーツを放物線状に跳ねさせる */
+    public jump(): void {
+        const velocity = Onion.JUMP_INITIAL_VELOCITY;
+        const gravity = Onion.JUMP_GRAVITY;
+        const height = this.parts.position.z;
+        const discriminant = Math.max(0, velocity ** 2 - 2 * gravity * height);
+        // 同じ高さに対応する時刻のうち、小さい方を選んで上昇中に戻す。
+        this.jumpTime = (velocity - Math.sqrt(discriminant)) / gravity;
+    }
+
+    public get partsMesh(): Mesh { return this.parts; }
 }

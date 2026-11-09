@@ -1,6 +1,8 @@
 import { Vector3 } from "#vendor/babylon";
 import { Random } from "../../core/random";
 
+export const SEED_MOTION_DURATION_SECONDS = 1.5;
+
 export type SeedMotionUpdate = {
     position: Vector3;
     rotationX: number;
@@ -37,13 +39,14 @@ export class SeedMotion {
         };
     }
 
-    public update(deltaSeconds: number, speed: number): SeedMotionUpdate | null {
+    public update(deltaSeconds: number): SeedMotionUpdate | null {
         const startPoint = this.startPoint;
         if (!startPoint) return null;
 
         this.elapsedSeconds += Math.max(0, deltaSeconds);
         const totalLength = this.getArcLengthAt(this.radius);
-        const distance = Math.min(this.elapsedSeconds * speed, totalLength);
+        const progress = Math.min(this.elapsedSeconds / SEED_MOTION_DURATION_SECONDS, 1);
+        const distance = progress * totalLength;
         let low = 0;
         let high = this.radius;
         // Invert the curve's arc length so the seed moves at a constant speed.
@@ -64,7 +67,7 @@ export class SeedMotion {
             ),
             rotationX: Math.sin(this.theta) * tilt,
             rotationY: -Math.cos(this.theta) * tilt,
-            finished: distance >= totalLength,
+            finished: progress >= 1,
         };
 
         if (update.finished) {

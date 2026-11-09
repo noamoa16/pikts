@@ -29,7 +29,7 @@ export class Pillar {
             axis.normalize(),
             new Quaternion(),
         );
-        pillar.parent = onion.mesh;
+        pillar.parent = onion.partsMesh;
         const pillarMaterial = new StandardMaterial(`${onion.name}.pillar.material`, scene);
         pillarMaterial.backFaceCulling = false;
         Color.set(pillarMaterial, color);

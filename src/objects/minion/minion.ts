@@ -157,7 +157,7 @@ export abstract class Minion extends Entity {
     }
 
     private updateSeed(deltaSeconds: number): void {
-        const update = this.seedMotion.update(deltaSeconds, this.speed);
+        const update = this.seedMotion.update(deltaSeconds);
         if (!update) {
             this.becomeBuried();
             return;
