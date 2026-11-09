@@ -34,8 +34,8 @@ export function dir4ToVector3(dir: Dir4): Vector3 {
 }
 export function dir4ToVector2(dir: Dir4): Vector2 {
     return {
-        [Dir4.Right]: new Vector2(1, 0,),
-        [Dir4.Left]: new Vector2(-1, 0,),
+        [Dir4.Right]: new Vector2(1, 0),
+        [Dir4.Left]: new Vector2(-1, 0),
         [Dir4.Front]: new Vector2(0, 1),
         [Dir4.Back]: new Vector2(0, -1),
     }[dir];

@@ -91,17 +91,22 @@ function updateThrown(actions: MinionStateUpdateActions): void {
     actions.setCollisionsEnabled(true);
 }
 
+/**
+ * フリー状態のとき
+ */
 function updateFree(
     minion: Minion,
     deltaSeconds: number,
     actions: MinionStateUpdateActions,
 ): void {
-    // 距離1以下の運搬物を探す
-    const nearby = actions.getNearbyCarriables(1);
+    // 距離0.75以下の運搬物を探す
+    const nearby = actions.getNearbyCarriables(0.75);
 
     // 距離0.5以下なら運搬開始可能
     const inPickupRange = nearby.find(carriable =>
-        toVector2(minion.position.subtract(carriable.position)).length() <= 0.5,
+        Vector3.Distance(
+            carriable.position, minion.position,
+        ) - carriable.radius <= 0.5,
     );
     if (inPickupRange && actions.tryBecomeCarrying(inPickupRange)) {
         actions.stopSelfMovement();

@@ -278,8 +278,8 @@ export abstract class Minion extends Entity {
     }
 
     /**
-     * 近くの運搬物を探し、距離が近い順に探す
-     * @param maxDistance - この距離以下の運搬物を探す
+     * 近くの運搬物を探し、距離が近い順に返す
+     * @param _maxDistance - この距離以下の運搬物を探す
      */
     private getNearbyCarriables(_maxDistance: number): Carriable[] {
         const maxDistance = _maxDistance;
@@ -289,7 +289,7 @@ export abstract class Minion extends Entity {
             )
             .map(carriable => ({
                 carriable,
-                distance: Vector3.DistanceSquared(
+                distance: Vector3.Distance(
                     carriable.position, this.position,
                 ) - carriable.radius,
             }))

@@ -1,6 +1,34 @@
-- 投げ中のMinionが回転するようにする
-- Seedの軌道を調整する
-- 埋まりMinionの判別を付きやすくする
+- プロンプト：
+  - src/physics/figure.ts について、dir4ToVector3 や dir4ToVector2 で毎回固定の Vector を new していますが、これは重いかもしれません。改善案はありますか？
+  - Entity.figure について、createEntityFigureは重いので、計算結果をキャッシュするようにしてください。引数 (this.shape, this.position, this.size) に変化がなければ、結果を使い回せます。
+  - Sphere2Slope.spaceFull について、straightRect に対する space が Infinity であれば、diagonalRect に対する space を計算する必要がありません。straightRect に対する space が Infinity であれば、diagonalRect に対する space の計算をスキップするようにしてください。
+    - Math.max(a, b) は、a が Infinity であっても b の計算をスキップしない認識ですが、今回はスキップするようにしたいです。
+  - Sphere2Cylinder.space について、三分探索するのは重いため、距離関数を時間区間で分けて解く方法に変えてください。関連する単体テストが全て通ればOKです。
+  - 画面サイズに合わせて、PlayerDebugOverlay, EntityInspector, MinionCountDisplay もスケーリングするようにしてください。dpadのように。
+    - dpadのように、これ以上小さくならない最小サイズもあると嬉しい
+  - debug時のチートモードを実装していきたいです。
+    - dpad の Enter の左側に、
+      - "Carry Speed 4x" と書かれた ON/OFFスイッチ を追加してください。
+        - デフォルトはOFF
+        - ONのとき、calcCarryingSpeed が 4倍 の値を返す
+      - "Add Minion 5" と書かれた ボタン を追加してください。
+        - 押すと、Player の 頭上 (z + 2) に RedMinion, YellowMinion, BlueMinion が 5体ずつ 出現します。
+  - buried 状態の Minion について、leaf をその Minion の色で少し光らせるようにしてください。
+  - SeedMotion について、
+    - 現状は speed = 3 としてそれを使っていますが、軌道の移動に要する時間を定数として定義し (とりあえず 2.0 にして)、それを使うようにしてください。
+      - speed 自体は移動時に使うので、speed は置いておいて
+    - 現状放物線に沿って動いていますが、arclengthの計算コストが高いなら、放物線に近い別の関数に変えることも想定しています。何か案があれば提案してください。
+  - CarriableAbsorption.spawnSeedMinions について、this.nutrition 回 SeedMinion を生成していますが、生成開始前 ( spawnSeedMinions の実行前 )に 1秒間 sleep したいです。また、生成ごとに 0.1秒の sleep を入れるようにしたいです。
+    - ただし、その場で sleep すると、その後の this.game.removeObject(this.carriable); が遅れる懸念があります。Onion に吸収されることが決まった時点で、その Carriable はなるべく早くゲームから削除されるべきです。上手く修正してください。
+    - 合計で 1 + (this.nutrition - 1) * 0.1 秒の sleep が追加される想定です。
+  - Onion へ Carriable が運搬された際、Onion をジャンプさせるようにしたいです。
+    - Onion の座標が変わると面倒なので、parts だけをジャンプさせるようにすると良さそうです。
+    - ジャンプは放物線を描くようにしてください。複数の Carriable が運搬された際にも、高さの限界は変わらないようにしてください。
+      - 常に、z = v_0 * t - g * t^2 / 2 に合うように移動するということです。
+        - ジャンプ中に別のCarriable が運搬された場合、そのときの z と一致するような t のうち小さい方を採用します。つまり上昇中の状態になります。
+  - 投げ中のMinionが回転するようにしてください。投げ中の移動方向に合うように回転します。
+    - xy平面でx方向に投げれば、時計回り回転になるイメージです。
+  - ゲーム画面を録画する機能を付けたいと考えています。実現可能性と方法について検討してください。実装はまだしないでください。
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

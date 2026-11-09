@@ -60,7 +60,7 @@ export class SeedMotion {
             position: new Vector3(
                 startPoint.x + a * Math.cos(this.theta),
                 startPoint.y + a * Math.sin(this.theta),
-                startPoint.z + this.height * (1 - radialFraction ** 2),
+                startPoint.z + this.height * (1 - radialFraction ** 2), // z = h * (1 - (a/r)^2)
             ),
             rotationX: Math.sin(this.theta) * tilt,
             rotationY: -Math.cos(this.theta) * tilt,
@@ -75,6 +75,12 @@ export class SeedMotion {
         return update;
     }
 
+    /**
+     * 軌道: z = h * (1 - (a/r)^2)
+     * integral (0 to a) sqrt(1 + (2h/r^2 * x)^2) dx
+     * integral sqrt(1 + (kx)^2) dx = x/2 * sqrt(1 + (kx)^2) + 1/2k arcsinh(kx) + C
+     *   arcsinh(x) = ln(x + sqrt(1 + x^2))
+     */
     private getArcLengthAt(a: number): number {
         if (this.radius <= 0 || this.height === 0) return a;
         const k = 2 * this.height / (this.radius * this.radius);

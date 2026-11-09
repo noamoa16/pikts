@@ -30,6 +30,7 @@ export class Sphere2Cylinder implements IFigureImpl {
         // 円柱までの距離は、有限円柱への最近点距離で求める。
         // 上下端の角では水平距離と垂直距離を個別に膨らませる近似が
         // 誤った早期接触を返すため、端面と側面を含む実際の距離を使う。
+        // d^2 = max(|u - c| - r_c, 0)^2 + max(|z| - h / 2, 0)^2
         const distanceSquaredAt = (time: number): number => {
             const x = dir.x * time - c.x;
             const y = dir.y * time - c.y;

@@ -34,6 +34,7 @@ export class CarriableAbsorption {
         const elapsed = this.elapsedSeconds;
         this.elapsedSeconds += deltaSeconds;
 
+        // Onion に吸収される
         if(this.elapsedSeconds >= ABSORBING_WAIT + ABSORBING_MOVE){
             this.spawnSeedMinions();
             this.game.removeObject(this.carriable);
@@ -52,7 +53,7 @@ export class CarriableAbsorption {
         if(!onion) return;
         const moveElapsed = Math.max(0, this.elapsedSeconds - ABSORBING_WAIT) / ABSORBING_MOVE;
         const progress = Math.min(moveElapsed, 1); // [0, 1]
-        const lerp = progress ** 2; // 2乗の関数で動かす
+        const lerp = progress ** 3; // y = x^3 で動かす
         const scale = 1 - lerp / 2;
         this.carriable.mesh.scaling = (this.baseScale ?? Vector3.One()).scale(scale);
         this.carriable.mesh.position = Vector3.Lerp(
@@ -62,6 +63,9 @@ export class CarriableAbsorption {
         );
     }
 
+    /**
+     * 栄養価に応じて、Minionを生成する
+     */
     private spawnSeedMinions(): void {
         const onion = this.onion;
         if(!onion) return;
