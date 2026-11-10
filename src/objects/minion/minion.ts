@@ -108,6 +108,7 @@ export abstract class Minion extends Entity {
             return;
         }
 
+        const positionBeforePhysicsUpdate = this.position.clone();
         super.update(deltaSeconds);
         const positionBeforeStateUpdate = this.position.clone();
         updateMinionState(this, deltaSeconds, this.stateUpdateActions);
@@ -119,7 +120,10 @@ export abstract class Minion extends Entity {
             separateFromNearbyCarriables(this, this.game.objects, deltaSeconds);
         }
 
-        if (this.state !== MinionState.thrown && this.state !== MinionState.held) {
+        if (this.state === MinionState.thrown) {
+            this.rotateWhileThrown(this.position.subtract(positionBeforePhysicsUpdate));
+        }
+        else if (this.state !== MinionState.held) {
             this.rotateToDirection(this.position.subtract(positionBeforeStateUpdate), deltaSeconds);
         }
 
@@ -264,6 +268,16 @@ export abstract class Minion extends Entity {
     private updateHeldPosition(){
         if(!this.follower) return;
         this.position = calcHeldPosition(this.follower.position, this.follower.rotation.z);
+    }
+
+    /** 投擲中は水平移動に合わせて転がるように回転する */
+    private rotateWhileThrown(displacement: Vector3): void {
+        const radius = this.size / 2;
+        if (radius <= 0) return;
+
+        const ROTATION_RATE = 0.25;
+        this.rotation.x -= displacement.y / radius * ROTATION_RATE;
+        this.rotation.y += displacement.x / radius * ROTATION_RATE;
     }
 
     public tryBecomeCarrying(carriable: Carriable): boolean{

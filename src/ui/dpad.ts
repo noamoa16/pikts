@@ -1,5 +1,6 @@
 import type { Engine } from "#vendor/babylon";
 import { Action } from "../actions/action";
+import { RecordingControl } from "./recordingControl";
 import { getViewportUiScale } from "./viewportScale";
 
 type OnPressed = (action: Action, pressed: boolean) => void;
@@ -20,6 +21,7 @@ export class Dpad {
     private readonly buttons = new Map<Action, HTMLButtonElement>();
     private readonly buttonStates = new Map<Action, ButtonState>();
     private holdDescription: HTMLSpanElement | null = null;
+    private recordingControl: RecordingControl | null = null;
 
     constructor(engine: Engine, onPressed: OnPressed, debugControls?: DebugControls) {
         const parent = engine.getRenderingCanvas()?.parentElement;
@@ -76,14 +78,14 @@ export class Dpad {
         this.container.append(rightContainer);
 
         if (debugControls) {
-            this.container.append(this.createDebugControls(debugControls));
+            this.container.append(this.createDebugControls(debugControls, engine.getRenderingCanvas()));
         }
 
         parent.append(this.container);
         this.adjustLayout();
     }
 
-    private createDebugControls(controls: DebugControls): HTMLDivElement {
+    private createDebugControls(controls: DebugControls, canvas: HTMLCanvasElement | null): HTMLDivElement {
         const panel = document.createElement("div");
         Object.assign(panel.style, {
             position: "absolute",
@@ -154,7 +156,8 @@ export class Dpad {
         } satisfies Partial<CSSStyleDeclaration>);
         addMinions.addEventListener("click", controls.onAddMinions);
 
-        panel.append(toggleLabel, addMinions);
+        this.recordingControl = new RecordingControl(canvas);
+        panel.append(toggleLabel, addMinions, this.recordingControl.element);
         return panel;
     }
 
@@ -407,6 +410,7 @@ export class Dpad {
     }
 
     public remove() {
+        this.recordingControl?.dispose();
         this.container.remove();
     }
 }
