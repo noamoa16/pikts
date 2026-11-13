@@ -23,7 +23,7 @@ export enum CarriableState {
     absorbed,
 }
 
-export class Carriable extends Entity {
+export abstract class Carriable extends Entity {
     protected static readonly _NUTRITION: number = 1;
     protected static readonly _MIN_CARRIERS: number = 1;
     protected static readonly _MAX_CARRIERS: number = 1;

@@ -1,4 +1,45 @@
-- Sphere2Cylinder の理解と整理
+- プロンプト：
+  - uiの各コンポーネントについて、サイズと最小サイズの2つを、クラスの定数として持つようにしてください。後から変更しやすくしたい。
+  - src/objects/carriable/pellets.ts について、12クラスを定義していますが、共通する部分を上手くまとめて簡潔にして。継承を使うといいかも。
+  - src/ui/dpad.ts の Add Minion のボタンを非表示にして。機能(関数)自体は残しておいて。
+  - Entity に height プロパティ (getter/setterになるかな？) を追加してください。
+    - Entity のコンストラクタのオプション引数とするのが良いでしょう。Cylinder のときのみ指定可能です。
+    - 指定がない場合は height = size / 2 とします。
+    - Pellet は height = size * 8 となるように Entity のコンストラクタに引数指定します。
+    - PelletPlant1 は height = 4 * size となるように Entity のコンストラクタに引数指定します。
+    - Entity の groundingOffset は単に height / 2 とできるはずです。groundingOffset の 定義自体不要になり、groundingPosition において height / 2 をそのまま書けば良いでしょう。
+  - Entity について、groundPosition の逆 (つまりオブジェクトの上部の座標) を追加してください。
+  - MinionのrotateWhileThrownでthrown状態のMinionのrotation.{x,y}を変更していますが、thrown以外の状態になったらrotation.{x,y}を元に戻すようにして
+  - src/ui/recordingControl.ts について、uiは録画に含まれないようになっていますが、src/ui/minionCountDisplay.ts が録画に含まれるようにしてください。
+  - Minion.getNearbyCarriables について、Entityクラスに、一般化した getNearbyEntity関数を定義し、それをMinionで使うようにしてください。
+    - getNearby の引数は、最低限 maxDistance は必要で、任意で条件 (関数オブジェクト: Entity -> boolean) や 型 (T extends Entity) も指定できます。getNearbyの戻り値は T[] です。型を省略した場合は Entity[] を返します。
+      - 条件に (object): object is Carriable => ... のような書き方をして型を省略できるのであれば、型の指定は省略するようにしてください。
+  - minion の updateFree で、距離 0.75 と 0.5 をマジックナンバーとして指定していますが、Minionクラスの定数として定義するようにしてください。
+  - Minion について、 Carriable を探す処理と同じように、自身の近くに Enemy があれば近づくようにしてください。
+    - 距離は Carriable に対するそれと同じです。
+    - Carriable であれば距離0.5で運搬開始ですが、Enemy であれば、「攻撃開始」処理を行います。
+      - 攻撃開始すると、その Minion の state は attack になります。attack対象もMinionのフィールドとして持つ必要があるでしょう。
+      - state が attack のとき、0.5秒に1回、そのEnemyに1ダメージを与えます。(Enemy.damage(1)を呼び出す)
+      - state が attack のとき、carrying のときに Carriable の周りに位置するのと同じで、Enemy の周りに位置します。
+      - 対象の Enemy が消滅した場合は、freeに戻ります。
+      - 笛で呼ばれた場合は、followingになります。(freeのときに笛で呼ばれるのと似ている)
+  - Carriable が消滅する処理がありますが、その消滅処理を関数として Entity クラスに定義し、Carriable 消滅処理においてはその関数を呼び出すようにしてください。
+    - また、Enemy.die が呼ばれたときに、ゲームからそのEnemyオブジェクトを削除するようにしてください。
+  - RedPelletPlant1 について、position + size / 4 の位置に、 RedPellet1 の見た目と同じものを表示するようにしてください。
+    - RedPellet1 は数字がZ軸+の方向を向いていますが、RedPelletPlant1においてはY軸+の方向の向くようにしてください。
+    - RedPellet1 の見た目には当たり判定はありません。
+    - RedPellet1 の見た目を作成する処理は RedPellet1 にも当然ありますが、見た目を作成する処理を共通化して、RedPellet1 と RedPelletPlant1 からそれぞれ呼び出すようにすると処理が簡潔になるかもしれません。できそうならやってください。
+  - Enemy について、
+    - hp < maxHp のとき、Enemy の上部に HpMeter を表示するようにしてください。
+      - HpMeterの位置は、オブジェクトの上部の座標 + Vector3(0, 0, 3/2) です。
+      - HpMeterは、円形で、その内部の一部分が色で塗りつぶされており、塗りつぶされていない箇所は黒色です。
+      - HpMeterのサイズは、直径が 0.5 です。
+      - HpMeterの向きは、カメラの方向を常に向きます。
+      - a = hp / maxHp としたとき、
+        - -3π/2 <= θ <= -3π/2 + 2πa の範囲が色で塗りつぶされています。
+        - 色は、 a = 1 のとき緑で、a = 0.5 のとき黄色、 a = 0 のとき赤です。aの変化に応じて滑らかに色が変化します。
+  - RedPelletPlant1 について、die関数で、RedPellet1 を position + Vector3(0, 0, size / 4) に出現させるようにしてください。
+- Kochappy
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

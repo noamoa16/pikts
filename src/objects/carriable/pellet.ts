@@ -10,7 +10,7 @@ import { Color } from "../../rendering/color";
 import { minionColorToColor3 } from "../minion/color";
 import { Carriable } from "./carriable";
 
-export class Pellet extends Carriable {
+export abstract class Pellet extends Carriable {
     protected static readonly _BASE_COLOR: Color3 = new Color3(0, 1, 0);
     private get baseColor(){ return (this.constructor as typeof Pellet)._BASE_COLOR; }
 
@@ -24,7 +24,7 @@ export class Pellet extends Carriable {
     }
 
     constructor(game: Game, position: Vector3, public readonly num: number) {
-        super(game, position, (num + 3) * 3 / 32);
+        super(game, position, (Math.floor(Math.sqrt(num)) + 1) * 3 / 16);
         const material = this.mesh.material;
         if(material instanceof StandardMaterial){
             Color.set(material, this.baseColor);
@@ -41,7 +41,8 @@ export class Pellet extends Carriable {
         const context = labelTexture.getContext() as CanvasRenderingContext2D;
         context.clearRect(0, 0, 256, 256);
         context.fillStyle = "white";
-        context.font = "bold 220px sans-serif";
+        const textSize = 220 - 50 * (num.toString().length - 1);
+        context.font = `bold ${textSize}px sans-serif`;
         context.textAlign = "center";
         context.textBaseline = "middle";
         context.lineWidth = 12; // 文字の太さ
@@ -57,7 +58,7 @@ export class Pellet extends Carriable {
         labelMaterial.emissiveColor = Color3.White();
         labelMaterial.backFaceCulling = false;
 
-        const labelSize = this.size * 0.75;
+        const labelSize = this.size * 0.8;
         const capOffset = this.size / 4 + 0.001;
         for(const side of [-1, 1]){
             const label = CreatePlane(
