@@ -6,6 +6,9 @@ import { TransformEditor } from "./transformEditor";
 import { getViewportUiScale } from "../viewportScale";
 
 export class PlayerDebugOverlay {
+    private static readonly SIZE = 96;
+    private static readonly MIN_SIZE = 36;
+
     private readonly panel: HTMLDivElement | null = null;
     private readonly info: HTMLPreElement | null = null;
     private transformEditor: TransformEditor | null = null;
@@ -55,7 +58,10 @@ export class PlayerDebugOverlay {
 
     private readonly adjustLayout = (): void => {
         if (this.panel) {
-            this.panel.style.zoom = getViewportUiScale().toString();
+            this.panel.style.zoom = getViewportUiScale(
+                PlayerDebugOverlay.SIZE,
+                PlayerDebugOverlay.MIN_SIZE,
+            ).toString();
         }
     };
 }

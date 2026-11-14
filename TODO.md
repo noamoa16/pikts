@@ -1,7 +1,4 @@
 - プロンプト：
-  - uiの各コンポーネントについて、サイズと最小サイズの2つを、クラスの定数として持つようにしてください。後から変更しやすくしたい。
-  - src/objects/carriable/pellets.ts について、12クラスを定義していますが、共通する部分を上手くまとめて簡潔にして。継承を使うといいかも。
-  - src/ui/dpad.ts の Add Minion のボタンを非表示にして。機能(関数)自体は残しておいて。
   - Entity に height プロパティ (getter/setterになるかな？) を追加してください。
     - Entity のコンストラクタのオプション引数とするのが良いでしょう。Cylinder のときのみ指定可能です。
     - 指定がない場合は height = size / 2 とします。
@@ -11,9 +8,6 @@
   - Entity について、groundPosition の逆 (つまりオブジェクトの上部の座標) を追加してください。
   - MinionのrotateWhileThrownでthrown状態のMinionのrotation.{x,y}を変更していますが、thrown以外の状態になったらrotation.{x,y}を元に戻すようにして
   - src/ui/recordingControl.ts について、uiは録画に含まれないようになっていますが、src/ui/minionCountDisplay.ts が録画に含まれるようにしてください。
-  - Minion.getNearbyCarriables について、Entityクラスに、一般化した getNearbyEntity関数を定義し、それをMinionで使うようにしてください。
-    - getNearby の引数は、最低限 maxDistance は必要で、任意で条件 (関数オブジェクト: Entity -> boolean) や 型 (T extends Entity) も指定できます。getNearbyの戻り値は T[] です。型を省略した場合は Entity[] を返します。
-      - 条件に (object): object is Carriable => ... のような書き方をして型を省略できるのであれば、型の指定は省略するようにしてください。
   - minion の updateFree で、距離 0.75 と 0.5 をマジックナンバーとして指定していますが、Minionクラスの定数として定義するようにしてください。
   - Minion について、 Carriable を探す処理と同じように、自身の近くに Enemy があれば近づくようにしてください。
     - 距離は Carriable に対するそれと同じです。

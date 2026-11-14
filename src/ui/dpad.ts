@@ -17,6 +17,9 @@ type DebugControls = {
 };
 
 export class Dpad {
+    private static readonly SIZE = 96;
+    private static readonly MIN_SIZE = 36;
+
     private readonly container: HTMLDivElement;
     private readonly buttons = new Map<Action, HTMLButtonElement>();
     private readonly buttonStates = new Map<Action, ButtonState>();
@@ -141,23 +144,8 @@ export class Dpad {
         });
         toggleLabel.append(toggleText, toggleStatus, toggle);
 
-        const addMinions = document.createElement("button");
-        addMinions.type = "button";
-        addMinions.textContent = "Add Minion 5";
-        Object.assign(addMinions.style, {
-            padding: "7px 9px",
-            border: "2px solid #111",
-            borderRadius: "4px",
-            background: "rgba(238, 246, 255, 0.96)",
-            color: "#111",
-            font: "inherit",
-            cursor: "pointer",
-            touchAction: "manipulation",
-        } satisfies Partial<CSSStyleDeclaration>);
-        addMinions.addEventListener("click", controls.onAddMinions);
-
         this.recordingControl = new RecordingControl(canvas);
-        panel.append(toggleLabel, addMinions, this.recordingControl.element);
+        panel.append(toggleLabel, this.recordingControl.element);
         return panel;
     }
 
@@ -392,7 +380,7 @@ export class Dpad {
     }
 
     public adjustLayout() {
-        const buttonSize = getViewportUiScale() * 96;
+        const buttonSize = getViewportUiScale(Dpad.SIZE, Dpad.MIN_SIZE) * Dpad.SIZE;
         const offset = Math.max(16, Math.round(buttonSize * 0.4));
 
         this.container.style.setProperty(

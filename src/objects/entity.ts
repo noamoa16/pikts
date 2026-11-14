@@ -144,6 +144,33 @@ export abstract class Entity {
     }
 
     // 移動
+    /**
+     * 指定距離内にいる Entity を近い順に返す
+     * 距離は対象 Entity の中心から外周までを差し引いて計算する
+     */
+    public getNearbyEntities<T extends Entity>(
+        maxDistance: number,
+        condition: (entity: Entity) => entity is T,
+    ): T[];
+    public getNearbyEntities<T extends Entity = Entity>(
+        maxDistance: number,
+        condition?: (entity: Entity) => boolean,
+    ): T[];
+    public getNearbyEntities<T extends Entity = Entity>(
+        maxDistance: number,
+        condition: (entity: Entity) => boolean = () => true,
+    ): T[] {
+        return this.game.objects
+            .filter((entity): entity is T => entity !== this && condition(entity))
+            .map(entity => ({
+                entity,
+                distance: Vector3.Distance(entity.position, this.position) - entity.size / 2,
+            }))
+            .filter(candidate => candidate.distance <= maxDistance)
+            .sort((a, b) => a.distance - b.distance)
+            .map(candidate => candidate.entity);
+    }
+
     protected moveFor(dir: Vector3, options: { ignoredEntities?: readonly Entity[], strict?: boolean } = {}): Vector3 {
         const dir1 = new Vector3(dir.x, 0, 0);
         const dir2 = new Vector3(0, dir.y, 0);

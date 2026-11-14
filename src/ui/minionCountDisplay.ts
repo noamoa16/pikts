@@ -3,6 +3,9 @@ import { Minion, MinionState } from "../objects/minion/minion";
 import { getViewportUiScale } from "./viewportScale";
 
 export class MinionCountDisplay {
+    private static readonly SIZE = 96;
+    private static readonly MIN_SIZE = 36;
+
     private readonly container: HTMLDivElement | null = null;
     private readonly counts: [HTMLDivElement, HTMLDivElement] | null = null;
 
@@ -66,7 +69,10 @@ export class MinionCountDisplay {
 
     private readonly adjustLayout = (): void => {
         if (this.container) {
-            this.container.style.zoom = getViewportUiScale().toString();
+            this.container.style.zoom = getViewportUiScale(
+                MinionCountDisplay.SIZE,
+                MinionCountDisplay.MIN_SIZE,
+            ).toString();
         }
     };
 }

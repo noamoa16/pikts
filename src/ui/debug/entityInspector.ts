@@ -10,6 +10,9 @@ import { getViewportUiScale } from "../viewportScale";
 type InspectedEntity = Minion | Carriable;
 
 export class EntityInspector {
+    private static readonly SIZE = 96;
+    private static readonly MIN_SIZE = 36;
+
     private readonly canvas: HTMLCanvasElement | null;
     private readonly panel: HTMLDivElement | null;
     private readonly info: HTMLPreElement | null;
@@ -70,7 +73,10 @@ export class EntityInspector {
 
     private readonly adjustLayout = (): void => {
         if (this.panel) {
-            this.panel.style.zoom = getViewportUiScale().toString();
+            this.panel.style.zoom = getViewportUiScale(
+                EntityInspector.SIZE,
+                EntityInspector.MIN_SIZE,
+            ).toString();
         }
     };
 

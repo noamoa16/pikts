@@ -300,22 +300,14 @@ export abstract class Minion extends Entity {
 
     /**
      * 近くの運搬物を探し、距離が近い順に返す
-     * @param _maxDistance - この距離以下の運搬物を探す
+     * @param maxDistance - この距離以下の運搬物を探す
      */
     private getNearbyCarriables(maxDistance: number): Carriable[] {
-        return this.game.objects
-            .filter((object): object is Carriable =>
+        return this.getNearbyEntities(
+            maxDistance,
+            (object): object is Carriable =>
                 object instanceof Carriable && object.canAcceptCarrier,
-            )
-            .map(carriable => ({
-                carriable,
-                distance: Vector3.Distance(
-                    carriable.position, this.position,
-                ) - carriable.radius,
-            }))
-            .filter(candidate => candidate.distance <= maxDistance)
-            .sort((a, b) => a.distance - b.distance)
-            .map(candidate => candidate.carriable);
+        );
     }
     
     /** Minionを投げる際の安全な初期位置 */

@@ -1,8 +1,8 @@
 import { clamp } from "../core/math";
 
-/** Scale UI with the dpad's viewport sizing, keeping its 48px minimum. */
-export function getViewportUiScale(): number {
+/** Scale a UI component against its own target and minimum sizes. */
+export function getViewportUiScale(size: number, minSize: number): number {
     const shortestSide = Math.min(window.innerWidth, window.innerHeight);
-    const buttonSize = clamp(Math.round(shortestSide * 0.12), 48, 96);
-    return buttonSize / 96;
+    const viewportSize = clamp(Math.round(shortestSide * 0.12), minSize, size);
+    return viewportSize / size;
 }
