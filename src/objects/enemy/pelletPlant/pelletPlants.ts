@@ -1,6 +1,8 @@
-import { Color3, StandardMaterial, Vector3 } from "#vendor/babylon";
+import { Color3, CreateCylinder, StandardMaterial, Vector3 } from "#vendor/babylon";
 import { Game } from "../../../game";
 import { Color } from "../../../rendering/color";
+import { RED_PELLET_COLOR } from "../../carriable/pellets";
+import { createPelletAppearance } from "../../carriable/pellet";
 import { Enemy } from "../enemy";
 
 export class RedPelletPlant1 extends Enemy {
@@ -14,9 +16,33 @@ export class RedPelletPlant1 extends Enemy {
             luminance: 0.1,
         });
         this.mesh.material = stemMaterial;
+
+        const pelletSize = (Math.floor(Math.sqrt(1)) + 1) * 3 / 16;
+        const pellet = CreateCylinder(
+            `${this.name}.${this.id}.pelletAppearance`,
+            { height: pelletSize * 3 / 8, diameter: pelletSize },
+            game.scene,
+        );
+        pellet.parent = this.mesh;
+        // Cancel the plant entity's rotation so the pellet cylinder's axis
+        // stays on world Y, leaving its circular face in the XZ plane.
+        pellet.rotation.x = -Math.PI / 2;
+        this.mesh.computeWorldMatrix(true);
+        pellet.computeWorldMatrix(true);
+        pellet.setAbsolutePosition(this.topPosition.add(new Vector3(0, 0, size / 2)));
+        pellet.isPickable = false;
+        pellet.checkCollisions = false;
+        createPelletAppearance(
+            pellet,
+            1,
+            pelletSize,
+            pellet.name,
+            game.scene,
+            RED_PELLET_COLOR,
+            "positiveY",
+        );
     }
     protected override die(){
-        // TODO: RedPellet1 を position + new Vector3(0, 0, size / 4) に出現させる
         super.die();
     }
 }

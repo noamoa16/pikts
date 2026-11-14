@@ -37,7 +37,7 @@ export class CarriableAbsorption {
         // Onion に吸収される
         if(this.elapsedSeconds >= ABSORBING_WAIT + ABSORBING_MOVE){
             this.onion?.jump();
-            this.game.removeObject(this.carriable);
+            this.carriable.remove();
             void this.spawnSeedMinions();
             return;
         }

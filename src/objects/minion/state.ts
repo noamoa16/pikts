@@ -4,6 +4,7 @@ export enum MinionState {
     held,
     thrown,
     carrying,
+    attack,
     seed,
     buried,
 }

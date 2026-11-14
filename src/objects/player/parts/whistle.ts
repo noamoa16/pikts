@@ -119,7 +119,7 @@ export class Whistle {
             for(const object of objects){
                 if(object instanceof Minion){
                     if(object.figure.intersects(whistleFigure)){
-                        if([MinionState.free, MinionState.carrying].includes(object.state)){
+                        if([MinionState.free, MinionState.carrying, MinionState.attack].includes(object.state)){
                             object.becomeFollowing(this.player, '笛で呼ばれた');
                         }
                     }

@@ -5,7 +5,7 @@ import { Game } from "../../game";
 import { MinionColor, minionColorToColor3 } from "../minion/color";
 import { Pellet } from "./pellet";
 
-const RED_COLOR = minionColorToColor3(MinionColor.red);
+export const RED_PELLET_COLOR = minionColorToColor3(MinionColor.red);
 const BLUE_COLOR = minionColorToColor3(MinionColor.blue);
 const YELLOW_COLOR = minionColorToColor3(MinionColor.yellow);
 
@@ -50,16 +50,16 @@ abstract class Pellet20 extends Pellet {
 }
 
 export class RedPellet1 extends Pellet1 {
-    protected static override readonly _BASE_COLOR = RED_COLOR;
+    protected static override readonly _BASE_COLOR = RED_PELLET_COLOR;
 }
 export class RedPellet5 extends Pellet5 {
-    protected static override readonly _BASE_COLOR = RED_COLOR;
+    protected static override readonly _BASE_COLOR = RED_PELLET_COLOR;
 }
 export class RedPellet10 extends Pellet10 {
-    protected static override readonly _BASE_COLOR = RED_COLOR;
+    protected static override readonly _BASE_COLOR = RED_PELLET_COLOR;
 }
 export class RedPellet20 extends Pellet20 {
-    protected static override readonly _BASE_COLOR = RED_COLOR;
+    protected static override readonly _BASE_COLOR = RED_PELLET_COLOR;
 }
 
 export class BluePellet1 extends Pellet1 {

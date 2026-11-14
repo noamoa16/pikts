@@ -160,6 +160,11 @@ export abstract class Entity {
         this.groundingPosition = position.clone();
     }
 
+    /** ゲームからこの Entity を削除する */
+    public remove(): void {
+        this.game.removeObject(this);
+    }
+
     // 移動
     /**
      * 指定距離内にいる Entity を近い順に返す

@@ -55,6 +55,19 @@ export function calcCarriableApproachMoveVector(
     ));
 }
 
+/** Minion を Enemy に近付け、指定した距離で止める移動ベクトルを計算 */
+export function calcEnemyApproachMoveVector(
+    minionPosition: Vector3,
+    enemyPosition: Vector3,
+    speed: number,
+    deltaSeconds: number,
+    stoppingDistance: number,
+): Vector3 {
+    return calcCarriableApproachMoveVector(
+        minionPosition, enemyPosition, speed, deltaSeconds, stoppingDistance,
+    );
+}
+
 /**
  * 二つのエンティティ間で、衝突を回避するために使用する「分離方向」 (単位ベクトル) を計算
  */

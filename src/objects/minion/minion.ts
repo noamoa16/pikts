@@ -19,6 +19,7 @@ import {
 } from "./throw";
 import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
+import { Enemy } from "../enemy/enemy";
 import { MinionColor, minionColorToColor3 } from "./color";
 import { Plant } from "./parts/plant";
 import { SeedMotion } from "./seedMotion";
@@ -31,8 +32,8 @@ import {
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
-    public static readonly FREE_CARRIABLE_SEARCH_DISTANCE = 0.75;
-    public static readonly FREE_CARRIABLE_PICKUP_DISTANCE = 0.5;
+    public static readonly FREE_SEARCH_DISTANCE = 0.75;
+    public static readonly FREE_PICKUP_DISTANCE = 0.5;
 
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Minion)._MINION_COLOR; }
@@ -62,6 +63,8 @@ export abstract class Minion extends Entity {
     }
     public follower: Player | null = null;
     public carried: Carriable | null = null;
+    public attackTarget: Enemy | null = null;
+    private attackElapsedSeconds = 0;
     private readonly seedMotion = new SeedMotion();
     private readonly plant: Plant;
     private thrownRotation: { x: number; y: number } | null = null;
@@ -75,7 +78,11 @@ export abstract class Minion extends Entity {
             this, this.game.objects, deltaSeconds,
         ),
         getNearbyCarriables: maxDistance => this.getNearbyCarriables(maxDistance),
+        getNearbyEnemies: maxDistance => this.getNearbyEnemies(maxDistance),
         tryBecomeCarrying: carriable => this.tryBecomeCarrying(carriable),
+        tryBecomeAttacking: enemy => this.tryBecomeAttacking(enemy),
+        damageAttackTarget: () => this.damageAttackTarget(),
+        stopAttacking: () => this.stopAttacking(),
         stopCarrying: () => this.stopCarrying(),
         stopSelfMovement: () => {
             this.velocity.x = 0;
@@ -131,6 +138,7 @@ export abstract class Minion extends Entity {
                 MinionState.free,
                 MinionState.following,
                 MinionState.carrying,
+                MinionState.attack,
             ].includes(this.state)) {
             separateFromNearbyCarriables(this, this.game.objects, deltaSeconds);
         }
@@ -233,6 +241,7 @@ export abstract class Minion extends Entity {
             [MinionState.held]: this.baseColor,
             [MinionState.thrown]: this.baseColor,
             [MinionState.carrying]: this.baseColor,
+            [MinionState.attack]: this.baseColor,
             [MinionState.seed]: this.baseColor,
             [MinionState.buried]: this.baseColor,
         }[this.state];
@@ -260,8 +269,10 @@ export abstract class Minion extends Entity {
     }
 
     public becomeFollowing(player: Player, src?: string){
-        if(this.state == MinionState.free || this.state == MinionState.carrying){
+        if(this.state == MinionState.free || this.state == MinionState.carrying || this.state === MinionState.attack){
             this.carried = null;
+            this.attackTarget = null;
+            this.attackElapsedSeconds = 0;
             this.state = MinionState.following;
             this.follower = player;
             this.velocity.z = 1;
@@ -314,6 +325,36 @@ export abstract class Minion extends Entity {
         }
     }
 
+    public tryBecomeAttacking(enemy: Enemy): boolean {
+        if (this.state !== MinionState.free || !enemy.isAlive) return false;
+        this.attackTarget = enemy;
+        this.attackElapsedSeconds = 0;
+        this.state = MinionState.attack;
+        return true;
+    }
+
+    private damageAttackTarget(): void {
+        this.attackTarget?.damage(1);
+    }
+
+    private stopAttacking(): void {
+        this.attackTarget = null;
+        this.attackElapsedSeconds = 0;
+        this.becomeFree();
+    }
+
+    public updateAttack(deltaSeconds: number, damageAttackTarget: () => void): void {
+        this.attackElapsedSeconds += deltaSeconds;
+        while (
+            this.attackElapsedSeconds >= 0.5
+            && this.state === MinionState.attack
+            && this.attackTarget?.isAlive
+        ) {
+            this.attackElapsedSeconds -= 0.5;
+            damageAttackTarget();
+        }
+    }
+
     private stopCarrying(): void {
         const carriable = this.carried;
         this.carried = null;
@@ -330,6 +371,13 @@ export abstract class Minion extends Entity {
             maxDistance,
             (object): object is Carriable =>
                 object instanceof Carriable && object.canAcceptCarrier,
+        );
+    }
+
+    private getNearbyEnemies(maxDistance: number): Enemy[] {
+        return this.getNearbyEntities(
+            maxDistance,
+            (object): object is Enemy => object instanceof Enemy && object.isAlive,
         );
     }
     

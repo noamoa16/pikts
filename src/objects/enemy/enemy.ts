@@ -11,6 +11,9 @@ export abstract class Enemy extends Entity {
     private _maxHp: number = 0;
     public get maxHp(): number { return this._maxHp; }
     private set maxHp(value: number) { this._maxHp = value; } 
+    public get isAlive(): boolean {
+        return this.hp > 0 && this.game.objects.includes(this);
+    }
 
     protected static readonly MAX_HP: number = 1;
 
@@ -30,6 +33,6 @@ export abstract class Enemy extends Entity {
     }
 
     protected die(){
-        // 現状は何もしない
+        this.remove();
     }
 }
