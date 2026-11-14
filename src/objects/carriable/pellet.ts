@@ -24,7 +24,8 @@ export abstract class Pellet extends Carriable {
     }
 
     constructor(game: Game, position: Vector3, public readonly num: number) {
-        super(game, position, (Math.floor(Math.sqrt(num)) + 1) * 3 / 16);
+        const size = (Math.floor(Math.sqrt(num)) + 1) * 3 / 16;
+        super(game, position, size, size / 4);
         const material = this.mesh.material;
         if(material instanceof StandardMaterial){
             Color.set(material, this.baseColor);

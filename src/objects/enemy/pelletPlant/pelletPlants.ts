@@ -5,7 +5,8 @@ import { Enemy } from "../enemy";
 
 export class RedPelletPlant1 extends Enemy {
     constructor(game: Game, position: Vector3){
-        super(game, position, 1 / 8, 10);
+        const size = 1 / 8;
+        super(game, position, size, 10, 4 * size);
         const stemMaterial = new StandardMaterial(`${this.name}.stem.material`, game.scene);
         stemMaterial.backFaceCulling = false;
         Color.set(stemMaterial, new Color3(0, 0.4, 0), {

@@ -1,6 +1,6 @@
 import { Vector3 } from "#vendor/babylon";
 import { toVector2 } from "../../core/math";
-import type { Minion } from "./minion";
+import { Minion } from "./minion";
 import { MinionState } from "./state";
 import { calcCarriableApproachMoveVector, calcMinionFollowMoveVector } from "./movement";
 import type { Carriable } from "../carriable/carriable";
@@ -100,13 +100,13 @@ function updateFree(
     actions: MinionStateUpdateActions,
 ): void {
     // 距離0.75以下の運搬物を探す
-    const nearby = actions.getNearbyCarriables(0.75);
+    const nearby = actions.getNearbyCarriables(Minion.FREE_CARRIABLE_SEARCH_DISTANCE);
 
     // 距離0.5以下なら運搬開始可能
     const inPickupRange = nearby.find(carriable =>
         Vector3.Distance(
             carriable.position, minion.position,
-        ) - carriable.radius <= 0.5,
+        ) - carriable.radius <= Minion.FREE_CARRIABLE_PICKUP_DISTANCE,
     );
     if (inPickupRange && actions.tryBecomeCarrying(inPickupRange)) {
         actions.stopSelfMovement();
@@ -122,7 +122,7 @@ function updateFree(
             target.position,
             minion.speed,
             deltaSeconds,
-            0.5,
+            Minion.FREE_CARRIABLE_PICKUP_DISTANCE,
         ));
     }
     else {

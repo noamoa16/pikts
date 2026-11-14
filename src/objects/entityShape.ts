@@ -24,13 +24,14 @@ type EntityShapeContext = {
     scene: Scene;
     name: string;
     size: number;
+    height: number;
     position: Vector3;
     upward: Dir4;
 };
 
 type EntityShapeDefinition = {
     createMesh(context: EntityShapeContext): Mesh;
-    createFigure?(center: Vector3, size: number): Figure;
+    createFigure?(center: Vector3, size: number, height: number): Figure;
     getInitialRotation(context: EntityShapeContext): Vector3;
 };
 
@@ -54,12 +55,12 @@ const ENTITY_SHAPES: Record<Shape, EntityShapeDefinition> = {
         getInitialRotation: () => new Vector3(0, 0, Math.PI * 3 / 2),
     },
     [Shape.Cylinder]: {
-        createMesh: ({ scene, name, size }) => CreateCylinder(
+        createMesh: ({ scene, name, size, height }) => CreateCylinder(
             name,
-            { height: size / 4, diameter: size },
+            { height, diameter: size },
             scene,
         ),
-        createFigure: (center, size) => new Cylinder(center, size / 2, size / 2),
+        createFigure: (center, size, height) => new Cylinder(center, size / 2, height),
         getInitialRotation: () => new Vector3(Math.PI / 2, 0, 0),
     },
     [Shape.RectangularPrism]: unsupportedShapeDefinition(Shape.RectangularPrism),
@@ -100,10 +101,11 @@ export function createEntityFigure(
     shape: Shape,
     center: Vector3,
     size: number,
+    height: number,
 ): Figure {
     const createFigure = ENTITY_SHAPES[shape].createFigure;
     if (!createFigure) {
         throw new Error(`figure() not implemented for ${shapeToString(shape)}`);
     }
-    return createFigure(center, size);
+    return createFigure(center, size, height);
 }

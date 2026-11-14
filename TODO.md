@@ -1,16 +1,6 @@
 - プロンプト：
-  - Entity に height プロパティ (getter/setterになるかな？) を追加してください。
-    - Entity のコンストラクタのオプション引数とするのが良いでしょう。Cylinder のときのみ指定可能です。
-    - 指定がない場合は height = size / 2 とします。
-    - Pellet は height = size * 8 となるように Entity のコンストラクタに引数指定します。
-    - PelletPlant1 は height = 4 * size となるように Entity のコンストラクタに引数指定します。
-    - Entity の groundingOffset は単に height / 2 とできるはずです。groundingOffset の 定義自体不要になり、groundingPosition において height / 2 をそのまま書けば良いでしょう。
-  - Entity について、groundPosition の逆 (つまりオブジェクトの上部の座標) を追加してください。
-  - MinionのrotateWhileThrownでthrown状態のMinionのrotation.{x,y}を変更していますが、thrown以外の状態になったらrotation.{x,y}を元に戻すようにして
-  - src/ui/recordingControl.ts について、uiは録画に含まれないようになっていますが、src/ui/minionCountDisplay.ts が録画に含まれるようにしてください。
-  - minion の updateFree で、距離 0.75 と 0.5 をマジックナンバーとして指定していますが、Minionクラスの定数として定義するようにしてください。
   - Minion について、 Carriable を探す処理と同じように、自身の近くに Enemy があれば近づくようにしてください。
-    - 距離は Carriable に対するそれと同じです。
+    - 距離は Carriable に対するそれと同じです。距離を定数定義していますが、必要であれば名前は変えてください。
     - Carriable であれば距離0.5で運搬開始ですが、Enemy であれば、「攻撃開始」処理を行います。
       - 攻撃開始すると、その Minion の state は attack になります。attack対象もMinionのフィールドとして持つ必要があるでしょう。
       - state が attack のとき、0.5秒に1回、そのEnemyに1ダメージを与えます。(Enemy.damage(1)を呼び出す)

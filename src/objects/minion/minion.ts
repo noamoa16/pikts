@@ -31,6 +31,9 @@ import {
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
+    public static readonly FREE_CARRIABLE_SEARCH_DISTANCE = 0.75;
+    public static readonly FREE_CARRIABLE_PICKUP_DISTANCE = 0.5;
+
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Minion)._MINION_COLOR; }
     private get baseColor(): Color3 {
@@ -45,11 +48,23 @@ export abstract class Minion extends Entity {
             color.b > 0 ? 0.95 : 0.5,
         );
     }
-    public state: MinionState = MinionState.free;
+    private currentState: MinionState = MinionState.free;
+    public get state(): MinionState { return this.currentState; }
+    public set state(state: MinionState) {
+        const previousState = this.currentState;
+        if (previousState !== MinionState.thrown && state === MinionState.thrown) {
+            this.thrownRotation = { x: this.rotation.x, y: this.rotation.y };
+        }
+        this.currentState = state;
+        if (previousState === MinionState.thrown && state !== MinionState.thrown) {
+            this.restoreRotationAfterThrow();
+        }
+    }
     public follower: Player | null = null;
     public carried: Carriable | null = null;
     private readonly seedMotion = new SeedMotion();
     private readonly plant: Plant;
+    private thrownRotation: { x: number; y: number } | null = null;
 
     /**
      * Minionの更新時アクション
@@ -278,6 +293,14 @@ export abstract class Minion extends Entity {
         const ROTATION_RATE = 0.25;
         this.rotation.x -= displacement.y / radius * ROTATION_RATE;
         this.rotation.y += displacement.x / radius * ROTATION_RATE;
+    }
+
+    private restoreRotationAfterThrow(): void {
+        if (this.state === MinionState.thrown || !this.thrownRotation) return;
+
+        this.rotation.x = this.thrownRotation.x;
+        this.rotation.y = this.thrownRotation.y;
+        this.thrownRotation = null;
     }
 
     public tryBecomeCarrying(carriable: Carriable): boolean{

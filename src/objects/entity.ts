@@ -26,14 +26,19 @@ export abstract class Entity {
     // 位置
     public get position(): Vector3 { return this.mesh.position; }
     protected set position(value: Vector3) { this.mesh.position = value; }
-    private get groundingOffset(): number {
-        return this.shape === Shape.Cylinder ? this.size / 4 : this.size / 2;
-    }
+    private _height: number = 1;
+    public get height(): number { return this._height; }
     public get groundingPosition(): Vector3 {
-        return this.mesh.position.subtract(new Vector3(0, 0, this.groundingOffset));
+        return this.mesh.position.subtract(new Vector3(0, 0, this.height / 2));
     }
     protected set groundingPosition(value: Vector3) {
-        this.mesh.position = value.add(new Vector3(0, 0, this.groundingOffset));
+        this.mesh.position = value.add(new Vector3(0, 0, this.height / 2));
+    }
+    public get topPosition(): Vector3 {
+        return this.mesh.position.add(new Vector3(0, 0, this.height / 2));
+    }
+    protected set topPosition(value: Vector3) {
+        this.mesh.position = value.subtract(new Vector3(0, 0, this.height / 2));
     }
 
     // 回転
@@ -83,25 +88,27 @@ export abstract class Entity {
         y: number;
         z: number;
         size: number;
+        height: number;
         figure: Figure;
     } | null = null;
     public get figure(): Figure {
         const position = this.position;
         const { x, y, z } = position;
         const size = this.size;
+        const height = this.height;
         const cached = this.figureCache;
         if (
             cached
             && cached.shape === this.shape
             && cached.position === position // 古い参照を返したくないので
             && cached.x === x && cached.y === y && cached.z === z
-            && cached.size === size
+            && cached.size === size && cached.height === height
         ) {
             return cached.figure;
         }
 
-        const figure = createEntityFigure(this.shape, position, size);
-        this.figureCache = { shape: this.shape, position, x, y, z, size, figure };
+        const figure = createEntityFigure(this.shape, position, size, height);
+        this.figureCache = { shape: this.shape, position, x, y, z, size, height, figure };
         return figure;
     }
 
@@ -123,16 +130,26 @@ export abstract class Entity {
         options: {
             fall: boolean,
             upward?: Dir4,
+            height?: number,
         },
     ) {
         this.id = Entity.count++;
         this.size = size;
+        if (options.height !== undefined && this.shape !== Shape.Cylinder) {
+            throw new Error("height can only be specified for Cylinder entities");
+        }
+        this._height = options.height ?? (
+            this.shape === Shape.Cylinder ?
+            this.size / 2 :
+            this.size
+        );
         this.fall = options.fall;
         this.game.objects.push(this);
         const shapeDefinition = createEntityShape(this.shape, {
             scene: this.scene,
             name: this.name,
             size: this.size,
+            height: this.height,
             position,
             upward: options.upward ?? Dir4.Right,
         });

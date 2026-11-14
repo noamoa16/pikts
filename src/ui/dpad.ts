@@ -26,7 +26,12 @@ export class Dpad {
     private holdDescription: HTMLSpanElement | null = null;
     private recordingControl: RecordingControl | null = null;
 
-    constructor(engine: Engine, onPressed: OnPressed, debugControls?: DebugControls) {
+    constructor(
+        engine: Engine,
+        onPressed: OnPressed,
+        debugControls?: DebugControls,
+        drawRecordingOverlay?: (context: CanvasRenderingContext2D) => void,
+    ) {
         const parent = engine.getRenderingCanvas()?.parentElement;
         if (!(parent instanceof HTMLDivElement)) {
             throw new Error('parent is not HTMLDivElement');
@@ -81,14 +86,22 @@ export class Dpad {
         this.container.append(rightContainer);
 
         if (debugControls) {
-            this.container.append(this.createDebugControls(debugControls, engine.getRenderingCanvas()));
+            this.container.append(this.createDebugControls(
+                debugControls,
+                engine.getRenderingCanvas(),
+                drawRecordingOverlay,
+            ));
         }
 
         parent.append(this.container);
         this.adjustLayout();
     }
 
-    private createDebugControls(controls: DebugControls, canvas: HTMLCanvasElement | null): HTMLDivElement {
+    private createDebugControls(
+        controls: DebugControls,
+        canvas: HTMLCanvasElement | null,
+        drawRecordingOverlay?: (context: CanvasRenderingContext2D) => void,
+    ): HTMLDivElement {
         const panel = document.createElement("div");
         Object.assign(panel.style, {
             position: "absolute",
@@ -144,7 +157,7 @@ export class Dpad {
         });
         toggleLabel.append(toggleText, toggleStatus, toggle);
 
-        this.recordingControl = new RecordingControl(canvas);
+        this.recordingControl = new RecordingControl(canvas, drawRecordingOverlay);
         panel.append(toggleLabel, this.recordingControl.element);
         return panel;
     }

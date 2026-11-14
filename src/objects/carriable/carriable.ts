@@ -64,8 +64,8 @@ export abstract class Carriable extends Entity {
 
     private readonly carrierCountLabel: CarrierCountLabel;
 
-    constructor(game: Game, position: Vector3, size: number = 1) {
-        super(game, "carriable", Shape.Cylinder, size, position, { fall: true });
+    constructor(game: Game, position: Vector3, size: number = 1, height?: number) {
+        super(game, "carriable", Shape.Cylinder, size, position, { fall: true, height });
 
         const material = new StandardMaterial(`${this.name}.material`, this.scene);
         material.backFaceCulling = false;

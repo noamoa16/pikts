@@ -15,7 +15,10 @@ export class RecordingControl {
     private recordingCanvas: HTMLCanvasElement | null = null;
     private recordingAnimationFrame: number | null = null;
 
-    constructor(canvas: HTMLCanvasElement | null) {
+    constructor(
+        canvas: HTMLCanvasElement | null,
+        private readonly drawRecordingOverlay?: (context: CanvasRenderingContext2D) => void,
+    ) {
         this.canvas = canvas;
 
         const row = document.createElement("div");
@@ -133,6 +136,8 @@ export class RecordingControl {
         }
         context.setTransform(-1, 0, 0, 1, target.width, 0);
         context.drawImage(source, 0, 0, target.width, target.height);
+        context.setTransform(1, 0, 0, 1, 0, 0);
+        this.drawRecordingOverlay?.(context);
         this.recordingAnimationFrame = window.requestAnimationFrame(() => this.drawFrame(context));
     }
 

@@ -9,8 +9,11 @@ export class MinionCountDisplay {
     private readonly container: HTMLDivElement | null = null;
     private readonly counts: [HTMLDivElement, HTMLDivElement] | null = null;
 
-    constructor(private readonly game: Game, canvas: HTMLCanvasElement | null) {
-        const parent = canvas?.parentElement;
+    constructor(
+        private readonly game: Game,
+        private readonly canvas: HTMLCanvasElement | null,
+    ) {
+        const parent = this.canvas?.parentElement;
         if (!(parent instanceof HTMLDivElement)) {
             return;
         }
@@ -60,6 +63,35 @@ export class MinionCountDisplay {
         const minions = this.game.objects.filter((object): object is Minion => object instanceof Minion);
         this.counts[0].textContent = `${minions.filter(minion => minion.state === MinionState.following).length}`;
         this.counts[1].textContent = `${minions.length}`;
+    }
+
+    public drawRecordingOverlay(context: CanvasRenderingContext2D): void {
+        if (!this.container || !this.counts || !this.canvas) return;
+
+        const canvasBounds = this.canvas.getBoundingClientRect();
+        if (canvasBounds.width === 0 || canvasBounds.height === 0) return;
+
+        const scaleX = this.canvas.width / canvasBounds.width;
+        const scaleY = this.canvas.height / canvasBounds.height;
+        for (const count of this.counts) {
+            const bounds = count.getBoundingClientRect();
+            const x = (bounds.left - canvasBounds.left) * scaleX;
+            const y = (bounds.top - canvasBounds.top) * scaleY;
+            const width = bounds.width * scaleX;
+            const height = bounds.height * scaleY;
+            const style = window.getComputedStyle(count);
+
+            context.fillStyle = style.backgroundColor;
+            context.beginPath();
+            context.roundRect(x, y, width, height, parseFloat(style.borderRadius) * scaleX);
+            context.fill();
+
+            context.fillStyle = style.color;
+            context.font = `${style.fontWeight} ${parseFloat(style.fontSize) * scaleY}px ${style.fontFamily}`;
+            context.textAlign = "center";
+            context.textBaseline = "middle";
+            context.fillText(count.textContent ?? "", x + width / 2, y + height / 2);
+        }
     }
 
     public remove(): void {

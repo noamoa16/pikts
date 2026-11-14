@@ -133,6 +133,7 @@ export function createDemoScene(engine: Engine): Scene {
                 for (let i = 0; i < 5; i++) new BlueMinion(game, spawnPosition.clone());
             },
         } : undefined,
+        context => game.minionCountDisplay.drawRecordingOverlay(context),
     );
     player.setKeyboardActionHandler((action, pressed) => {
         dpad.setKeyboardPressed(action, pressed);
