@@ -1,7 +1,7 @@
 import { Color3, CreateCylinder, StandardMaterial, Vector3 } from "#vendor/babylon";
 import { Game } from "../../../game";
 import { Color } from "../../../rendering/color";
-import { RED_PELLET_COLOR } from "../../carriable/pellets";
+import { RED_PELLET_COLOR, RedPellet1 } from "../../carriable/pellets";
 import { createPelletAppearance } from "../../carriable/pellet";
 import { Enemy } from "../enemy";
 
@@ -43,6 +43,8 @@ export class RedPelletPlant1 extends Enemy {
         );
     }
     protected override die(){
+        const pelletPosition = this.position.add(new Vector3(0, 0, this.size / 4));
         super.die();
+        new RedPellet1(this.game, pelletPosition);
     }
 }
