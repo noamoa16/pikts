@@ -1,4 +1,45 @@
-- Kochappy
+- プロンプト：
+  - RecordingControl と Carrying Speed 2x の機能について、dpadのように SIZE, MIN_SIZE を定数定義して、容易に変更できるようにして。
+  - src/objects/enemy/pelletPlant/pelletPlants.ts について、Pelletの周囲にもう一つパーツ (Mesh) を追加してください。
+   - 名前：Flower (Create... に渡す名前は flowerAppearance などになるはず)
+   - 親：Pellet
+   - 色：白
+   - 当たり判定：なし
+   - Pellet の式を x^2 + z^2 <= r^2 and -h/2 <= y <= h/2 としたとき、 Flower の式は、n = 8 , θ = 2π/n として、(x - r cos(kθ))^2 + (z - r sin(kθ))^2 <= (r * sin(θ/2))^2 (k = 0, 1, ..., n - 1) and -h/4 <= y <= h/4 です。 n は 適切な名前で定数定義して後から変更可能なように。 Flower の一部が Pellet の内部にありますが、問題ありません。
+  - src/ui/debug/entityInspector.ts を Enemy に対しても有効にして。
+    - name, id, hp, maxHp を表示すること。
+    - position, rotation は Minion などと同じように編集可能にすること。
+  - RedPelletPlant1 を参考に、{Yellow,Blue}RedPelletPlant1 を作ってください。継承を適切に用いるとよいでしょう。
+  - RandomPelletPlant1 を作ってください。
+    - 最小は Red ですが、2秒ごとに色が変化します。 Red → Yellow → Blue → Red → ... という順番です。
+    - die したとき、その色に応じた Pellet1 をドロップします。
+  - GrassFloor(game, new Vector3(0, 0, 0), PLAY_AREA) 上から GrassFloor(game, new Vector3(-PLAY_AREA, 0, 0), PLAY_AREA) 上に移動する際に、Minionが引っかかります。解消してください。
+    - そのときの Minion の状態は following
+    - デバッグ機能を用いて、引っかかった Minion の z座標を0.1増やすことで解消することを確認しました
+    - 当たり判定にバグがありそうなら、単体テスト か Entity.moveFor を修正するなど考えてください。当たり判定での対応が難しそうならば、 Minion が引っかかっていそうならば z座標を上げたり z方向の速度を与えたりするなどの対策を講じてください。
+      - Entity.moveFor で clearLow16Bits をしているが、「四捨五入」のようなことをする方がいいかも？
+  - Minion.damageAttackTarget で Enemy に 1.0 ダメージを与えていますが、 RedMinion は 1.5 ダメージ、他の色の Minion は 1.0 ダメージを与えるようにしてください。「攻撃力」を定数として定義するのが良さそうですかね。
+  - Enemy を継承した Kochappy を作って
+    - 形状は球
+    - 色は赤
+    - size = 0.5
+    - HP は 20
+    - 球を x^2 + y^2 + z^2 <= r^2 として、
+      - x^2 + y^2 + z^2 = (r * (1 + 1/16))^2 and y <= 0 に 薄橙色の球がある (これには当たり判定なし)
+      - y >= 0 の範囲に、白い円柱が満遍なく7個ある (円柱を S_0, S_1, ..., S_6 とする)
+        - 円柱 S_i の中心座標を S_i.c , 原点を O とする
+        - S_i.c から円柱の円の中心へのベクトルと、O から S_i.c へのベクトルが平行
+        - |S_i.c| = r
+        - S_i, の半径は r/8, 高さは r/32
+        - S_0 は、x^2 + z^2 = (r/8)^2 and -r/64 <= y - r <= r/64
+        - i = 1, ..., 6 について、d = |S_0.c - S_i.c| = |S_i.c - S_(i mod 6 + 1).c| は一定
+        - i = 1, ..., 6 について、S_i.c.y = r/2 は一定
+  - Kochappy について、半径 0.5 以上 半径 2 以下に Minion (seed, buried は除く) が存在すれば、それらの Minion の中で、最も近い Minion に向かって移動するようにして。
+    - Kochappy に state を定義して。(free, chase)
+      - 半径 0.5 以上 半径 2 以下に Minion が存在するときは chase, そうでなければ free
+    - 移動時には、 Player のように、移動に応じて rotation を変えるようにして。
+    - 半径 0.5 以上 半径 2 以下に Minion が存在しなくなったら停止して。
+    - マジックナンバーは定数として定義して後から容易に変更できるようにすること。
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

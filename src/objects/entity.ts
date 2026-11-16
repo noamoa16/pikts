@@ -193,7 +193,13 @@ export abstract class Entity {
             .map(candidate => candidate.entity);
     }
 
-    protected moveFor(dir: Vector3, options: { ignoredEntities?: readonly Entity[], strict?: boolean } = {}): Vector3 {
+    protected moveFor(
+        dir: Vector3,
+        options: {
+            ignoredEntities?: readonly Entity[],
+            strict?: boolean,
+        } = {}
+    ): Vector3 {
         const dir1 = new Vector3(dir.x, 0, 0);
         const dir2 = new Vector3(0, dir.y, 0);
         const dir3 = new Vector3(0, 0, dir.z);
@@ -216,7 +222,10 @@ export abstract class Entity {
                 if(!this.isBlockedBy(entity)){
                     continue;
                 }
-                space = Math.min(this.figure.space(entity.figure, dir, options?.strict === true), space);
+                space = Math.min(
+                    this.figure.space(entity.figure, dir, options?.strict === true),
+                    space,
+                );
             }
             if(space <= 3 * Number.EPSILON){ // 移動不可
                 continue;

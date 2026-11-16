@@ -301,7 +301,7 @@ export abstract class Minion extends Entity {
         const radius = this.size / 2;
         if (radius <= 0) return;
 
-        const ROTATION_RATE = 0.25;
+        const ROTATION_RATE = 0.5;
         this.rotation.x -= displacement.y / radius * ROTATION_RATE;
         this.rotation.y += displacement.x / radius * ROTATION_RATE;
     }

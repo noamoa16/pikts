@@ -18,7 +18,7 @@ type DebugControls = {
 
 export class Dpad {
     private static readonly SIZE = 96;
-    private static readonly MIN_SIZE = 36;
+    private static readonly MIN_SIZE = 30;
 
     private readonly container: HTMLDivElement;
     private readonly buttons = new Map<Action, HTMLButtonElement>();
