@@ -19,8 +19,15 @@ export abstract class Enemy extends Entity {
 
     protected static readonly MAX_HP: number = 1;
 
-    constructor(game: Game, position: Vector3, size: number, hp: number, height?: number){
-        super(game, "enemy", Shape.Cylinder, size, position, { fall: true, height });
+    constructor(
+        game: Game,
+        position: Vector3,
+        size: number,
+        hp: number,
+        height?: number,
+        shape: Shape = Shape.Cylinder,
+    ){
+        super(game, "enemy", shape, size, position, { fall: true, height });
         this.hp = this.maxHp = hp;
         this.hpMeter = new HpMeter(this.mesh, this.scene, this.height);
     }
