@@ -31,6 +31,11 @@ export class GrassFloor extends Entity {
     override update(_: number): void {
         // 何もしない
     }
+
+    override blocksMovementInDirection(direction: Vector3): boolean {
+        // 床は落下を支えるが、隣接する床の側面は水平移動を妨げない。
+        return direction.z < 0;
+    }
 }
 
 function createGrassFloor(scene: Scene, position: Vector3, size: number): Mesh {

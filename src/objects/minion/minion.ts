@@ -35,6 +35,9 @@ export abstract class Minion extends Entity {
     public static readonly FREE_SEARCH_DISTANCE = 1.0;
     public static readonly FREE_PICKUP_DISTANCE = 0.5;
 
+    protected static readonly _ATTACK_POWER: number = 1.0;
+    private get attackPower(): number { return (this.constructor as typeof Minion)._ATTACK_POWER; }
+
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Minion)._MINION_COLOR; }
     private get baseColor(): Color3 {
@@ -334,7 +337,7 @@ export abstract class Minion extends Entity {
     }
 
     private damageAttackTarget(): void {
-        this.attackTarget?.damage(1);
+        this.attackTarget?.damage(this.attackPower);
     }
 
     private stopAttacking(): void {

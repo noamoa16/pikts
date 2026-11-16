@@ -219,6 +219,9 @@ export abstract class Entity {
                 if(options.ignoredEntities?.includes(entity)){
                     continue;
                 }
+                if(!entity.blocksMovementInDirection(dir)){
+                    continue;
+                }
                 if(!this.isBlockedBy(entity)){
                     continue;
                 }
@@ -310,6 +313,11 @@ export abstract class Entity {
      * 移動の際に他オブジェクトの邪魔をするかどうか
      */
     protected isBlockedBy(_: Entity): boolean {
+        return true;
+    }
+
+    /** Whether this entity blocks another entity moving in the given direction. */
+    public blocksMovementInDirection(_: Vector3): boolean {
         return true;
     }
 

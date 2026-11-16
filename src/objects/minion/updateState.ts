@@ -111,13 +111,13 @@ function updateFree(
     deltaSeconds: number,
     actions: MinionStateUpdateActions,
 ): void {
-    // 距離0.75以下の運搬物を探す
-    const nearby = actions.getNearbyCarriables(Minion.FREE_SEARCH_DISTANCE);
+    // 距離 FREE_SEARCH_DISTANCE 以下の運搬物を探す
+    const nearbyCarriables = actions.getNearbyCarriables(Minion.FREE_SEARCH_DISTANCE);
     const nearbyEnemies = actions.getNearbyEnemies(Minion.FREE_SEARCH_DISTANCE);
 
-    // 取得範囲内に複数の対象があれば、近い方を優先する。
-    const carriableInRange = nearby.find(carriable =>
-        Vector3.Distance(carriable.position, minion.position) - carriable.radius
+    // 取得範囲内に複数の対象があれば、近い方を優先
+    const carriableInRange = nearbyCarriables.find(carriable =>
+        Vector3.Distance(carriable.position, minion.position) - carriable.size / 2
             <= Minion.FREE_PICKUP_DISTANCE,
     );
     const enemyInRange = nearbyEnemies.find(enemy =>
@@ -125,21 +125,23 @@ function updateFree(
             <= Minion.FREE_PICKUP_DISTANCE,
     );
     const carriableDistance = carriableInRange
-        ? Vector3.Distance(carriableInRange.position, minion.position) - carriableInRange.radius
+        ? Vector3.Distance(carriableInRange.position, minion.position) - carriableInRange.size / 2
         : Infinity;
     const enemyDistance = enemyInRange
         ? Vector3.Distance(enemyInRange.position, minion.position) - enemyInRange.size / 2
         : Infinity;
 
-    if (enemyInRange && enemyDistance < carriableDistance
-        && actions.tryBecomeAttacking(enemyInRange)) {
+    if (
+        enemyInRange && enemyDistance < carriableDistance &&
+        actions.tryBecomeAttacking(enemyInRange)
+    ) {
         actions.stopSelfMovement();
         actions.setCollisionsEnabled(true);
         return;
     }
 
-    // 距離0.5以下なら運搬開始可能
-    const inPickupRange = nearby.find(carriable =>
+    // 距離 FREE_PICKUP_DISTANCE 以下なら運搬開始可能
+    const inPickupRange = nearbyCarriables.find(carriable =>
         Vector3.Distance(
             carriable.position, minion.position,
         ) - carriable.radius <= Minion.FREE_PICKUP_DISTANCE,
@@ -150,7 +152,7 @@ function updateFree(
         return;
     }
 
-    const target = nearby[0];
+    const target = nearbyCarriables[0];
     const enemyTarget = nearbyEnemies[0];
     if (enemyTarget && (!target || enemyTarget.position.subtract(minion.position).length()
         - enemyTarget.size / 2 < target.position.subtract(minion.position).length() - target.radius)) {

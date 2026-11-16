@@ -1,10 +1,4 @@
 - プロンプト：
-  - GrassFloor(game, new Vector3(0, 0, 0), PLAY_AREA) 上から GrassFloor(game, new Vector3(-PLAY_AREA, 0, 0), PLAY_AREA) 上に移動する際に、Minionが引っかかります。解消してください。
-    - そのときの Minion の状態は following
-    - デバッグ機能を用いて、引っかかった Minion の z座標を0.1増やすことで解消することを確認しました
-    - 当たり判定にバグがありそうなら、単体テスト か Entity.moveFor を修正するなど考えてください。当たり判定での対応が難しそうならば、 Minion が引っかかっていそうならば z座標を上げたり z方向の速度を与えたりするなどの対策を講じてください。
-      - Entity.moveFor で clearLow16Bits をしているが、「四捨五入」のようなことをする方がいいかも？
-  - Minion.damageAttackTarget で Enemy に 1.0 ダメージを与えていますが、 RedMinion は 1.5 ダメージ、他の色の Minion は 1.0 ダメージを与えるようにしてください。「攻撃力」を定数として定義するのが良さそうですかね。
   - Enemy を継承した Kochappy を作って
     - 形状は球
     - 色は赤
@@ -26,6 +20,9 @@
     - 移動時には、 Player のように、移動に応じて rotation を変えるようにして。
     - 半径 0.5 以上 半径 2 以下に Minion が存在しなくなったら停止して。
     - マジックナンバーは定数として定義して後から容易に変更できるようにすること。
+- MinionがPelletPlantに引っかかる問題の解消
+- MinionがEnemyに攻撃開始しない問題の解消 (運搬物と処理が違いそう)
+- 解散処理
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定
