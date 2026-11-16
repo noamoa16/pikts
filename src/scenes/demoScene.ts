@@ -33,7 +33,12 @@ import {
     YellowPellet20,
     BluePellet20,
 } from "../objects/carriable/pellets";
-import { RedPelletPlant1 } from "../objects/enemy/pelletPlant/pelletPlants";
+import {
+    BlueRedPelletPlant1,
+    RandomPelletPlant1,
+    RedPelletPlant1,
+    YellowRedPelletPlant1,
+} from "../objects/enemy/pelletPlant/pelletPlants";
 
 // let shadowGen: ShadowGenerator;
 
@@ -72,9 +77,12 @@ export function createDemoScene(engine: Engine): Scene {
     new YellowPellet5(game, new Vector3(3, -2, 0));
 
     new RedPelletPlant1(game, new Vector3(-2, -1, 0));
+    new YellowRedPelletPlant1(game, new Vector3(-3, -1, 0));
+    new BlueRedPelletPlant1(game, new Vector3(-4, -1, 0));
+    new RandomPelletPlant1(game, new Vector3(-5, -1, 0));
 
-    new Block(game, new Vector3(-5, -1, 0));
-    new RedPellet1(game, new Vector3(-5, -1, 1));
+    new Block(game, new Vector3(-6, -1, 0));
+    new RedPellet1(game, new Vector3(-6, -1, 1));
     new BluePellet5(game, new Vector3(-6, -4, 0));
 
     new RedPellet10(game, new Vector3(-7, 0, 0));

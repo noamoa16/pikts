@@ -1,11 +1,22 @@
 import { Color3, CreateCylinder, StandardMaterial, Vector3 } from "#vendor/babylon";
 import { Game } from "../../../game";
 import { Color } from "../../../rendering/color";
-import { RED_PELLET_COLOR, RedPellet1 } from "../../carriable/pellets";
+import {
+    RED_PELLET_COLOR,
+    YELLOW_PELLET_COLOR,
+    BLUE_PELLET_COLOR,
+    BluePellet1,
+    RedPellet1,
+    YellowPellet1,
+} from "../../carriable/pellets";
 import { createPelletAppearance } from "../../carriable/pellet";
 import { Enemy } from "../enemy";
 
-export class RedPelletPlant1 extends Enemy {
+const FLOWER_PETAL_COUNT = 8;
+
+export abstract class PelletPlant1 extends Enemy {
+    private pelletMaterial!: StandardMaterial;
+
     constructor(game: Game, position: Vector3){
         const size = 1 / 8;
         super(game, position, size, 10, 4 * size);
@@ -39,14 +50,125 @@ export class RedPelletPlant1 extends Enemy {
             pelletSize,
             pellet.name,
             game.scene,
-            RED_PELLET_COLOR,
+            this.pelletColor,
             "positiveY",
         );
+        this.pelletMaterial = pellet.material as StandardMaterial;
+
+        // Flower
+        const flowerMaterial = new StandardMaterial(
+            `${pellet.name}.flower.material`,
+            game.scene,
+        );
+        flowerMaterial.diffuseColor = Color3.White();
+        const theta = 2 * Math.PI / FLOWER_PETAL_COUNT;
+        const petalRadius = (pelletSize / 2) * Math.sin(theta / 2);
+        for(let k = 0; k < FLOWER_PETAL_COUNT; k++){
+            const angle = k * theta;
+            const flowerPetal = CreateCylinder(
+                `${pellet.name}.flowerAppearance.${k}`,
+                {
+                    height: pelletSize * 3 / 16,
+                    diameter: petalRadius * 2,
+                },
+                game.scene,
+            );
+            flowerPetal.parent = pellet;
+            flowerPetal.position = new Vector3(
+                pelletSize / 2 * Math.cos(angle),
+                0,
+                pelletSize / 2 * Math.sin(angle),
+            );
+            flowerPetal.material = flowerMaterial;
+            flowerPetal.isPickable = false;
+            flowerPetal.checkCollisions = false;
+        }
     }
     protected override die(){
         // Pellet をドロップする
         const pelletPosition = this.position.add(new Vector3(0, 0, this.size / 4));
         super.die();
-        new RedPellet1(this.game, pelletPosition);
+        this.dropPellet(pelletPosition);
+    }
+
+    protected get pelletColor(): Color3 {
+        return RED_PELLET_COLOR;
+    }
+    protected abstract dropPellet(position: Vector3): void;
+
+    protected updatePelletColor(): void {
+        Color.set(this.pelletMaterial, this.pelletColor);
+    }
+}
+
+export class RedPelletPlant1 extends PelletPlant1 {
+    protected get pelletColor(): Color3 {
+        return RED_PELLET_COLOR;
+    }
+
+    protected dropPellet(position: Vector3): void {
+        new RedPellet1(this.game, position);
+    }
+}
+
+export class YellowRedPelletPlant1 extends PelletPlant1 {
+    protected get pelletColor(): Color3 {
+        return YELLOW_PELLET_COLOR;
+    }
+
+    protected dropPellet(position: Vector3): void {
+        new YellowPellet1(this.game, position);
+    }
+}
+
+export class BlueRedPelletPlant1 extends PelletPlant1 {
+    protected get pelletColor(): Color3 {
+        return BLUE_PELLET_COLOR;
+    }
+
+    protected dropPellet(position: Vector3): void {
+        new BluePellet1(this.game, position);
+    }
+}
+
+export class RandomPelletPlant1 extends PelletPlant1 {
+    private static readonly RANDOM_PELLET_PLANT_COLOR_PERIOD = 1.5;
+
+    private colorIndex = 0;
+    private elapsedSeconds = 0;
+
+    protected get pelletColor(): Color3 {
+        switch (this.colorIndex ?? 0) {
+            case 1:
+                return YELLOW_PELLET_COLOR;
+            case 2:
+                return BLUE_PELLET_COLOR;
+            default:
+                return RED_PELLET_COLOR;
+        }
+    }
+
+    public override update(deltaSeconds: number): void {
+        super.update(deltaSeconds);
+        this.elapsedSeconds += deltaSeconds;
+        while (this.elapsedSeconds >= RandomPelletPlant1.RANDOM_PELLET_PLANT_COLOR_PERIOD) {
+            this.elapsedSeconds -= RandomPelletPlant1.RANDOM_PELLET_PLANT_COLOR_PERIOD;
+            this.colorIndex = (this.colorIndex + 1) % 3;
+            this.updatePelletColor();
+        }
+    }
+
+    protected dropPellet(position: Vector3): void {
+        switch (this.colorIndex) {
+            case 0:
+                new RedPellet1(this.game, position);
+                break;
+            case 1:
+                new YellowPellet1(this.game, position);
+                break;
+            case 2:
+                new BluePellet1(this.game, position);
+                break;
+        }
     }
 }

@@ -1,7 +1,12 @@
+import { getViewportUiScale } from "./viewportScale";
+
 const MAX_RECORDING_MS = 30_000;
 
 /** UI and browser recording lifecycle for a mirrored game canvas. */
 export class RecordingControl {
+    private static readonly SIZE = 96;
+    private static readonly MIN_SIZE = 30;
+
     public readonly element: HTMLDivElement;
 
     private readonly canvas: HTMLCanvasElement | null;
@@ -59,7 +64,16 @@ export class RecordingControl {
         this.element = row;
         this.button = button;
         this.status = status;
+        this.adjustLayout();
+        window.addEventListener("resize", this.adjustLayout);
     }
+
+    private readonly adjustLayout = (): void => {
+        this.element.style.zoom = getViewportUiScale(
+            RecordingControl.SIZE,
+            RecordingControl.MIN_SIZE,
+        ).toString();
+    };
 
     private readonly toggleRecording = (): void => {
         if (this.recorder) {
@@ -198,6 +212,7 @@ export class RecordingControl {
     }
 
     public dispose(): void {
+        window.removeEventListener("resize", this.adjustLayout);
         this.button.removeEventListener("click", this.toggleRecording);
         if (this.recorder?.state === "recording") this.recorder.stop();
         this.element.remove();

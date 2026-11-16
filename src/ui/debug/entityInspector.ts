@@ -1,13 +1,14 @@
 import { Color3, HighlightLayer } from "#vendor/babylon";
 import type { Game } from "../../game";
 import { Carriable, CarriableState } from "../../objects/carriable/carriable";
+import { Enemy } from "../../objects/enemy/enemy";
 import { minionColorToString } from "../../objects/minion/color";
 import { Minion, MinionState } from "../../objects/minion/minion";
 import { createDebugInfo, createDebugPanel } from "./debugPanel";
 import { TransformEditor } from "./transformEditor";
 import { getViewportUiScale } from "../viewportScale";
 
-type InspectedEntity = Minion | Carriable;
+type InspectedEntity = Minion | Carriable | Enemy;
 
 export class EntityInspector {
     private static readonly SIZE = 96;
@@ -154,6 +155,12 @@ export class EntityInspector {
                 `State: ${MinionState[entity.state]}`,
             ].join("\n");
         }
+        else if (entity instanceof Enemy) {
+            return [
+                `${entity.constructor.name} #${entity.id}`,
+                `HP: ${entity.hp} / ${entity.maxHp}`,
+            ].join("\n");
+        }
         else if(entity instanceof Carriable){
             return [
                 `${entity.constructor.name} #${entity.id}`,
@@ -173,14 +180,14 @@ export class EntityInspector {
             x,
             y,
             mesh => this.game.objects.some(
-                object => (object instanceof Minion || object instanceof Carriable)
+                object => (object instanceof Minion || object instanceof Carriable || object instanceof Enemy)
                     && object.mesh === mesh,
             ),
         );
         return result?.hit
             ? this.game.objects.find(
                 (object): object is InspectedEntity =>
-                    (object instanceof Minion || object instanceof Carriable)
+                    (object instanceof Minion || object instanceof Carriable || object instanceof Enemy)
                     && object.mesh === result.pickedMesh,
             ) ?? null
             : null;

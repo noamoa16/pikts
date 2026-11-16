@@ -1,5 +1,6 @@
 import type { Engine } from "#vendor/babylon";
 import { Action } from "../actions/action";
+import { CarrySpeedControl } from "./carrySpeedControl";
 import { RecordingControl } from "./recordingControl";
 import { getViewportUiScale } from "./viewportScale";
 
@@ -24,6 +25,7 @@ export class Dpad {
     private readonly buttons = new Map<Action, HTMLButtonElement>();
     private readonly buttonStates = new Map<Action, ButtonState>();
     private holdDescription: HTMLSpanElement | null = null;
+    private carrySpeedControl: CarrySpeedControl | null = null;
     private recordingControl: RecordingControl | null = null;
 
     constructor(
@@ -119,46 +121,9 @@ export class Dpad {
             touchAction: "manipulation",
         } satisfies Partial<CSSStyleDeclaration>);
 
-        const toggleLabel = document.createElement("label");
-        Object.assign(toggleLabel.style, {
-            display: "flex",
-            alignItems: "center",
-            justifyContent: "space-between",
-            gap: "7px",
-            padding: "7px 9px",
-            border: "2px solid #111",
-            borderRadius: "4px",
-            background: "rgba(238, 246, 255, 0.96)",
-            cursor: "pointer",
-            userSelect: "none",
-        } satisfies Partial<CSSStyleDeclaration>);
-        const toggleText = document.createElement("span");
-        toggleText.textContent = "Carry Speed 2x";
-        const toggleStatus = document.createElement("span");
-        toggleStatus.textContent = "OFF";
-        toggleStatus.setAttribute("aria-hidden", "true");
-        const toggle = document.createElement("input");
-        toggle.type = "checkbox";
-        toggle.checked = false;
-        toggle.setAttribute("role", "switch");
-        toggle.setAttribute("aria-checked", "false");
-        toggle.setAttribute("aria-label", "Carry Speed 2x");
-        Object.assign(toggle.style, {
-            width: "16px",
-            height: "16px",
-            margin: "0",
-            flex: "none",
-            accentColor: "#1d6fce",
-        } satisfies Partial<CSSStyleDeclaration>);
-        toggle.addEventListener("change", () => {
-            toggleStatus.textContent = toggle.checked ? "ON" : "OFF";
-            toggle.setAttribute("aria-checked", String(toggle.checked));
-            controls.onCarrySpeed2xChange(toggle.checked);
-        });
-        toggleLabel.append(toggleText, toggleStatus, toggle);
-
+        this.carrySpeedControl = new CarrySpeedControl(controls.onCarrySpeed2xChange);
         this.recordingControl = new RecordingControl(canvas, drawRecordingOverlay);
-        panel.append(toggleLabel, this.recordingControl.element);
+        panel.append(this.carrySpeedControl.element, this.recordingControl.element);
         return panel;
     }
 
@@ -411,6 +376,7 @@ export class Dpad {
     }
 
     public remove() {
+        this.carrySpeedControl?.dispose();
         this.recordingControl?.dispose();
         this.container.remove();
     }

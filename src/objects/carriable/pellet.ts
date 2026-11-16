@@ -26,7 +26,7 @@ export function createPelletAppearance(
         : new StandardMaterial(`${name}.material`, scene);
     mesh.material = material;
     Color.set(material, baseColor);
-    material.alpha = 0.6;
+    material.alpha = 0.95;
 
     const labelMaterial = createPelletLabelMaterial(
         `${name}.labelMaterial`,
