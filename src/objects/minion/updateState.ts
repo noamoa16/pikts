@@ -115,25 +115,26 @@ function updateFree(
     const nearbyCarriables = actions.getNearbyCarriables(Minion.FREE_SEARCH_DISTANCE);
     const nearbyEnemies = actions.getNearbyEnemies(Minion.FREE_SEARCH_DISTANCE);
 
-    // 取得範囲内に複数の対象があれば、近い方を優先
-    const carriableInRange = nearbyCarriables.find(carriable =>
-        Vector3.Distance(carriable.position, minion.position) - carriable.size / 2
-            <= Minion.FREE_PICKUP_DISTANCE,
+    // Candidates are already ordered by distance; compute each surface distance once.
+    const carriableDistances = nearbyCarriables.map(carriable => ({
+        target: carriable,
+        distance: minion.distanceToSurface(carriable),
+    }));
+    const enemyDistances = nearbyEnemies.map(enemy => ({
+        target: enemy,
+        distance: minion.distanceToSurface(enemy),
+    }));
+    const carriableInRange = carriableDistances.find(candidate =>
+        candidate.distance <= Minion.FREE_PICKUP_DISTANCE,
     );
-    const enemyInRange = nearbyEnemies.find(enemy =>
-        Vector3.Distance(enemy.position, minion.position) - enemy.size / 2
-            <= Minion.FREE_PICKUP_DISTANCE,
+    const enemyInRange = enemyDistances.find(candidate =>
+        candidate.distance <= Minion.FREE_PICKUP_DISTANCE,
     );
-    const carriableDistance = carriableInRange
-        ? Vector3.Distance(carriableInRange.position, minion.position) - carriableInRange.size / 2
-        : Infinity;
-    const enemyDistance = enemyInRange
-        ? Vector3.Distance(enemyInRange.position, minion.position) - enemyInRange.size / 2
-        : Infinity;
 
     if (
-        enemyInRange && enemyDistance < carriableDistance &&
-        actions.tryBecomeAttacking(enemyInRange)
+        enemyInRange
+        && enemyInRange.distance < (carriableInRange?.distance ?? Infinity)
+        && actions.tryBecomeAttacking(enemyInRange.target)
     ) {
         actions.stopSelfMovement();
         actions.setCollisionsEnabled(true);
@@ -141,28 +142,24 @@ function updateFree(
     }
 
     // 距離 FREE_PICKUP_DISTANCE 以下なら運搬開始可能
-    const inPickupRange = nearbyCarriables.find(carriable =>
-        Vector3.Distance(
-            carriable.position, minion.position,
-        ) - carriable.radius <= Minion.FREE_PICKUP_DISTANCE,
-    );
-    if (inPickupRange && actions.tryBecomeCarrying(inPickupRange)) {
+    if (carriableInRange && actions.tryBecomeCarrying(carriableInRange.target)) {
         actions.stopSelfMovement();
         actions.setCollisionsEnabled(true);
         return;
     }
 
-    const target = nearbyCarriables[0];
-    const enemyTarget = nearbyEnemies[0];
-    if (enemyTarget && (!target || enemyTarget.position.subtract(minion.position).length()
-        - enemyTarget.size / 2 < target.position.subtract(minion.position).length() - target.radius)) {
+    const target = carriableDistances[0];
+    const enemyTarget = enemyDistances[0];
+    if (enemyTarget && (!target || enemyTarget.distance < target.distance)) {
         actions.stopSelfMovement();
         actions.moveFor(calcEnemyApproachMoveVector(
             minion.position,
-            enemyTarget.position,
+            enemyTarget.target.position,
             minion.speed,
             deltaSeconds,
-            enemyTarget.size / 2 + Minion.FREE_PICKUP_DISTANCE,
+            enemyTarget.target.size / 2
+                + minion.size / 2
+                + Minion.FREE_PICKUP_DISTANCE,
         ));
         actions.setCollisionsEnabled(true);
         return;
@@ -171,10 +168,12 @@ function updateFree(
         actions.stopSelfMovement();
         actions.moveFor(calcCarriableApproachMoveVector(
             minion.position,
-            target.position,
+            target.target.position,
             minion.speed,
             deltaSeconds,
-            Minion.FREE_PICKUP_DISTANCE,
+            target.target.size / 2
+                + minion.size / 2
+                + Minion.FREE_PICKUP_DISTANCE,
         ));
     }
     else {

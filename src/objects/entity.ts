@@ -165,10 +165,16 @@ export abstract class Entity {
         this.game.removeObject(this);
     }
 
-    // 移動
+    /** Return the edge-to-edge distance to another entity, based on their size radii. */
+    public distanceToSurface(entity: Entity): number {
+        return Vector3.Distance(this.position, entity.position)
+            - this.size / 2
+            - entity.size / 2;
+    }
+
     /**
-     * 指定距離内にいる Entity を近い順に返す
-     * 距離は対象 Entity の中心から外周までを差し引いて計算する
+     * 指定した表面間距離以内にいる Entity を近い順に返す。
+     * 距離は両 Entity の中心間距離から、それぞれの size / 2 を差し引いて計算する。
      */
     public getNearbyEntities<T extends Entity>(
         maxDistance: number,
@@ -186,7 +192,7 @@ export abstract class Entity {
             .filter((entity): entity is T => entity !== this && condition(entity))
             .map(entity => ({
                 entity,
-                distance: Vector3.Distance(entity.position, this.position) - entity.size / 2,
+                distance: this.distanceToSurface(entity),
             }))
             .filter(candidate => candidate.distance <= maxDistance)
             .sort((a, b) => a.distance - b.distance)

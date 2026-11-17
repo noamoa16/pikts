@@ -1,13 +1,8 @@
-- プロンプト：
-  - Kochappy について、半径 0.5 以上 半径 2 以下に Minion (seed, buried は除く) が存在すれば、それらの Minion の中で、最も近い Minion に向かって移動するようにして。
-    - Kochappy に state を定義して。(free, chase)
-      - 半径 0.5 以上 半径 2 以下に Minion が存在するときは chase, そうでなければ free
-    - 移動時には、 Player のように、移動に応じて rotation を変えるようにして。
-    - 半径 0.5 以上 半径 2 以下に Minion が存在しなくなったら停止して。
-    - マジックナンバーは定数として定義して後から容易に変更できるようにすること。
 - MinionがPelletPlantに引っかかる問題の解消
 - MinionがEnemyに攻撃開始しない問題の解消 (運搬物と処理が違いそう)
 - 解散処理
+- Minion持ち替え処理
+- Kochappyの見た目を完成させる
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

@@ -1,11 +1,6 @@
-import {
-    Color3,
-    StandardMaterial,
-    Vector3,
-} from "#vendor/babylon";
+import { Vector3 } from "#vendor/babylon";
 import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
-import { Color } from "../../rendering/color";
 import { Entity } from "../entity";
 import { Player } from "../player/player";
 import { Cursor } from "../player/parts/cursor";
@@ -20,9 +15,11 @@ import {
 import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
 import { Enemy } from "../enemy/enemy";
-import { MinionColor, minionColorToColor3 } from "./color";
+import { MinionColor } from "./color";
 import { Plant } from "./parts/plant";
 import { SeedMotion } from "./seedMotion";
+import { MinionAppearance } from "./appearance";
+import { MinionRotation } from "./rotation";
 import {
     separateFromNearbyCarriables,
     separateFromOverlappingEntities,
@@ -40,28 +37,16 @@ export abstract class Minion extends Entity {
 
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Minion)._MINION_COLOR; }
-    private get baseColor(): Color3 {
-        const color = minionColorToColor3(this.minionColor);
-        return new Color3(color.r * 0.95, color.g * 0.95, color.b * 0.95);
-    }
-    private get freeColor(): Color3 {
-        const color = minionColorToColor3(this.minionColor);
-        return new Color3(
-            color.r > 0 ? 0.95 : 0.5,
-            color.g > 0 ? 0.95 : 0.5,
-            color.b > 0 ? 0.95 : 0.5,
-        );
-    }
     private currentState: MinionState = MinionState.free;
     public get state(): MinionState { return this.currentState; }
     public set state(state: MinionState) {
         const previousState = this.currentState;
         if (previousState !== MinionState.thrown && state === MinionState.thrown) {
-            this.thrownRotation = { x: this.rotation.x, y: this.rotation.y };
+            this.rotationEffects.beginThrow(this.rotation);
         }
         this.currentState = state;
         if (previousState === MinionState.thrown && state !== MinionState.thrown) {
-            this.restoreRotationAfterThrow();
+            this.rotationEffects.finishThrow(this.rotation);
         }
     }
     public follower: Player | null = null;
@@ -69,8 +54,8 @@ export abstract class Minion extends Entity {
     public attackTarget: Enemy | null = null;
     private attackElapsedSeconds = 0;
     private readonly seedMotion = new SeedMotion();
-    private readonly plant: Plant;
-    private thrownRotation: { x: number; y: number } | null = null;
+    private readonly appearance: MinionAppearance;
+    private readonly rotationEffects = new MinionRotation();
 
     /**
      * Minionの更新時アクション
@@ -116,12 +101,9 @@ export abstract class Minion extends Entity {
         this.speed = 3;
         this.collisionEventsEnabled = true;
 
-        const material = new StandardMaterial(`${this.name}.material`, this.scene);
-        material.backFaceCulling = false;
-        this.mesh.material = material;
-
         // 葉っぱパーツ
-        this.plant = new Plant(this.scene, this);
+        const plant = new Plant(this.scene, this);
+        this.appearance = new MinionAppearance(this.mesh, plant, this.name, this.scene);
     }
 
     override update(deltaSeconds: number): void {
@@ -157,21 +139,7 @@ export abstract class Minion extends Entity {
     }
 
     private updateColor(): void {
-        this.plant.setBuriedGlow(
-            this.state === MinionState.buried
-                ? minionColorToColor3(this.minionColor)
-                : null,
-        );
-
-        // 色
-        const material = this.mesh.material;
-        if(material){
-            Color.set(
-                material as StandardMaterial, 
-                this.getColor(), 
-                { metallicity: 0.1, luminance: 0.3 },
-            );
-        }
+        this.appearance.update(this.minionColor, this.state);
     }
 
     /** Onion から生まれた直後の軌道を設定する */
@@ -237,19 +205,6 @@ export abstract class Minion extends Entity {
         }
     }
 
-    private getColor(): Color3{
-        return {
-            [MinionState.free]: this.freeColor,
-            [MinionState.following]: this.baseColor,
-            [MinionState.held]: this.baseColor,
-            [MinionState.thrown]: this.baseColor,
-            [MinionState.carrying]: this.baseColor,
-            [MinionState.attack]: this.baseColor,
-            [MinionState.seed]: this.baseColor,
-            [MinionState.buried]: this.baseColor,
-        }[this.state];
-    }
-
     public becomeFree(){
         this.state = MinionState.free;
         this.velocity = Vector3.Zero();
@@ -301,20 +256,7 @@ export abstract class Minion extends Entity {
 
     /** 投擲中は水平移動に合わせて転がるように回転する */
     private rotateWhileThrown(displacement: Vector3): void {
-        const radius = this.size / 2;
-        if (radius <= 0) return;
-
-        const ROTATION_RATE = 0.5;
-        this.rotation.x -= displacement.y / radius * ROTATION_RATE;
-        this.rotation.y += displacement.x / radius * ROTATION_RATE;
-    }
-
-    private restoreRotationAfterThrow(): void {
-        if (this.state === MinionState.thrown || !this.thrownRotation) return;
-
-        this.rotation.x = this.thrownRotation.x;
-        this.rotation.y = this.thrownRotation.y;
-        this.thrownRotation = null;
+        this.rotationEffects.updateThrown(this.rotation, displacement, this.size);
     }
 
     public tryBecomeCarrying(carriable: Carriable): boolean{

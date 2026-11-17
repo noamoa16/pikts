@@ -11,16 +11,29 @@ import { Game } from "../../game";
 import { Shape } from "../../physics/figure";
 import { Color } from "../../rendering/color";
 import { Enemy } from "./enemy";
+import { Minion, MinionState } from "../minion/minion";
+
+export enum KochappyState {
+    free,
+    chase,
+}
 
 /** Kochappy: a red spherical enemy with its characteristic shell and spots. */
 export class Kochappy extends Enemy {
     private static readonly SIZE = 0.5;
     private static readonly HP = 20;
+    private static readonly MINION_SEARCH_MIN_DISTANCE = 0.5;
+    private static readonly MINION_SEARCH_MAX_DISTANCE = 2;
+    private static readonly CHASE_SPEED = 1;
+
+    private currentState = KochappyState.free;
+    public get state(): KochappyState { return this.currentState; }
 
     constructor(game: Game, position: Vector3) {
         super(game, position, Kochappy.SIZE, Kochappy.HP, undefined, Shape.Sphere);
         // Keep the mesh axes aligned with the coordinates used below.
         this.mesh.rotation = Vector3.Zero();
+        this.speed = Kochappy.CHASE_SPEED;
 
         const bodyMaterial = new StandardMaterial(`${this.name}.${this.id}.material`, game.scene);
         Color.set(bodyMaterial, Color3.Red());
@@ -64,6 +77,51 @@ export class Kochappy extends Enemy {
             );
             this.createSpot(game, `${index + 1}`, center, radial, r, spotMaterial);
         }
+    }
+
+    public override update(deltaSeconds: number): void {
+        super.update(deltaSeconds);
+        this.velocity.x = 0;
+        this.velocity.y = 0;
+
+        const target = this.findNearestMinion();
+        this.currentState = target ? KochappyState.chase : KochappyState.free;
+        if (!target) return;
+
+        const direction = target.groundingPosition.subtract(this.groundingPosition);
+        direction.z = 0;
+        if (direction.lengthSquared() === 0) return;
+
+        const displacement = direction.normalize().scale(this.speed * deltaSeconds);
+        const actualDisplacement = this.moveFor(displacement);
+        if (deltaSeconds > 0) {
+            this.velocity.x = actualDisplacement.x / deltaSeconds;
+            this.velocity.y = actualDisplacement.y / deltaSeconds;
+        }
+        this.rotateToDirection(
+            new Vector3(-actualDisplacement.y, actualDisplacement.x, 0),
+            deltaSeconds,
+        );
+    }
+
+    private findNearestMinion(): Minion | null {
+        let nearest: Minion | null = null;
+        let nearestDistanceSquared = Kochappy.MINION_SEARCH_MAX_DISTANCE ** 2;
+        const minimumDistanceSquared = Kochappy.MINION_SEARCH_MIN_DISTANCE ** 2;
+
+        for (const object of this.game.objects) {
+            if (!(object instanceof Minion)) continue;
+            if (object.state === MinionState.seed || object.state === MinionState.buried) continue;
+
+            const offset = object.groundingPosition.subtract(this.groundingPosition);
+            const distanceSquared = offset.x * offset.x + offset.y * offset.y;
+            if (distanceSquared < minimumDistanceSquared || distanceSquared > nearestDistanceSquared) {
+                continue;
+            }
+            nearestDistanceSquared = distanceSquared;
+            nearest = object;
+        }
+        return nearest;
     }
 
     private createLowerHemisphere(name: string, radius: number, game: Game): Mesh {

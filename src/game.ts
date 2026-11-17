@@ -1,14 +1,13 @@
 import { Scene } from "#vendor/babylon";
 import { FrameTimer } from "./core/frameTimer";
+import { buildGridMap } from "./core/gridMapBuilder";
 import { Entity } from "./objects/entity";
 import { Collision } from "./physics/collision";
 import { Minion, MinionState } from "./objects/minion/minion";
 import { Player } from "./objects/player/player";
 import { MainCamera } from "./rendering/camera";
-import { Block } from "./objects/block";
-import { Slope as SlopeEntity } from "./objects/slope";
-import { Dir4, Figure, Slope as SlopeFigure } from "./physics/figure";
-import { type GridBounds, type GridMap, type GridObstacle } from "./core/gridPathfinding";
+import type { Figure } from "./physics/figure";
+import type { GridMap } from "./core/gridPathfinding";
 import { Onion } from "./objects/onion/onion";
 import { EntityInspector } from "./ui/debug/entityInspector";
 import { MinionCountDisplay } from "./ui/minionCountDisplay";
@@ -87,82 +86,8 @@ export class Game {
         object.mesh.dispose(false, true);
     }
 
-    private createGridObstaclePoints(): GridObstacle[] {
-        const points = new Map<string, GridObstacle>();
-        for (const object of this.objects) {
-            if (!(object instanceof Block || object instanceof SlopeEntity)) continue;
-
-            let halfX = object.size / 2;
-            let halfY = object.size / 2;
-            let minZ = object.position.z - object.size / 2;
-            let maxZ = object.position.z + object.size / 2;
-            if (object instanceof SlopeEntity && object.figure instanceof SlopeFigure) {
-                const figure = object.figure;
-                if (figure.upward === Dir4.Right || figure.upward === Dir4.Left) {
-                    halfX = figure.length / 2;
-                    halfY = figure.width / 2;
-                } else {
-                    halfX = figure.width / 2;
-                    halfY = figure.length / 2;
-                }
-                minZ = figure.center.z - figure.height / 2;
-                maxZ = figure.center.z + figure.height / 2;
-            }
-
-            const minX = Math.ceil(object.position.x - halfX - 1e-6);
-            const maxX = Math.floor(object.position.x + halfX + 1e-6);
-            const minY = Math.ceil(object.position.y - halfY - 1e-6);
-            const maxY = Math.floor(object.position.y + halfY + 1e-6);
-            for (let x = minX; x <= maxX; x++) {
-                for (let y = minY; y <= maxY; y++) {
-                    const point = { x, y, minZ, maxZ };
-                    points.set(`${x},${y},${minZ},${maxZ}`, point);
-                }
-            }
-        }
-        return [...points.values()];
-    }
-
-    private createGridMapBounds(): GridBounds {
-        if (this.objects.length === 0) {
-            return { minX: 0, maxX: 0, minY: 0, maxY: 0 };
-        }
-
-        let minX = Infinity;
-        let maxX = -Infinity;
-        let minY = Infinity;
-        let maxY = -Infinity;
-        for (const object of this.objects) {
-            let halfX = object.size / 2;
-            let halfY = object.size / 2;
-            if (object instanceof SlopeEntity && object.figure instanceof SlopeFigure) {
-                const figure = object.figure;
-                if (figure.upward === Dir4.Right || figure.upward === Dir4.Left) {
-                    halfX = figure.length / 2;
-                    halfY = figure.width / 2;
-                } else {
-                    halfX = figure.width / 2;
-                    halfY = figure.length / 2;
-                }
-            }
-            minX = Math.min(minX, object.position.x - halfX);
-            maxX = Math.max(maxX, object.position.x + halfX);
-            minY = Math.min(minY, object.position.y - halfY);
-            maxY = Math.max(maxY, object.position.y + halfY);
-        }
-        return {
-            minX: Math.floor(minX),
-            maxX: Math.ceil(maxX),
-            minY: Math.floor(minY),
-            maxY: Math.ceil(maxY),
-        };
-    }
-
     private updateGridMap(): void {
-        this._gridMap = {
-            bounds: this.createGridMapBounds(),
-            blocked: this.createGridObstaclePoints(),
-        };
+        this._gridMap = buildGridMap(this.objects);
     }
 
     private dispatchCollisionEvents(): void {

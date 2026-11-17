@@ -151,17 +151,24 @@ export function atan(v: Vector2): number {
 
 export function rotate2D(x: number, y: number, angle: number): Vector2;
 export function rotate2D(v: Vector2, angle: number): Vector2;
-export function rotate2D(a: any, b: any, c?: any): Vector2 {
-    let angle: number = typeof c === 'number' ? c : b;
+export function rotate2D(
+    xOrVector: number | Vector2,
+    yOrAngle: number,
+    angleArgument?: number,
+): Vector2 {
+    let angle = typeof xOrVector === "number"
+        ? angleArgument ?? 0
+        : yOrAngle;
     angle = normalizeAngle(angle);
 
-    let x: number, y: number;
-    if (a instanceof Vector2) {
-        x = a.x;
-        y = a.y;
+    let x: number;
+    let y: number;
+    if (typeof xOrVector === "number") {
+        x = xOrVector;
+        y = yOrAngle;
     } else {
-        x = a;
-        y = b as number;
+        x = xOrVector.x;
+        y = xOrVector.y;
     }
 
     if(Math.abs(angle) < Number.EPSILON){
