@@ -1,5 +1,6 @@
 import type { Game } from "../game";
 import { Minion, MinionState } from "../objects/minion/minion";
+import { minionColorToString } from "../objects/minion/color";
 import { getViewportUiScale } from "./viewportScale";
 
 export class MinionCountDisplay {
@@ -8,6 +9,7 @@ export class MinionCountDisplay {
 
     private readonly container: HTMLDivElement | null = null;
     private readonly counts: [HTMLDivElement, HTMLDivElement] | null = null;
+    private readonly heldMinionIndicator: HTMLDivElement | null = null;
 
     constructor(
         private readonly game: Game,
@@ -46,34 +48,48 @@ export class MinionCountDisplay {
             display: "flex",
             gap: "8px",
         } satisfies Partial<CSSStyleDeclaration>);
-        container.append(...counts);
+        const heldMinionIndicator = document.createElement("div");
+        Object.assign(heldMinionIndicator.style, {
+            alignSelf: "center",
+            width: "40px",
+            height: "40px",
+            flex: "none",
+            borderRadius: "50%",
+            backgroundColor: "black",
+            pointerEvents: "none",
+        } satisfies Partial<CSSStyleDeclaration>);
+        container.append(heldMinionIndicator, ...counts);
         parent.append(container);
 
         this.container = container;
         this.counts = counts as [HTMLDivElement, HTMLDivElement];
+        this.heldMinionIndicator = heldMinionIndicator;
         this.adjustLayout();
         window.addEventListener("resize", this.adjustLayout);
     }
 
     public update(): void {
-        if (!this.counts) {
+        if (!this.counts || !this.heldMinionIndicator) {
             return;
         }
 
         const minions = this.game.objects.filter((object): object is Minion => object instanceof Minion);
+        const heldMinion = minions.find(minion => minion.state === MinionState.held);
+        const heldMinionColor = heldMinion ? minionColorToString(heldMinion.minionColor) : null;
+        this.heldMinionIndicator.style.backgroundColor = heldMinionColor ?? "black";
         this.counts[0].textContent = `${minions.filter(minion => minion.state === MinionState.following).length}`;
         this.counts[1].textContent = `${minions.length}`;
     }
 
     public drawRecordingOverlay(context: CanvasRenderingContext2D): void {
-        if (!this.container || !this.counts || !this.canvas) return;
+        if (!this.container || !this.counts || !this.heldMinionIndicator || !this.canvas) return;
 
         const canvasBounds = this.canvas.getBoundingClientRect();
         if (canvasBounds.width === 0 || canvasBounds.height === 0) return;
 
         const scaleX = this.canvas.width / canvasBounds.width;
         const scaleY = this.canvas.height / canvasBounds.height;
-        for (const count of this.counts) {
+        for (const count of [this.heldMinionIndicator, ...this.counts]) {
             const bounds = count.getBoundingClientRect();
             const x = (bounds.left - canvasBounds.left) * scaleX;
             const y = (bounds.top - canvasBounds.top) * scaleY;
@@ -83,9 +99,14 @@ export class MinionCountDisplay {
 
             context.fillStyle = style.backgroundColor;
             context.beginPath();
-            context.roundRect(x, y, width, height, parseFloat(style.borderRadius) * scaleX);
+            if (count === this.heldMinionIndicator) {
+                context.ellipse(x + width / 2, y + height / 2, width / 2, height / 2, 0, 0, Math.PI * 2);
+            } else {
+                context.roundRect(x, y, width, height, parseFloat(style.borderRadius) * scaleX);
+            }
             context.fill();
 
+            if (count === this.heldMinionIndicator) continue;
             context.fillStyle = style.color;
             context.font = `${style.fontWeight} ${parseFloat(style.fontSize) * scaleY}px ${style.fontFamily}`;
             context.textAlign = "center";

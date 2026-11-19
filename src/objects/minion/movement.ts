@@ -37,6 +37,36 @@ export function calcMinionFollowMoveVector(
     return Vector3.Zero();
 }
 
+/** Move a Minion away from nearby enemies, with stronger steering at close range. */
+export function calcEnemyAvoidanceMoveVector(
+    minion: Entity,
+    enemies: readonly Entity[],
+    speed: number,
+    deltaSeconds: number,
+): Vector3 {
+    const AVOIDANCE_MARGIN = 0.25;
+    const minionPosition = toVector2(minion.position);
+    const direction = new Vector2();
+
+    for (const enemy of enemies) {
+        const away = minionPosition.subtract(toVector2(enemy.position));
+        const distance = away.length();
+        const minimumDistance = (minion.size + enemy.size) / 2 + AVOIDANCE_MARGIN;
+        if (distance >= minimumDistance) continue;
+
+        if (distance === 0) {
+            away.copyFrom(calcSeparationDirection(minion, enemy));
+        }
+        else {
+            away.scaleInPlace(1 / distance);
+        }
+        direction.addInPlace(away.scale((minimumDistance - distance) / minimumDistance));
+    }
+
+    if (direction.lengthSquared() === 0) return Vector3.Zero();
+    return toVector3(direction.normalize().scale(speed * deltaSeconds));
+}
+
 /** Minion を Carriable に近付け、指定した距離で止める移動ベクトルを計算 */
 export function calcCarriableApproachMoveVector(
     minionPosition: Vector3,

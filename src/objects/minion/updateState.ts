@@ -4,6 +4,7 @@ import { Minion } from "./minion";
 import { MinionState } from "./state";
 import {
     calcCarriableApproachMoveVector,
+    calcEnemyAvoidanceMoveVector,
     calcEnemyApproachMoveVector,
     calcMinionFollowMoveVector,
 } from "./movement";
@@ -77,8 +78,23 @@ function updateFollowing(
         minion.speed,
         deltaSeconds,
     );
-    actions.moveFor(moveVector);
-    if (moveVector.lengthSquared() === 0) {
+    const nearbyEnemies = actions.getNearbyEnemies(Minion.FOLLOW_ENEMY_AVOIDANCE_DISTANCE);
+    const avoidanceVector = calcEnemyAvoidanceMoveVector(
+        minion,
+        nearbyEnemies,
+        minion.speed,
+        deltaSeconds,
+    );
+    const combinedMove = moveVector.add(avoidanceVector);
+    const maxMoveDistance = minion.speed * deltaSeconds;
+    if (combinedMove.length() > maxMoveDistance && maxMoveDistance > 0) {
+        combinedMove.normalize().scaleInPlace(maxMoveDistance);
+    }
+    const overlappingEnemies = nearbyEnemies.filter(enemy =>
+        minion.distanceToSurface(enemy) <= 0,
+    );
+    actions.moveFor(combinedMove, overlappingEnemies);
+    if (combinedMove.lengthSquared() === 0) {
         actions.separateFromOverlappingEntities(deltaSeconds);
     }
     actions.setCollisionsEnabled(true);

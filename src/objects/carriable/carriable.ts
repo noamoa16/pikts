@@ -14,6 +14,7 @@ import { Minion, MinionState } from "../minion/minion";
 import { MinionColor } from "../minion/color";
 import { Player } from "../player/player";
 import { Onion } from "../onion/onion";
+import { Enemy } from "../enemy/enemy";
 import { CarrierCountLabel } from "./carrierCountLabel";
 import { CarriableAbsorption } from "./carriableAbsorption";
 
@@ -241,7 +242,12 @@ export abstract class Carriable extends Entity {
     protected override isBlockedBy(entity: Entity): boolean{
         if(
             this.state === CarriableState.carried
-            && (entity instanceof Carriable || entity instanceof Minion || entity instanceof Player)
+            && (
+                entity instanceof Carriable
+                || entity instanceof Minion
+                || entity instanceof Player
+                || entity instanceof Enemy
+            )
         ){
             return false;
         }

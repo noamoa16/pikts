@@ -31,6 +31,7 @@ export { MinionState } from "./state";
 export abstract class Minion extends Entity {
     public static readonly FREE_SEARCH_DISTANCE = 0.75;
     public static readonly FREE_PICKUP_DISTANCE = 0.5;
+    public static readonly FOLLOW_ENEMY_AVOIDANCE_DISTANCE = 0.75;
 
     protected static readonly _ATTACK_POWER: number = 1.0;
     private get attackPower(): number { return (this.constructor as typeof Minion)._ATTACK_POWER; }
@@ -215,7 +216,12 @@ export abstract class Minion extends Entity {
         // 運搬中は他の運搬物、Minion、Playerを通り抜ける
         if(
             this.state === MinionState.carrying
-            && (entity instanceof Carriable || entity instanceof Minion || entity instanceof Player)
+            && (
+                entity instanceof Carriable
+                || entity instanceof Minion
+                || entity instanceof Player
+                || entity instanceof Enemy
+            )
         ){
             return false;
         }
