@@ -1,8 +1,63 @@
-- MinionがPelletPlantに引っかかる問題の解消
-- MinionがEnemyに攻撃開始しない問題の解消 (運搬物と処理が違いそう)
-- 解散処理
-- Minion持ち替え処理
-- Kochappyの見た目を完成させる
+- プロンプト：
+  - MinionCountDisplay の左側に、現在 hold 中の Minion の色を表示する円を追加してください。
+    - hold 中の Minion がいる場合はその色の円、いない場合は黒い円です。
+  - Minion が PelletPlant などの Enemy に引っかかって、移動ができなくなったり、運搬がスタックしたりする問題があります。
+    - following での移動時に、 Enemy への引っ掛かり対策を行うようにしてください。 Enemy と距離が十分に近い場合に離れるように動くなどが良いでしょうか？
+    - carrying 状態のときに、 Enemy へのスタック対策を行うようにしてください。 carrying 状態の Minion および運搬物が Enemy を貫通可能にすると良いでしょうか？
+  - player が hold する minion を変更する処理を実装してください。
+    - "[" の whistle ボタンの下に "]" キーで発火するボタンを配置し、それを押したら minion の色を変更する処理を実行します。ボタンのラベルは適切なものを考えて設定してください。
+      - そのボタンおよび処理は player の holdingMinion が null でないときにのみ有効です。
+    - getHoldableMinion の HOLDABLE_DISTANCE を Player の static な定数にしてください。
+    - 「処理」は getHoldableMinion と似ています。「処理」を実行すると、
+      - 距離 HOLDABLE_DISTANCE 以下の following な Minion を調べます。(仮にこれを candidates とします)
+      - 現在 holding 中の Minion が red であれば、yellow, blue、 yellow であれば　blue, red、 blue であれば red, yellow の優先順位 (MinionColorの順番) で、candidates の中から最も距離が近い Minion がいれば、それを取得します。取得した Minion があれば、それを hold するようにし、現在 hold していた　Minion は following に戻ります。following に戻る Minion の座標は自然なものを考えてください。
+  - 「解散」処理を実装してください。
+    - F (rotate) の右側に "R" キーで発火するボタンを配置し、それを押したら「解散」処理を実行します。ボタンのラベルは適切なものを考えて設定してください。
+    - 「解散」を実行すると、 following 中の Minion が全て free になります。
+    - 「解散」を実行して最初の3秒間は、Minionは特定の座標(xy)に向かって移動しようとする。特定の座標とは、その色のMinionの座標の平均値である。3秒経過後は通常の free Minion と同様に静止する。
+  - findNearestMinion について、 Entity.getNearbyEntities を使って処理を簡潔にできそうならしてください。
+  - src/objects/enemy/kochappy.ts に、 "eyes" パーツを追加してください。
+    - 当たり判定なし
+    - eyes は2つの eye からなります (k = 0, 1)
+    - Kochappy 本体の球を x^2 + y^2 + z^2 = r^2 として、
+      - eye は 4つの図形からなります
+        - 1/2 <= z <= 2 - √2/2 and (x - (-1)^k / 2)^2 + (y - 1/2)^2 <= (r/16)^2
+          - 顔パーツと同じ色。(顔パーツの色は変数に入れて使い回すと良いかも)
+        - (x - (-1)^k / 2)^2 + (y - 1/2)^2 + {z - (2 - √2/2)^2} <= (r/8)^2
+          - 白
+        - (x - (-1)^k / 2)^2 + (y - 1/2)^2 + {z - (2 - √2/2)^2} = {(r/8) * (1 + 1/16)}^2 and y >= 1/2
+          - 顔パーツと同じ色
+        - (x - (-1)^k / 2)^2 + {y - (1/2 - r/12)}^2 + {z - (2 - √2/2)^2} <= (r/16)^2
+          - 黒
+      - 2 - √2/2 は定数に入れて後から変更しやすくすると良いでしょう
+  - Kochappy に、"mouth" パーツを追加してください。
+    - 色は赤
+    - |z/r + 1/2| <= 1/16 and x^2 + (y - 1/2)^2 <= (r/2)^2
+    - 当たり判定なし
+  - kochappy が die したときに、 kochappy の死骸 (extends Carriable) と、魂のエフェクトを生成するようにしてください。
+    - 死骸
+      - 生成位置は、そのときの kochappy の位置と同じ
+      - kochappy の死骸は、_MIN_CARRIERS = 3, _MAX_CARRIERS = 6, _NUTRITION = 4
+      - kochappy の死骸の見た目は、 kochappy をz座標反転したもの
+    - 魂のエフェクト
+      - 当たり判定なし
+      - 球の形、半径は1/2
+      - Entity を継承する必要なし
+        - エフェクトは今後も追加予定なので、Effect クラスを作ってそれを継承してもいいかも
+      - そのときの kochappy の位置に出現し、3秒間かけてz座標を3増やす。3秒間移動した後は消滅する。
+      - alpha = 0.25
+      - 色は青
+  - kochappy について、「捕食」処理を実装してください。
+    - 発火条件は、以下に該当する Minion が少なくとも1存在すること
+      - MINION_SEARCH_MIN_DISTANCE 以内
+      - 「自分が向いている向きのベクトル」と「自分→Minionのベクトル」のコサイン類似度が正
+    - 発火したとき、1.5秒間「捕食」のステートになる (stateは適切な名前を考えて追加して)
+      - 自分の向いている向きをX+、上方向をZ+としたとき、XY平面上で、時計回りに45度回転する
+        - 1秒間かけて45度回転し、0.5秒間かけて45度逆回転する
+      - 秒数については定数として定義して後から変更しやすくすること
+  - src/objects/minion/color.ts では、 Minion の Color は red, yellow, blue の順で定義しています。しかし、red, blue, yellow の順で処理を定義しているファイルもあります。red, yellow, blue の順に統一してください。
+- Player の HP 作成
+- サウンドの追加
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

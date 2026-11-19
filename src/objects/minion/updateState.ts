@@ -111,11 +111,9 @@ function updateFree(
     deltaSeconds: number,
     actions: MinionStateUpdateActions,
 ): void {
-    // 距離 FREE_SEARCH_DISTANCE 以下の運搬物を探す
+    // 近くの運搬物と敵を探す
     const nearbyCarriables = actions.getNearbyCarriables(Minion.FREE_SEARCH_DISTANCE);
     const nearbyEnemies = actions.getNearbyEnemies(Minion.FREE_SEARCH_DISTANCE);
-
-    // Candidates are already ordered by distance; compute each surface distance once.
     const carriableDistances = nearbyCarriables.map(carriable => ({
         target: carriable,
         distance: minion.distanceToSurface(carriable),
@@ -131,6 +129,7 @@ function updateFree(
         candidate.distance <= Minion.FREE_PICKUP_DISTANCE,
     );
 
+    // 十分に距離の近い敵または運搬物に対しては行動開始
     if (
         enemyInRange
         && enemyInRange.distance < (carriableInRange?.distance ?? Infinity)
@@ -140,17 +139,16 @@ function updateFree(
         actions.setCollisionsEnabled(true);
         return;
     }
-
-    // 距離 FREE_PICKUP_DISTANCE 以下なら運搬開始可能
     if (carriableInRange && actions.tryBecomeCarrying(carriableInRange.target)) {
         actions.stopSelfMovement();
         actions.setCollisionsEnabled(true);
         return;
     }
 
-    const target = carriableDistances[0];
+    const carriableTarget = carriableDistances[0];
     const enemyTarget = enemyDistances[0];
-    if (enemyTarget && (!target || enemyTarget.distance < target.distance)) {
+    if (enemyTarget && (!carriableTarget || enemyTarget.distance < carriableTarget.distance)) {
+        // 敵に近づく
         actions.stopSelfMovement();
         actions.moveFor(calcEnemyApproachMoveVector(
             minion.position,
@@ -159,21 +157,22 @@ function updateFree(
             deltaSeconds,
             enemyTarget.target.size / 2
                 + minion.size / 2
-                + Minion.FREE_PICKUP_DISTANCE,
+                + Minion.FREE_PICKUP_DISTANCE / 2,
         ));
         actions.setCollisionsEnabled(true);
         return;
     }
-    if (target) {
+    if (carriableTarget) {
+        // 運搬物に近づく
         actions.stopSelfMovement();
         actions.moveFor(calcCarriableApproachMoveVector(
             minion.position,
-            target.target.position,
+            carriableTarget.target.position,
             minion.speed,
             deltaSeconds,
-            target.target.size / 2
+            carriableTarget.target.size / 2
                 + minion.size / 2
-                + Minion.FREE_PICKUP_DISTANCE,
+                + Minion.FREE_PICKUP_DISTANCE / 2,
         ));
     }
     else {
@@ -224,7 +223,7 @@ function updateCarrying(
     if (minion.carried) {
         const carriable = minion.carried;
         const distance = toVector2(minion.position.subtract(carriable.position)).length();
-        if (distance > carriable.radius + 0.5) {
+        if (distance > carriable.radius + Minion.FREE_SEARCH_DISTANCE) {
             actions.stopCarrying();
             actions.setCollisionsEnabled(true);
             return;

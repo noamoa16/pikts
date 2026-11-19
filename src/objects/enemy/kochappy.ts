@@ -18,19 +18,16 @@ export enum KochappyState {
     chase,
 }
 
-/** Kochappy: a red spherical enemy with its characteristic shell and spots. */
 export class Kochappy extends Enemy {
-    private static readonly SIZE = 0.5;
-    private static readonly HP = 20;
     private static readonly MINION_SEARCH_MIN_DISTANCE = 0.5;
-    private static readonly MINION_SEARCH_MAX_DISTANCE = 2;
-    private static readonly CHASE_SPEED = 1;
+    private static readonly MINION_SEARCH_MAX_DISTANCE = 1.5;
+    private static readonly CHASE_SPEED = 0.5;
 
     private currentState = KochappyState.free;
     public get state(): KochappyState { return this.currentState; }
 
     constructor(game: Game, position: Vector3) {
-        super(game, position, Kochappy.SIZE, Kochappy.HP, undefined, Shape.Sphere);
+        super(game, position, 0.5, 20, undefined, Shape.Sphere);
         // Keep the mesh axes aligned with the coordinates used below.
         this.mesh.rotation = Vector3.Zero();
         this.speed = Kochappy.CHASE_SPEED;
@@ -40,29 +37,25 @@ export class Kochappy extends Enemy {
         this.mesh.material = bodyMaterial;
 
         const r = this.size / 2;
-        const shellMaterial = new StandardMaterial(`${this.name}.${this.id}.shell.material`, game.scene);
-        Color.set(shellMaterial, new Color3(1, 0.75, 0.4), { luminance: 0.2 });
-        // The half shell is an open surface, so render it from either side.
-        shellMaterial.backFaceCulling = false;
 
-        const shell = this.createLowerHemisphere(
+        // 顔パーツ
+        const headMaterial = new StandardMaterial(`${this.name}.${this.id}.head.material`, game.scene);
+        Color.set(headMaterial, new Color3(1, 0.75, 0.4), { luminance: 0.2 });
+        headMaterial.backFaceCulling = false;
+        const head = this.createLowerHemisphere(
             `${this.name}.${this.id}.shell`,
             r * (1 + 1 / 16),
             game,
         );
-        shell.parent = this.mesh;
-        shell.material = shellMaterial;
-        shell.isPickable = false;
-        shell.checkCollisions = false;
+        head.parent = this.mesh;
+        head.material = headMaterial;
+        head.isPickable = false;
+        head.checkCollisions = false;
 
+        // 背中の斑点
         const spotMaterial = new StandardMaterial(`${this.name}.${this.id}.spots.material`, game.scene);
         Color.set(spotMaterial, Color3.White());
-
-        // S0 is centered on the positive Y pole.
         this.createSpot(game, "0", new Vector3(0, r, 0), new Vector3(0, 1, 0), r, spotMaterial);
-
-        // Six equally spaced centers form a regular hexagon at y = r / 2.
-        const ringRadius = r * Math.sqrt(3) / 2;
         for (let index = 0; index < 6; index++) {
             const angle = 2 * Math.PI * index / 6;
             const radial = new Vector3(
@@ -70,11 +63,7 @@ export class Kochappy extends Enemy {
                 1 / 2,
                 Math.sqrt(3) / 2 * Math.sin(angle),
             );
-            const center = new Vector3(
-                ringRadius * Math.cos(angle),
-                r / 2,
-                ringRadius * Math.sin(angle),
-            );
+            const center = radial.scale(r);
             this.createSpot(game, `${index + 1}`, center, radial, r, spotMaterial);
         }
     }
@@ -106,20 +95,18 @@ export class Kochappy extends Enemy {
 
     private findNearestMinion(): Minion | null {
         let nearest: Minion | null = null;
-        let nearestDistanceSquared = Kochappy.MINION_SEARCH_MAX_DISTANCE ** 2;
-        const minimumDistanceSquared = Kochappy.MINION_SEARCH_MIN_DISTANCE ** 2;
+        let nearestDistance = Kochappy.MINION_SEARCH_MAX_DISTANCE;
+        const minimumDistance = Kochappy.MINION_SEARCH_MIN_DISTANCE;
 
         for (const object of this.game.objects) {
             if (!(object instanceof Minion)) continue;
             if (object.state === MinionState.seed || object.state === MinionState.buried) continue;
 
-            const offset = object.groundingPosition.subtract(this.groundingPosition);
-            const distanceSquared = offset.x * offset.x + offset.y * offset.y;
-            if (distanceSquared < minimumDistanceSquared || distanceSquared > nearestDistanceSquared) {
-                continue;
+            const distance = this.distanceToSurface(object);
+            if(minimumDistance <= distance && distance <= nearestDistance){
+                nearestDistance = distance;
+                nearest = object;
             }
-            nearestDistanceSquared = distanceSquared;
-            nearest = object;
         }
         return nearest;
     }
@@ -131,8 +118,6 @@ export class Kochappy extends Enemy {
         const normals: number[] = [];
         const indices: number[] = [];
 
-        // Build y <= 0 directly so the shell does not depend on slice or
-        // negative-scale behavior.
         for (let latitude = 0; latitude <= latitudeSegments; latitude++) {
             const theta = Math.PI / 2 + Math.PI / 2 * latitude / latitudeSegments;
             for (let longitude = 0; longitude <= longitudeSegments; longitude++) {
@@ -141,8 +126,6 @@ export class Kochappy extends Enemy {
                 const y = Math.cos(theta);
                 const z = Math.sin(theta) * Math.sin(phi);
                 positions.push(radius * x, radius * y, radius * z);
-                // Keep lighting correct even if Babylon treats the triangle
-                // winding differently for the active coordinate handedness.
                 normals.push(x, y, z);
             }
         }
