@@ -29,7 +29,7 @@ import {
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
-    public static readonly FREE_SEARCH_DISTANCE = 1.0;
+    public static readonly FREE_SEARCH_DISTANCE = 0.75;
     public static readonly FREE_PICKUP_DISTANCE = 0.5;
 
     protected static readonly _ATTACK_POWER: number = 1.0;

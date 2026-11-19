@@ -6,7 +6,7 @@ import { Player } from "../player";
 export class Cursor {
     public readonly mesh;
     public static readonly CURSOR_DISTANCE = 2.5;
-    public static readonly CURSOR_SPEED = 10.0;
+    public static readonly CURSOR_SPEED = 8.0;
 
     constructor(
         scene: Scene,
