@@ -54,6 +54,8 @@ export abstract class Minion extends Entity {
     public carried: Carriable | null = null;
     public attackTarget: Enemy | null = null;
     private attackElapsedSeconds = 0;
+    private disbandTarget: Vector3 | null = null;
+    private disbandRemainingSeconds = 0;
     private readonly seedMotion = new SeedMotion();
     private readonly appearance: MinionAppearance;
     private readonly rotationEffects = new MinionRotation();
@@ -210,6 +212,37 @@ export abstract class Minion extends Entity {
         this.state = MinionState.free;
         this.velocity = Vector3.Zero();
         separateFromOverlappingMinions(this, this.game.objects);
+    }
+
+    public becomeDisbanded(target: Vector3): void {
+        if (this.state !== MinionState.following) return;
+        this.follower = null;
+        this.state = MinionState.free;
+        this.velocity = Vector3.Zero();
+        this.disbandTarget = target.clone();
+        this.disbandRemainingSeconds = 3;
+        separateFromOverlappingMinions(this, this.game.objects);
+    }
+
+    /** Disband steering time remaining for free-state updates. */
+    public takeDisbandMoveTime(deltaSeconds: number): number {
+        if (!this.disbandTarget || this.disbandRemainingSeconds <= 0) {
+            this.disbandTarget = null;
+            return 0;
+        }
+        const moveTime = Math.min(deltaSeconds, this.disbandRemainingSeconds);
+        this.disbandRemainingSeconds -= moveTime;
+        if (this.disbandRemainingSeconds <= 0) this.disbandTarget = null;
+        return moveTime;
+    }
+
+    public getDisbandTarget(): Vector3 | null {
+        return this.disbandTarget;
+    }
+
+    public clearDisbandMovement(): void {
+        this.disbandTarget = null;
+        this.disbandRemainingSeconds = 0;
     }
 
     protected override isBlockedBy(entity: Entity): boolean {

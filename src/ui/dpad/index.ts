@@ -40,7 +40,8 @@ export class Dpad {
             this.createButton("left", "Move left", onPressed, 1, 3).element,
             this.createButton("right", "Move right", onPressed, 3, 3).element,
             this.createButton("down", "Move down", onPressed, 2, 4).element,
-            this.createButton("rotate", "Rotate", onPressed, 3, 1).element,
+            this.createButton("rotate", "Rotate", onPressed, 3, 2).element,
+            this.createButton("disband", "Disband", onPressed, 3, 1).element,
         );
         this.container.append(leftContainer);
 

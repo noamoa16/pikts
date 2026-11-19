@@ -127,6 +127,8 @@ function updateFree(
     deltaSeconds: number,
     actions: MinionStateUpdateActions,
 ): void {
+    const disbandTarget = minion.getDisbandTarget();
+    const disbandMoveTime = minion.takeDisbandMoveTime(deltaSeconds);
     // 近くの運搬物と敵を探す
     const nearbyCarriables = actions.getNearbyCarriables(Minion.FREE_SEARCH_DISTANCE);
     const nearbyEnemies = actions.getNearbyEnemies(Minion.FREE_SEARCH_DISTANCE);
@@ -151,12 +153,27 @@ function updateFree(
         && enemyInRange.distance < (carriableInRange?.distance ?? Infinity)
         && actions.tryBecomeAttacking(enemyInRange.target)
     ) {
+        minion.clearDisbandMovement();
         actions.stopSelfMovement();
         actions.setCollisionsEnabled(true);
         return;
     }
     if (carriableInRange && actions.tryBecomeCarrying(carriableInRange.target)) {
+        minion.clearDisbandMovement();
         actions.stopSelfMovement();
+        actions.setCollisionsEnabled(true);
+        return;
+    }
+
+    if (disbandTarget && disbandMoveTime > 0) {
+        actions.stopSelfMovement();
+        actions.moveFor(calcCarriableApproachMoveVector(
+            minion.position,
+            disbandTarget,
+            minion.speed,
+            disbandMoveTime,
+            0,
+        ));
         actions.setCollisionsEnabled(true);
         return;
     }

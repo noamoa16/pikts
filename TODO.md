@@ -1,8 +1,4 @@
 - プロンプト：
-  - 「解散」処理を実装してください。
-    - F (rotate) の右側に "R" キーで発火するボタンを配置し、それを押したら「解散」処理を実行します。ボタンのラベルは適切なものを考えて設定してください。
-    - 「解散」を実行すると、 following 中の Minion が全て free になります。
-    - 「解散」を実行して最初の3秒間は、Minionは特定の座標(xy)に向かって移動しようとする。特定の座標とは、その色のMinionの座標の平均値である。3秒経過後は通常の free Minion と同様に静止する。
   - findNearestMinion について、 Entity.getNearbyEntities を使って処理を簡潔にできそうならしてください。
   - src/objects/enemy/kochappy.ts に、 "eyes" パーツを追加してください。
     - 当たり判定なし
@@ -46,6 +42,7 @@
   - src/objects/minion/color.ts では、 Minion の Color は red, yellow, blue の順で定義しています。しかし、red, blue, yellow の順で処理を定義しているファイルもあります。red, yellow, blue の順に統一してください。
 - Player の HP 作成
 - サウンドの追加
+- Minionをholdしているときに整列
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

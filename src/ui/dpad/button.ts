@@ -84,6 +84,7 @@ function createButtonContent(
     onHoldDescriptionCreated?: (element: HTMLSpanElement) => void,
 ): HTMLElement {
     if (action === "rotate") return createLabel("F", "(rotate)");
+    if (action === "disband") return createLabel("R", "(disband)");
     if (action === "whistle") return createLabel("[", "(whistle)", onHoldDescriptionCreated);
     if (action === "hold") return createLabel("Enter", "(hold)", onHoldDescriptionCreated);
 

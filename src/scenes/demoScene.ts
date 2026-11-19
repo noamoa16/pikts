@@ -15,6 +15,8 @@ import { BoundaryWall } from "../objects/boundaryWall";
 import { Game } from "../game";
 import { isMoveAction, type Action } from "../actions/action";
 import { Minion } from "../objects/minion/minion";
+import { MinionState } from "../objects/minion/state";
+import { MinionColor } from "../objects/minion/color";
 import { RedMinion, YellowMinion, BlueMinion } from "../objects/minion/minions";
 import { RedOnion, YellowOnion, BlueOnion } from "../objects/onion/onions";
 import { Slope } from "../objects/slope";
@@ -106,6 +108,29 @@ export function createDemoScene(engine: Engine): Scene {
             case "rotate":
                 if (pressed) {
                     game.camera.startRotate(player.rotation.z);
+                }
+                break;
+            case "disband":
+                if (pressed) {
+                    const following = game.objects.filter((object): object is Minion =>
+                        object instanceof Minion && object.state === MinionState.following,
+                    );
+                    const averageByColor = new Map<MinionColor, { x: number; y: number; count: number }>();
+                    for (const minion of following) {
+                        const average = averageByColor.get(minion.minionColor) ?? { x: 0, y: 0, count: 0 };
+                        average.x += minion.groundingPosition.x;
+                        average.y += minion.groundingPosition.y;
+                        average.count++;
+                        averageByColor.set(minion.minionColor, average);
+                    }
+                    for (const minion of following) {
+                        const average = averageByColor.get(minion.minionColor)!;
+                        minion.becomeDisbanded(new Vector3(
+                            average.x / average.count,
+                            average.y / average.count,
+                            0,
+                        ));
+                    }
                 }
                 break;
             case "hold":

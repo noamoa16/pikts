@@ -13,6 +13,7 @@ const KEYBOARD_BINDINGS: readonly KeyboardBinding[] = [
     { action: "right", code: "KeyD" },
     { action: "whistle", code: "BracketLeft", key: "[" },
     { action: "rotate", code: "KeyF" },
+    { action: "disband", code: "KeyR" },
     { action: "hold", code: "Enter" },
     { action: "hold", code: "NumpadEnter" },
 ];
