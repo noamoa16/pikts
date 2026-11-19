@@ -18,6 +18,7 @@ export class Dpad {
     private readonly container: HTMLDivElement;
     private readonly buttons = new Map<Action, DpadButton>();
     private holdDescription: HTMLSpanElement | null = null;
+    private whistleDescription: HTMLSpanElement | null = null;
     private carrySpeedControl: CarrySpeedControl | null = null;
     private recordingControl: RecordingControl | null = null;
 
@@ -123,7 +124,10 @@ export class Dpad {
     ): DpadButton {
         const button = new DpadButton(
             action, label, onPressed, gridColumn, gridRow,
-            element => { if (action === "hold") this.holdDescription = element; },
+            element => {
+                if (action === "hold") this.holdDescription = element;
+                if (action === "whistle") this.whistleDescription = element;
+            },
         );
         this.buttons.set(action, button);
         return button;
@@ -139,6 +143,12 @@ export class Dpad {
     public setHoldPrompt(pick: boolean): void {
         if (this.holdDescription) {
             this.holdDescription.textContent = pick ? "(pick)" : "(hold)";
+        }
+    }
+
+    public setWhistlePrompt(switchMinion: boolean): void {
+        if (this.whistleDescription) {
+            this.whistleDescription.textContent = switchMinion ? "(switch)" : "(whistle)";
         }
     }
 

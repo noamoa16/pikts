@@ -100,7 +100,8 @@ export function createDemoScene(engine: Engine): Scene {
     const handleNonMovementAction = (action: Action, pressed: boolean) => {
         switch (action) {
             case "whistle":
-                player.whistle.active = pressed;
+                if (pressed && player.hasHoldingMinion) player.trySwitchMinion();
+                player.whistle.active = pressed && !player.hasHoldingMinion;
                 break;
             case "rotate":
                 if (pressed) {
@@ -157,6 +158,7 @@ export function createDemoScene(engine: Engine): Scene {
         const deltaSeconds = Math.min(engine.getDeltaTime() / 1000, 1 / Game.TARGET_FPS);
         game.update(deltaSeconds);
         dpad.setHoldPrompt(player.hasNearbyBuriedMinion());
+        dpad.setWhistlePrompt(player.hasHoldingMinion);
 
         playerDebugOverlay.update();
     });

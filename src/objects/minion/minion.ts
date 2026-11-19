@@ -255,6 +255,13 @@ export abstract class Minion extends Entity {
             beforePosition: this.position.clone(),
         });
     }
+    public becomeFollowingFromHeld(player: Player): void {
+        if (this.state !== MinionState.held) return;
+        this.position = calcHeldPosition(player.position, player.rotation.z);
+        this.state = MinionState.following;
+        this.follower = player;
+        this.velocity = new Vector3(0, 0, 1);
+    }
     private updateHeldPosition(){
         if(!this.follower) return;
         this.position = calcHeldPosition(this.follower.position, this.follower.rotation.z);

@@ -13,11 +13,13 @@ import { Nose } from "./parts/nose";
 import { Cursor } from "./parts/cursor";
 import { Whistle } from "./parts/whistle";
 import { Minion, MinionState } from "../minion/minion";
+import { MinionColor } from "../minion/color";
 import { PlayerInput } from "./input";
 import type { Action } from "../../actions/action";
 
 export class Player extends Entity {
     public static readonly SPEED = 4.0;
+    public static readonly HOLDABLE_DISTANCE = 1.5;
     private readonly input = new PlayerInput();
 
     public readonly cursor: Cursor;
@@ -82,19 +84,49 @@ export class Player extends Entity {
     }
 
     public getHoldableMinion(): Minion | null{
-        const HOLDABLE_DISTANCE = 1.5;
         let candidate: Minion | null = null;
-        let minDistanceSq = HOLDABLE_DISTANCE * HOLDABLE_DISTANCE;
+        let minDistanceSq = Player.HOLDABLE_DISTANCE * Player.HOLDABLE_DISTANCE;
         for(const object of this.game.objects){
             if(!(object instanceof Minion)) continue;
             if(object.state !== MinionState.following) continue;
             const distanceSq = Vector3.DistanceSquared(this.groundingPosition, object.groundingPosition);
-            if(distanceSq < minDistanceSq){
+            if(distanceSq <= minDistanceSq){
                 minDistanceSq = distanceSq;
                 candidate = object; 
             }
         }
         return candidate;
+    }
+    public get hasHoldingMinion(): boolean {
+        return this.holdingMinion !== null;
+    }
+
+    public trySwitchMinion(): void {
+        const heldMinion = this.holdingMinion;
+        if (!heldMinion) return;
+
+        const preferredColors = getPreferredSwitchColors(heldMinion.minionColor);
+        const candidates = this.game.objects.filter((object): object is Minion =>
+            object instanceof Minion
+            && object.state === MinionState.following
+            && Vector3.DistanceSquared(this.groundingPosition, object.groundingPosition)
+                <= Player.HOLDABLE_DISTANCE * Player.HOLDABLE_DISTANCE,
+        );
+
+        for (const color of preferredColors) {
+            const candidate = candidates
+                .filter(minion => minion.minionColor === color)
+                .sort((a, b) =>
+                    Vector3.DistanceSquared(this.groundingPosition, a.groundingPosition)
+                    - Vector3.DistanceSquared(this.groundingPosition, b.groundingPosition),
+                )[0];
+            if (!candidate) continue;
+
+            candidate.becomeHeld(this);
+            this.holdingMinion = candidate;
+            heldMinion.becomeFollowingFromHeld(this);
+            return;
+        }
     }
     public tryHoldMinion(){
         if(this.holdingMinion) return;
@@ -158,4 +190,10 @@ export class Player extends Entity {
         this.input.clearVirtualMovement();
         this.input.dispose();
     }
+}
+
+function getPreferredSwitchColors(currentColor: MinionColor): MinionColor[] {
+    const colors = [MinionColor.red, MinionColor.yellow, MinionColor.blue];
+    const currentIndex = colors.indexOf(currentColor);
+    return [colors[(currentIndex + 1) % colors.length], colors[(currentIndex + 2) % colors.length]];
 }
