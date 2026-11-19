@@ -1,6 +1,7 @@
 import {
     Color3,
     CreateCylinder,
+    CreateSphere,
     Mesh,
     Quaternion,
     StandardMaterial,
@@ -22,6 +23,7 @@ export class Kochappy extends Enemy {
     private static readonly MINION_SEARCH_MIN_DISTANCE = 0.5;
     private static readonly MINION_SEARCH_MAX_DISTANCE = 1.5;
     private static readonly CHASE_SPEED = 0.5;
+    private static readonly EYE_CENTER_Z = 2 - Math.SQRT2 / 2;
 
     private currentState = KochappyState.free;
     public get state(): KochappyState { return this.currentState; }
@@ -40,7 +42,8 @@ export class Kochappy extends Enemy {
 
         // 顔パーツ
         const headMaterial = new StandardMaterial(`${this.name}.${this.id}.head.material`, game.scene);
-        Color.set(headMaterial, new Color3(1, 0.75, 0.4), { luminance: 0.2 });
+        const faceColor = new Color3(1, 0.75, 0.4);
+        Color.set(headMaterial, faceColor, { luminance: 0.2 });
         headMaterial.backFaceCulling = false;
         const head = this.createLowerHemisphere(
             `${this.name}.${this.id}.shell`,
@@ -51,6 +54,71 @@ export class Kochappy extends Enemy {
         head.material = headMaterial;
         head.isPickable = false;
         head.checkCollisions = false;
+
+        // 目（装飾パーツのため当たり判定なし）
+        const eyeMaterial = new StandardMaterial(`${this.name}.${this.id}.eyes.material`, game.scene);
+        Color.set(eyeMaterial, faceColor, { luminance: 0.2 });
+        const eyeWhiteMaterial = new StandardMaterial(`${this.name}.${this.id}.eyes.white.material`, game.scene);
+        Color.set(eyeWhiteMaterial, Color3.White());
+        const pupilMaterial = new StandardMaterial(`${this.name}.${this.id}.eyes.pupil.material`, game.scene);
+        Color.set(pupilMaterial, Color3.Black());
+        for (let index = 0; index < 2; index++) {
+            const side = index === 0 ? 1 : -1;
+            const x = side * r / 2;
+            const y = -r / 2;
+            const z = Kochappy.EYE_CENTER_Z * r;
+
+            // z 軸方向の細い土台
+            const stem = CreateCylinder(
+                `${this.name}.${this.id}.eye.${index}.stem`,
+                {
+                    height: (Kochappy.EYE_CENTER_Z - 1 / 2) * r,
+                    diameter: r / 8,
+                    tessellation: 24,
+                },
+                game.scene,
+            );
+            stem.parent = this.mesh;
+            stem.position.set(x, y, (Kochappy.EYE_CENTER_Z + 1 / 2) * r / 2);
+            stem.rotation.x = Math.PI / 2;
+            stem.material = eyeMaterial;
+            stem.isPickable = false;
+            stem.checkCollisions = false;
+
+            const eye = CreateSphere(
+                `${this.name}.${this.id}.eye.${index}.white`,
+                { diameter: r * 3 / 8, segments: 16 },
+                game.scene,
+            );
+            eye.parent = this.mesh;
+            eye.position.set(x, y, z);
+            eye.material = eyeWhiteMaterial;
+            eye.isPickable = false;
+            eye.checkCollisions = false;
+
+            // 白目の外側に、顔と同じ色の薄い半球面を重ねる
+            const eyeOutline = this.createEyeCap(
+                `${this.name}.${this.id}.eye.${index}.outline`,
+                new Vector3(x, y, z),
+                (r * 3 / 16) * (1 + 1 / 2),
+                game,
+            );
+            eyeOutline.parent = this.mesh;
+            eyeOutline.material = eyeMaterial;
+            eyeOutline.isPickable = false;
+            eyeOutline.checkCollisions = false;
+
+            const pupil = CreateSphere(
+                `${this.name}.${this.id}.eye.${index}.pupil`,
+                { diameter: r * 3 / 16, segments: 12 },
+                game.scene,
+            );
+            pupil.parent = this.mesh;
+            pupil.position.set(x, y - r * 3 / 16, z);
+            pupil.material = pupilMaterial;
+            pupil.isPickable = false;
+            pupil.checkCollisions = false;
+        }
 
         // 背中の斑点
         const spotMaterial = new StandardMaterial(`${this.name}.${this.id}.spots.material`, game.scene);
@@ -94,21 +162,15 @@ export class Kochappy extends Enemy {
     }
 
     private findNearestMinion(): Minion | null {
-        let nearest: Minion | null = null;
-        let nearestDistance = Kochappy.MINION_SEARCH_MAX_DISTANCE;
-        const minimumDistance = Kochappy.MINION_SEARCH_MIN_DISTANCE;
-
-        for (const object of this.game.objects) {
-            if (!(object instanceof Minion)) continue;
-            if (object.state === MinionState.seed || object.state === MinionState.buried) continue;
-
-            const distance = this.distanceToSurface(object);
-            if(minimumDistance <= distance && distance <= nearestDistance){
-                nearestDistance = distance;
-                nearest = object;
-            }
-        }
-        return nearest;
+        return this.getNearbyEntities(
+            Kochappy.MINION_SEARCH_MAX_DISTANCE,
+            (entity): entity is Minion =>
+                entity instanceof Minion
+                && entity.state !== MinionState.seed
+                && entity.state !== MinionState.buried,
+        ).find(entity =>
+            this.distanceToSurface(entity) >= Kochappy.MINION_SEARCH_MIN_DISTANCE,
+        ) ?? null;
     }
 
     private createLowerHemisphere(name: string, radius: number, game: Game): Mesh {
@@ -176,5 +238,43 @@ export class Kochappy extends Enemy {
         spot.material = material;
         spot.isPickable = false;
         spot.checkCollisions = false;
+    }
+
+    private createEyeCap(name: string, center: Vector3, radius: number, game: Game): Mesh {
+        const latitudeSegments = 12;
+        const longitudeSegments = 24;
+        const positions: number[] = [];
+        const normals: number[] = [];
+        const indices: number[] = [];
+
+        // 半球の向きは +y 側。白目より少し大きくして縁を見せる。
+        for (let latitude = 0; latitude <= latitudeSegments; latitude++) {
+            const theta = Math.PI / 2 * latitude / latitudeSegments;
+            for (let longitude = 0; longitude <= longitudeSegments; longitude++) {
+                const phi = 2 * Math.PI * longitude / longitudeSegments;
+                const nx = Math.sin(theta) * Math.cos(phi);
+                const ny = Math.cos(theta);
+                const nz = Math.sin(theta) * Math.sin(phi);
+                positions.push(center.x + radius * nx, center.y + radius * ny, center.z + radius * nz);
+                normals.push(nx, ny, nz);
+            }
+        }
+
+        for (let latitude = 0; latitude < latitudeSegments; latitude++) {
+            for (let longitude = 0; longitude < longitudeSegments; longitude++) {
+                const current = latitude * (longitudeSegments + 1) + longitude;
+                const nextRow = current + longitudeSegments + 1;
+                indices.push(current, current + 1, nextRow);
+                indices.push(current + 1, nextRow + 1, nextRow);
+            }
+        }
+
+        const vertexData = new VertexData();
+        vertexData.positions = positions;
+        vertexData.indices = indices;
+        vertexData.normals = normals;
+        const cap = new Mesh(name, game.scene);
+        vertexData.applyToMesh(cap);
+        return cap;
     }
 }
