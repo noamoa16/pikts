@@ -25,7 +25,7 @@ export function minionColorToString(minionColor: MinionColor | null){
     }
     return {
         [MinionColor.red]: "red",
-        [MinionColor.blue]: "blue",
         [MinionColor.yellow]: "yellow",
+        [MinionColor.blue]: "blue",
     }[minionColor];
 }

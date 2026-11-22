@@ -24,10 +24,10 @@ import { Dir4 } from "../physics/figure";
 import {
     RedPellet1,
     RedPellet5,
-    BluePellet1,
     YellowPellet1,
-    BluePellet5,
     YellowPellet5,
+    BluePellet1,
+    BluePellet5,
     RedPellet10,
     YellowPellet10,
     BluePellet10,
@@ -75,9 +75,9 @@ export function createDemoScene(engine: Engine): Scene {
     new YellowOnion(game, new Vector3(-1, 3, 0));
     new BlueOnion(game, new Vector3(1, 3, 0));
     new RedPellet5(game, new Vector3(-3, 1, 0));
-    new BluePellet1(game, new Vector3(3, 0, 1));
     new YellowPellet1(game, new Vector3(3, 1, 1));
     new YellowPellet5(game, new Vector3(3, -2, 0));
+    new BluePellet1(game, new Vector3(3, 0, 1));
 
     new RedPelletPlant1(game, new Vector3(-2, -1, 0));
     new YellowRedPelletPlant1(game, new Vector3(-3, -1, 0));

@@ -6,8 +6,8 @@ import { MinionColor, minionColorToColor3 } from "../minion/color";
 import { Pellet } from "./pellet";
 
 export const RED_PELLET_COLOR = minionColorToColor3(MinionColor.red);
-export const BLUE_PELLET_COLOR = minionColorToColor3(MinionColor.blue);
 export const YELLOW_PELLET_COLOR = minionColorToColor3(MinionColor.yellow);
+export const BLUE_PELLET_COLOR = minionColorToColor3(MinionColor.blue);
 
 abstract class Pellet1 extends Pellet {
     protected static override readonly _MIN_CARRIERS = 1;
@@ -62,19 +62,6 @@ export class RedPellet20 extends Pellet20 {
     protected static override readonly _BASE_COLOR = RED_PELLET_COLOR;
 }
 
-export class BluePellet1 extends Pellet1 {
-    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
-}
-export class BluePellet5 extends Pellet5 {
-    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
-}
-export class BluePellet10 extends Pellet10 {
-    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
-}
-export class BluePellet20 extends Pellet20 {
-    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
-}
-
 export class YellowPellet1 extends Pellet1 {
     protected static override readonly _BASE_COLOR = YELLOW_PELLET_COLOR;
 }
@@ -86,4 +73,17 @@ export class YellowPellet10 extends Pellet10 {
 }
 export class YellowPellet20 extends Pellet20 {
     protected static override readonly _BASE_COLOR = YELLOW_PELLET_COLOR;
+}
+
+export class BluePellet1 extends Pellet1 {
+    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
+}
+export class BluePellet5 extends Pellet5 {
+    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
+}
+export class BluePellet10 extends Pellet10 {
+    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
+}
+export class BluePellet20 extends Pellet20 {
+    protected static override readonly _BASE_COLOR = BLUE_PELLET_COLOR;
 }

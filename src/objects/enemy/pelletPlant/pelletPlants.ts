@@ -5,9 +5,9 @@ import {
     RED_PELLET_COLOR,
     YELLOW_PELLET_COLOR,
     BLUE_PELLET_COLOR,
-    BluePellet1,
     RedPellet1,
     YellowPellet1,
+    BluePellet1,
 } from "../../carriable/pellets";
 import { createPelletAppearance } from "../../carriable/pellet";
 import { Enemy } from "../enemy";
@@ -139,13 +139,14 @@ export class RandomPelletPlant1 extends PelletPlant1 {
 
     protected get pelletColor(): Color3 {
         switch (this.colorIndex ?? 0) {
+            case 0:
+                return RED_PELLET_COLOR;
             case 1:
                 return YELLOW_PELLET_COLOR;
             case 2:
                 return BLUE_PELLET_COLOR;
-            default:
-                return RED_PELLET_COLOR;
         }
+        return RED_PELLET_COLOR;
     }
 
     public override update(deltaSeconds: number): void {
