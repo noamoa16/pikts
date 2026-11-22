@@ -29,7 +29,11 @@ function makeMinion(overrides: Partial<Minion> = {}): Minion {
         state: MinionState.free,
         follower: null,
         groundingPosition: new Vector3(0, 0, 0),
+        position: overrides.groundingPosition ?? new Vector3(0, 0, 0),
         speed: 3,
+        getDisbandTarget: vi.fn(() => null),
+        takeDisbandMoveTime: vi.fn(() => 0),
+        clearDisbandMovement: vi.fn(),
         ...overrides,
     } as Minion;
 }

@@ -7,6 +7,7 @@ import { Minion, MinionState } from "../../objects/minion/minion";
 import { createDebugInfo, createDebugPanel } from "./debugPanel";
 import { TransformEditor } from "./transformEditor";
 import { getViewportUiScale } from "../viewportScale";
+import { Kochappy, KochappyState } from "../../objects/enemy/kochappy";
 
 type InspectedEntity = Minion | Carriable | Enemy;
 
@@ -153,6 +154,13 @@ export class EntityInspector {
             return [
                 `${entity.constructor.name} #${entity.id}`,
                 `State: ${MinionState[entity.state]}`,
+            ].join("\n");
+        }
+        else if (entity instanceof Kochappy) {
+            return [
+                `${entity.constructor.name} #${entity.id}`,
+                `HP: ${entity.hp} / ${entity.maxHp}`,
+                `State: ${KochappyState[entity.state]}`,
             ].join("\n");
         }
         else if (entity instanceof Enemy) {
