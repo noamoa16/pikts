@@ -18,6 +18,7 @@ export class HpMeter {
     private readonly background: Mesh;
     private readonly fill: Mesh;
     private readonly fillMaterial: StandardMaterial;
+    private disposed = false;
 
     constructor(parent: Mesh, scene: Scene, height: number) {
         const background = CreateDisc(
@@ -60,6 +61,7 @@ export class HpMeter {
     }
 
     public update(hp: number, maxHp: number): void {
+        if (this.disposed) return;
         const ratio = maxHp > 0 ? Math.max(0, Math.min(1, hp / maxHp)) : 0;
         const color = ratio <= 0.5
             ? Color3.Lerp(Color3.Red(), Color3.Yellow(), ratio * 2)
@@ -89,5 +91,12 @@ export class HpMeter {
         const visible = hp < maxHp;
         this.background.isVisible = visible;
         this.fill.isVisible = visible && ratio > 0;
+    }
+
+    public dispose(): void {
+        if (this.disposed) return;
+        this.disposed = true;
+        this.background.dispose(false, true);
+        this.fill.dispose(false, true);
     }
 }

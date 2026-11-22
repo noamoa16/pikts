@@ -13,6 +13,8 @@ import { Shape } from "../../physics/figure";
 import { Color } from "../../rendering/color";
 import { Enemy } from "./enemy";
 import { Minion, MinionState } from "../minion/minion";
+import { KochappyCarcass } from "../carriable/kochappyCarcass";
+import { SoulEffect } from "../../effects/soulEffect";
 
 export enum KochappyState {
     free,
@@ -27,6 +29,14 @@ export class Kochappy extends Enemy {
 
     private currentState = KochappyState.free;
     public get state(): KochappyState { return this.currentState; }
+
+    protected override die(): void {
+        const deathPosition = this.position.clone();
+        this.disposeHpMeter();
+        new KochappyCarcass(this.game, deathPosition, this.mesh, this.size);
+        new SoulEffect(this.game, deathPosition);
+        super.die();
+    }
 
     constructor(game: Game, position: Vector3) {
         super(game, position, 0.5, 20, undefined, Shape.Sphere);
@@ -54,6 +64,21 @@ export class Kochappy extends Enemy {
         head.material = headMaterial;
         head.isPickable = false;
         head.checkCollisions = false;
+
+        // 口は z 軸方向の円柱。装飾パーツのため当たり判定なし。
+        const mouthMaterial = new StandardMaterial(`${this.name}.${this.id}.mouth.material`, game.scene);
+        Color.set(mouthMaterial, new Color3(0.5, 0.25, 0.25));
+        const mouth = CreateCylinder(
+            `${this.name}.${this.id}.mouth`,
+            { height: r / 8, diameter: r * 1.68, tessellation: 32 },
+            game.scene,
+        );
+        mouth.parent = this.mesh;
+        mouth.position.set(0, -r / 4, -r / 16);
+        mouth.rotation.x = Math.PI / 2;
+        mouth.material = mouthMaterial;
+        mouth.isPickable = false;
+        mouth.checkCollisions = false;
 
         // 目（装飾パーツのため当たり判定なし）
         const eyeMaterial = new StandardMaterial(`${this.name}.${this.id}.eyes.material`, game.scene);

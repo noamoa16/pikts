@@ -45,6 +45,11 @@ export abstract class Enemy extends Entity {
     }
 
     protected die(){
+        this.disposeHpMeter();
         this.remove();
+    }
+
+    protected disposeHpMeter(): void {
+        this.hpMeter.dispose();
     }
 }

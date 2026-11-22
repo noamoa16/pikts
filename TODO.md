@@ -1,21 +1,4 @@
 - プロンプト：
-  - Kochappy に、"mouth" パーツを追加してください。
-    - 色は赤
-    - |z/r + 1/2| <= 1/16 and x^2 + (y - 1/2)^2 <= (r/2)^2
-    - 当たり判定なし
-  - kochappy が die したときに、 kochappy の死骸 (extends Carriable) と、魂のエフェクトを生成するようにしてください。
-    - 死骸
-      - 生成位置は、そのときの kochappy の位置と同じ
-      - kochappy の死骸は、_MIN_CARRIERS = 3, _MAX_CARRIERS = 6, _NUTRITION = 4
-      - kochappy の死骸の見た目は、 kochappy をz座標反転したもの
-    - 魂のエフェクト
-      - 当たり判定なし
-      - 球の形、半径は1/2
-      - Entity を継承する必要なし
-        - エフェクトは今後も追加予定なので、Effect クラスを作ってそれを継承してもいいかも
-      - そのときの kochappy の位置に出現し、3秒間かけてz座標を3増やす。3秒間移動した後は消滅する。
-      - alpha = 0.25
-      - 色は青
   - kochappy について、「捕食」処理を実装してください。
     - 発火条件は、以下に該当する Minion が少なくとも1存在すること
       - MINION_SEARCH_MIN_DISTANCE 以内
@@ -29,6 +12,9 @@
 - サウンドの追加
 - Minionをholdしているときに整列
 - 画面拡大縮小
+- 解散で色分け
+- 魂エフェクトの調整
+- KochappyCarcassの見た目調整
 - update系の処理をGameに集約する
 - 衝突判定の高速化
   - 距離が近い場合にのみ衝突判定

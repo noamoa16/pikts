@@ -11,12 +11,14 @@ import type { GridMap } from "./core/gridPathfinding";
 import { Onion } from "./objects/onion/onion";
 import { EntityInspector } from "./ui/debug/entityInspector";
 import { MinionCountDisplay } from "./ui/minionCountDisplay";
+import { Effect } from "./effects/effect";
 
 export class Game {
     public readonly isDevelopment = import.meta.env.DEV;
     /** 開発時の運搬速度チート */
     public debugCarrySpeed2x = false;
     public readonly objects: Entity[] = [];
+    public readonly effects: Effect[] = [];
     public readonly camera: MainCamera;
     public readonly minionCountDisplay: MinionCountDisplay;
     public readonly entityInspector: EntityInspector | null;
@@ -86,6 +88,17 @@ export class Game {
         object.mesh.dispose(false, true);
     }
 
+    public addEffect(effect: Effect): void {
+        this.effects.push(effect);
+    }
+
+    public removeEffect(effect: Effect): void {
+        const index = this.effects.indexOf(effect);
+        if (index < 0) return;
+        this.effects.splice(index, 1);
+        effect.dispose();
+    }
+
     private updateGridMap(): void {
         this._gridMap = buildGridMap(this.objects);
     }
@@ -99,6 +112,9 @@ export class Game {
     public update(deltaSeconds: number): void {
         this.time += deltaSeconds;
         this.updateObjects(deltaSeconds);
+        for (const effect of [...this.effects]) {
+            if (this.effects.includes(effect)) effect.update(deltaSeconds);
+        }
         this.updateGridMap();
         this._onions = this.objects
             .filter((object): object is Onion =>
