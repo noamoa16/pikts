@@ -219,7 +219,9 @@ export class Kochappy extends Enemy {
     }
 
     private findMinionInFront(): Minion | null {
+        // Kochappy が向いている向き
         const facing = new Vector3(Math.sin(this.rotation.z), -Math.cos(this.rotation.z), 0);
+        
         return this.getNearbyEntities(
             Kochappy.MINION_SEARCH_MIN_DISTANCE,
             (entity): entity is Minion =>
