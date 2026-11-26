@@ -18,11 +18,13 @@ export class Kochappy extends Enemy {
     private static readonly MINION_SEARCH_MAX_DISTANCE = 1.5;
     private static readonly FEEDING_TURN_SECONDS = 0.4;
     private static readonly FEEDING_RETURN_SECONDS = 0.4;
+    private static readonly FEEDING_COOLDOWN_SECONDS = 1;
     private static readonly FEEDING_TURN_RADIANS = Math.PI / 4;
     private static readonly CHASE_SPEED = 0.5;
     private currentState = KochappyState.free;
     public get state(): KochappyState { return this.currentState; }
     private feedingElapsedSeconds = 0;
+    private feedingCooldownRemainingSeconds = 0;
     private feedingStartRotationX = 0;
     private feedingStartRotationY = 0;
     private feedingStartFacingAngle = 0;
@@ -51,7 +53,13 @@ export class Kochappy extends Enemy {
             return;
         }
 
-        const minionInFront = this.findMinionInFront();
+        this.feedingCooldownRemainingSeconds = Math.max(
+            0,
+            this.feedingCooldownRemainingSeconds - deltaSeconds,
+        );
+        const minionInFront = this.feedingCooldownRemainingSeconds === 0
+            ? this.findMinionInFront()
+            : null;
         if (minionInFront) {
             this.startFeeding();
             this.updateFeeding(deltaSeconds);
@@ -139,6 +147,7 @@ export class Kochappy extends Enemy {
             this.rotation.x = this.feedingStartRotationX;
             this.rotation.y = this.feedingStartRotationY;
             this.currentState = KochappyState.free;
+            this.feedingCooldownRemainingSeconds = Kochappy.FEEDING_COOLDOWN_SECONDS;
         }
     }
 
