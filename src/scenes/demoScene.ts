@@ -9,14 +9,9 @@ import { PlayerDebugOverlay } from "../ui/debug/playerDebugOverlay";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
-import { Dpad } from "../ui/dpad";
 import { GrassFloor } from "../objects/grassFloor";
 import { BoundaryWall } from "../objects/boundaryWall";
 import { Game } from "../game";
-import { isMoveAction, type Action } from "../actions/action";
-import { Minion } from "../objects/minion/minion";
-import { MinionState } from "../objects/minion/state";
-import { MinionColor } from "../objects/minion/color";
 import { RedMinion, YellowMinion, BlueMinion } from "../objects/minion/minions";
 import { RedOnion, YellowOnion, BlueOnion } from "../objects/onion/onions";
 import { Slope } from "../objects/slope";
@@ -42,6 +37,7 @@ import {
     YellowRedPelletPlant1,
 } from "../objects/enemy/pelletPlant/pelletPlants";
 import { Kochappy } from "../objects/enemy/kochappy";
+import { GameInput } from "../game/input";
 
 // let shadowGen: ShadowGenerator;
 
@@ -99,113 +95,18 @@ export function createDemoScene(engine: Engine): Scene {
     // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const playerDebugOverlay = new PlayerDebugOverlay(game, player, game.isDevelopment ? engine : null);
-    const handleNonMovementAction = (action: Action, pressed: boolean) => {
-        switch (action) {
-            case "whistle":
-                if (pressed && player.hasHoldingMinion) player.trySwitchMinion();
-                player.whistle.active = pressed && !player.hasHoldingMinion;
-                break;
-            case "rotate":
-                if (pressed) {
-                    game.camera.startRotate(player.rotation.z);
-                }
-                break;
-            case "cameraAngle":
-                if (pressed) game.camera.cycleAngle();
-                break;
-            case "cameraZoom":
-                if (pressed) game.camera.cycleZoom();
-                break;
-            case "disband":
-                if (pressed) {
-                    const following = game.objects.filter((object): object is Minion =>
-                        object instanceof Minion && object.state === MinionState.following,
-                    );
-                    const averageByColor = new Map<MinionColor, { x: number; y: number; count: number }>();
-                    for (const minion of following) {
-                        const average = averageByColor.get(minion.minionColor) ?? { x: 0, y: 0, count: 0 };
-                        average.x += minion.groundingPosition.x;
-                        average.y += minion.groundingPosition.y;
-                        average.count++;
-                        averageByColor.set(minion.minionColor, average);
-                    }
-                    for (const minion of following) {
-                        const average = averageByColor.get(minion.minionColor)!;
-                        minion.becomeDisbanded(new Vector3(
-                            average.x / average.count,
-                            average.y / average.count,
-                            0,
-                        ));
-                    }
-                }
-                break;
-            case "hold":
-                if (pressed) {
-                    player.handleHoldPressed();
-                }
-                else {
-                    player.handleHoldReleased();
-                }
-                break;
-            default:
-                break;
-        }
-    };
-    const dpad = new Dpad(
-        engine,
-       (action, pressed) => {
-            if(isMoveAction(action)){
-                player.setVirtualInput(action, pressed);
-            }
-            else {
-                handleNonMovementAction(action, pressed);
-            }
-        },
-        game.isDevelopment ? {
-            onCarrySpeed2xChange: enabled => {
-                game.debugCarrySpeed2x = enabled;
-            },
-            onAddMinions: () => {
-                const minionCount = game.objects.filter(object => object instanceof Minion).length;
-                if (minionCount > 200) return;
-
-                const spawnPosition = player.position.add(new Vector3(0, 0, 2));
-                for (let i = 0; i < 5; i++) new RedMinion(game, spawnPosition.clone());
-                for (let i = 0; i < 5; i++) new YellowMinion(game, spawnPosition.clone());
-                for (let i = 0; i < 5; i++) new BlueMinion(game, spawnPosition.clone());
-            },
-        } : undefined,
-        context => game.minionCountDisplay.drawRecordingOverlay(context),
-    );
-    player.setKeyboardActionHandler((action, pressed) => {
-        dpad.setKeyboardPressed(action, pressed);
-        if (!isMoveAction(action)) {
-            handleNonMovementAction(action, pressed);
-        }
-    });
+    new GameInput(game, player, engine);
 
     // 定期実行
     game.scene.onBeforeRenderObservable.add(() => {
         const deltaSeconds = Math.min(engine.getDeltaTime() / 1000, 1 / Game.TARGET_FPS);
         game.update(deltaSeconds);
-        dpad.setHoldPrompt(player.hasNearbyBuriedMinion());
-        dpad.setWhistlePrompt(player.hasHoldingMinion);
-
         playerDebugOverlay.update();
     });
 
-    // 画面がリサイズされたら
-    const onResize = () => {
-        dpad.adjustLayout();
-    };
-    window.addEventListener("resize", onResize);
-
     // Sceneが破棄されたらイベントを無効化
     game.scene.onDisposeObservable.add(() => {
-        window.removeEventListener("resize", onResize);
         playerDebugOverlay.remove();
-        player.removeEvents();
-        dpad.remove();
     });
 
     return game.scene;
