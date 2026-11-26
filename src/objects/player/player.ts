@@ -101,6 +101,10 @@ export class Player extends Entity {
         return this.holdingMinion !== null;
     }
 
+    public get heldMinionColor(): MinionColor | null {
+        return this.holdingMinion?.minionColor ?? null;
+    }
+
     public trySwitchMinion(): void {
         const heldMinion = this.holdingMinion;
         if (!heldMinion) return;
@@ -193,7 +197,7 @@ export class Player extends Entity {
 }
 
 function getPreferredSwitchColors(currentColor: MinionColor): MinionColor[] {
-    const colors = [MinionColor.red, MinionColor.yellow, MinionColor.blue];
+    const colors = Minion.COLOR_ORDER;
     const currentIndex = colors.indexOf(currentColor);
     return [colors[(currentIndex + 1) % colors.length], colors[(currentIndex + 2) % colors.length]];
 }

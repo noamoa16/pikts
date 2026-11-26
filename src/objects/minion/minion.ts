@@ -29,6 +29,11 @@ import {
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
+    public static readonly COLOR_ORDER: readonly MinionColor[] = [
+        MinionColor.red,
+        MinionColor.yellow,
+        MinionColor.blue,
+    ];
     public static readonly FREE_SEARCH_DISTANCE = 0.75;
     public static readonly FREE_PICKUP_DISTANCE = 0.5;
     public static readonly FOLLOW_ENEMY_AVOIDANCE_DISTANCE = 0.75;
@@ -290,7 +295,7 @@ export abstract class Minion extends Entity {
     }
     public becomeFollowingFromHeld(player: Player): void {
         if (this.state !== MinionState.held) return;
-        this.position = calcHeldPosition(player.position, player.rotation.z);
+        this.position = calcHeldPosition(player.position, player.rotation.z + Math.PI);
         this.state = MinionState.following;
         this.follower = player;
         this.velocity = new Vector3(0, 0, 1);

@@ -6,6 +6,7 @@ import {
     calcCarriableApproachMoveVector,
     calcEnemyAvoidanceMoveVector,
     calcEnemyApproachMoveVector,
+    calcMinionHoldFormationMoveVector,
     calcMinionFollowMoveVector,
 } from "./movement";
 import type { Carriable } from "../carriable/carriable";
@@ -72,12 +73,22 @@ function updateFollowing(
         return;
     }
 
-    const moveVector = calcMinionFollowMoveVector(
-        minion.groundingPosition,
-        minion.follower.groundingPosition,
-        minion.speed,
-        deltaSeconds,
-    );
+    const moveVector = minion.follower.hasHoldingMinion
+        ? calcMinionHoldFormationMoveVector(
+            minion.groundingPosition,
+            minion.follower.groundingPosition,
+            minion.follower.rotation.z,
+            minion.minionColor,
+            minion.follower.heldMinionColor ?? minion.minionColor,
+            minion.speed,
+            deltaSeconds,
+        )
+        : calcMinionFollowMoveVector(
+            minion.groundingPosition,
+            minion.follower.groundingPosition,
+            minion.speed,
+            deltaSeconds,
+        );
     const nearbyEnemies = actions.getNearbyEnemies(Minion.FOLLOW_ENEMY_AVOIDANCE_DISTANCE);
     const avoidanceVector = calcEnemyAvoidanceMoveVector(
         minion,

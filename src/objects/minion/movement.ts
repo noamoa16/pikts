@@ -1,6 +1,7 @@
 import { Vector2, Vector3 } from "#vendor/babylon";
-import { hashInt32, toVector2, toVector3 } from "../../core/math";
+import { hashInt32, rotate2D, toVector2, toVector3 } from "../../core/math";
 import { Entity } from "../entity";
+import { MinionColor } from "./color";
 
 /**
  * Minion が Player に対して追従する際の移動ベクトルを計算
@@ -35,6 +36,34 @@ export function calcMinionFollowMoveVector(
     }
 
     return Vector3.Zero();
+}
+
+/** Held by the player: form a line behind them in color order. */
+export function calcMinionHoldFormationMoveVector(
+    minionPosition: Vector3,
+    playerPosition: Vector3,
+    playerRotation: number,
+    color: MinionColor,
+    heldColor: MinionColor,
+    speed: number,
+    deltaSeconds: number,
+): Vector3 {
+    const FORMATION_GAP = 0.35;
+    const STOPPING_DISTANCE = 0.1;
+    const colors = [MinionColor.red, MinionColor.yellow, MinionColor.blue];
+    const colorIndex = colors.indexOf(color);
+    const heldColorIndex = colors.indexOf(heldColor);
+    const formationIndex = (colorIndex - heldColorIndex + colors.length) % colors.length;
+    const distanceBehindPlayer = 0.5 + formationIndex * FORMATION_GAP;
+    const targetOffset = rotate2D(-distanceBehindPlayer, 0, playerRotation);
+    const target = toVector2(playerPosition).add(targetOffset);
+    const toTarget = target.subtract(toVector2(minionPosition));
+    const distance = toTarget.length();
+    if (distance <= STOPPING_DISTANCE || distance === 0) return Vector3.Zero();
+
+    return toVector3(toTarget.normalize().scale(
+        Math.min(speed * deltaSeconds, distance - STOPPING_DISTANCE),
+    ));
 }
 
 /** Move a Minion away from nearby enemies, with stronger steering at close range. */

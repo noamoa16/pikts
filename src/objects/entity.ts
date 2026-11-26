@@ -188,13 +188,32 @@ export abstract class Entity {
         maxDistance: number,
         condition: (entity: Entity) => boolean = () => true,
     ): T[] {
-        return this.game.objects
-            .filter((entity): entity is T => entity !== this && condition(entity))
-            .map(entity => ({
-                entity,
-                distance: this.distanceToSurface(entity),
-            }))
-            .filter(candidate => candidate.distance <= maxDistance)
+        const position = this.position;
+        const sizeRadius = this.size / 2;
+        const nearbyEntities: { entity: T; distance: number }[] = [];
+
+        // 平方根計算は重いのでなるべく避ける
+        for (const entity of this.game.objects) {
+            if (entity === this || !condition(entity)) continue;
+
+            const entityPosition = entity.position;
+            const dx = position.x - entityPosition.x;
+            const dy = position.y - entityPosition.y;
+            const dz = position.z - entityPosition.z;
+            const entitySizeRadius = entity.size / 2;
+            const maxCenterDistance = maxDistance + sizeRadius + entitySizeRadius;
+            if (maxCenterDistance < 0) continue;
+
+            const distanceSquared = dx * dx + dy * dy + dz * dz;
+            if (distanceSquared > maxCenterDistance * maxCenterDistance) continue;
+
+            const distance = Math.sqrt(distanceSquared) - sizeRadius - entitySizeRadius;
+            if (distance <= maxDistance) {
+                nearbyEntities.push({ entity: entity as T, distance });
+            }
+        }
+
+        return nearbyEntities
             .sort((a, b) => a.distance - b.distance)
             .map(candidate => candidate.entity);
     }
