@@ -301,9 +301,10 @@ export abstract class Minion extends Entity {
             this.carried = null;
             this.attackTarget = null;
             this.attackElapsedSeconds = 0;
+            this.clearDisbandMovement();
             this.state = MinionState.following;
             this.follower = player;
-            this.velocity.z = 1;
+            this.velocity = new Vector3(0, 0, 1);
         }
         console.log('Minion.becomeFollowing', {
             id: this.id,
