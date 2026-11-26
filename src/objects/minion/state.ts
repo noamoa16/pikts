@@ -7,4 +7,5 @@ export enum MinionState {
     attack,
     seed,
     buried,
+    eaten,
 }

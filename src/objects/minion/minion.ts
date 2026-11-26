@@ -20,6 +20,7 @@ import { Plant } from "./parts/plant";
 import { SeedMotion } from "./seedMotion";
 import { MinionAppearance } from "./appearance";
 import { MinionRotation } from "./rotation";
+import { SoulEffect } from "../../effects/soulEffect";
 import {
     separateFromNearbyCarriables,
     separateFromOverlappingEntities,
@@ -115,6 +116,11 @@ export abstract class Minion extends Entity {
     }
 
     override update(deltaSeconds: number): void {
+        if (this.state === MinionState.eaten) {
+            this.updateColor();
+            return;
+        }
+
         if (this.state === MinionState.seed || this.state === MinionState.buried) {
             if (this.state === MinionState.seed) {
                 this.updateSeed(deltaSeconds);
@@ -216,7 +222,27 @@ export abstract class Minion extends Entity {
     public becomeFree(){
         this.state = MinionState.free;
         this.velocity = Vector3.Zero();
+        this.checkCollisions = true;
         separateFromOverlappingMinions(this, this.game.objects);
+    }
+
+    /** Kochappy の捕食対象になる。捕食中は状態更新と衝突を停止する。 */
+    public becomeEaten(): void {
+        this.follower = null;
+        this.carried = null;
+        this.attackTarget = null;
+        this.attackElapsedSeconds = 0;
+        this.clearDisbandMovement();
+        this.state = MinionState.eaten;
+        this.velocity = Vector3.Zero();
+        this.checkCollisions = false;
+    }
+
+    /** 捕食者が捕食中に倒された場合に呼ぶ。 */
+    public dieFromEating(): void {
+        const deathPosition = this.position.clone();
+        this.remove();
+        new SoulEffect(this.game, deathPosition);
     }
 
     public becomeDisbanded(target: Vector3): void {

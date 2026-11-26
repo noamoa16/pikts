@@ -11,6 +11,7 @@ export enum KochappyState {
     free,
     chase,
     feeding,
+    eating,
 }
 
 export class Kochappy extends Enemy {
@@ -20,6 +21,8 @@ export class Kochappy extends Enemy {
     private static readonly FEEDING_RETURN_SECONDS = 0.4;
     private static readonly FEEDING_COOLDOWN_SECONDS = 1;
     private static readonly FEEDING_TURN_RADIANS = Math.PI / 4;
+    private static readonly PREDATION_DURATION_SECONDS = 3;
+    private static readonly EATING_TILT_RADIANS = Math.PI / 8;
     private static readonly CHASE_SPEED = 0.5;
     private currentState = KochappyState.free;
     public get state(): KochappyState { return this.currentState; }
@@ -28,8 +31,11 @@ export class Kochappy extends Enemy {
     private feedingStartRotationX = 0;
     private feedingStartRotationY = 0;
     private feedingStartFacingAngle = 0;
+    private predationElapsedSeconds = 0;
+    private eatenMinion: Minion | null = null;
 
     protected override die(): void {
+        this.releaseEatenMinion();
         const deathPosition = this.position.clone();
         this.disposeHpMeter();
         new KochappyCarcass(this.game, deathPosition, this.mesh, this.size);
@@ -52,6 +58,10 @@ export class Kochappy extends Enemy {
             this.updateFeeding(deltaSeconds);
             return;
         }
+        if (this.currentState === KochappyState.eating) {
+            this.updateEating(deltaSeconds);
+            return;
+        }
 
         this.feedingCooldownRemainingSeconds = Math.max(
             0,
@@ -61,7 +71,7 @@ export class Kochappy extends Enemy {
             ? this.findMinionInFront()
             : null;
         if (minionInFront) {
-            this.startFeeding();
+            this.startFeeding(minionInFront);
             this.updateFeeding(deltaSeconds);
             return;
         }
@@ -92,7 +102,8 @@ export class Kochappy extends Enemy {
             (entity): entity is Minion =>
                 entity instanceof Minion
                 && entity.state !== MinionState.seed
-                && entity.state !== MinionState.buried,
+                && entity.state !== MinionState.buried
+                && entity.state !== MinionState.eaten,
         ).find(entity =>
             this.distanceToSurface(entity) >= Kochappy.MINION_SEARCH_MIN_DISTANCE,
         ) ?? null;
@@ -109,7 +120,8 @@ export class Kochappy extends Enemy {
             (entity): entity is Minion =>
                 entity instanceof Minion
                 && entity.state !== MinionState.seed
-                && entity.state !== MinionState.buried,
+                && entity.state !== MinionState.buried
+                && entity.state !== MinionState.eaten,
         )) {
             const toMinion = minion.groundingPosition.subtract(this.groundingPosition);
             toMinion.z = 0;
@@ -124,9 +136,12 @@ export class Kochappy extends Enemy {
         return bestMinion;
     }
 
-    private startFeeding(): void {
+    private startFeeding(minion: Minion): void {
+        this.eatenMinion = minion;
+        minion.becomeEaten();
         this.currentState = KochappyState.feeding;
         this.feedingElapsedSeconds = 0;
+        this.predationElapsedSeconds = 0;
         this.feedingStartRotationX = this.rotation.x;
         this.feedingStartRotationY = this.rotation.y;
         this.feedingStartFacingAngle = this.rotation.z;
@@ -135,6 +150,10 @@ export class Kochappy extends Enemy {
     private updateFeeding(deltaSeconds: number): void {
         const duration = Kochappy.FEEDING_TURN_SECONDS + Kochappy.FEEDING_RETURN_SECONDS;
         this.feedingElapsedSeconds = Math.min(this.feedingElapsedSeconds + deltaSeconds, duration);
+        this.predationElapsedSeconds = Math.min(
+            this.predationElapsedSeconds + deltaSeconds,
+            Kochappy.PREDATION_DURATION_SECONDS,
+        );
 
         const turnProgress = Math.min(
             this.feedingElapsedSeconds / Kochappy.FEEDING_TURN_SECONDS,
@@ -154,9 +173,47 @@ export class Kochappy extends Enemy {
         if (this.feedingElapsedSeconds >= duration) {
             this.rotation.x = this.feedingStartRotationX;
             this.rotation.y = this.feedingStartRotationY;
-            this.currentState = KochappyState.free;
-            this.feedingCooldownRemainingSeconds = Kochappy.FEEDING_COOLDOWN_SECONDS;
+            this.currentState = KochappyState.eating;
+            this.setEatingPose();
         }
+        if (this.predationElapsedSeconds >= Kochappy.PREDATION_DURATION_SECONDS) {
+            this.finishPredation();
+        }
+    }
+
+    private updateEating(deltaSeconds: number): void {
+        this.predationElapsedSeconds = Math.min(
+            this.predationElapsedSeconds + deltaSeconds,
+            Kochappy.PREDATION_DURATION_SECONDS,
+        );
+        this.setEatingPose();
+        if (this.predationElapsedSeconds >= Kochappy.PREDATION_DURATION_SECONDS) {
+            this.finishPredation();
+        }
+    }
+
+    private setEatingPose(): void {
+        const tilt = Kochappy.EATING_TILT_RADIANS;
+        this.rotation.x = this.feedingStartRotationX
+            + Math.cos(this.feedingStartFacingAngle) * tilt;
+        this.rotation.y = this.feedingStartRotationY
+            + Math.sin(this.feedingStartFacingAngle) * tilt;
+    }
+
+    private finishPredation(): void {
+        const minion = this.eatenMinion;
+        this.eatenMinion = null;
+        minion?.dieFromEating();
+        this.rotation.x = this.feedingStartRotationX;
+        this.rotation.y = this.feedingStartRotationY;
+        this.currentState = KochappyState.free;
+        this.feedingCooldownRemainingSeconds = Kochappy.FEEDING_COOLDOWN_SECONDS;
+    }
+
+    private releaseEatenMinion(): void {
+        const minion = this.eatenMinion;
+        this.eatenMinion = null;
+        if (minion?.state === MinionState.eaten) minion.becomeFree();
     }
 
 }
