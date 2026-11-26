@@ -86,6 +86,8 @@ function createButtonContent(
     if (action === "rotate") return createLabel("F", "(rotate)");
     if (action === "disband") return createLabel("R", "(disband)");
     if (action === "whistle") return createLabel("[", "(whistle)", onHoldDescriptionCreated);
+    if (action === "cameraAngle") return createLabel("@", "(angle)");
+    if (action === "cameraZoom") return createLabel(":", "(zoom)");
     if (action === "hold") return createLabel("Enter", "(hold)", onHoldDescriptionCreated);
 
     const arrow = document.createElement("span");

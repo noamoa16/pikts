@@ -110,6 +110,12 @@ export function createDemoScene(engine: Engine): Scene {
                     game.camera.startRotate(player.rotation.z);
                 }
                 break;
+            case "cameraAngle":
+                if (pressed) game.camera.cycleAngle();
+                break;
+            case "cameraZoom":
+                if (pressed) game.camera.cycleZoom();
+                break;
             case "disband":
                 if (pressed) {
                     const following = game.objects.filter((object): object is Minion =>

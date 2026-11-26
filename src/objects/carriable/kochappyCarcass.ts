@@ -29,6 +29,15 @@ export class KochappyCarcass extends Carriable {
         appearance.scaling.z = -1;
         appearance.isPickable = false;
         appearance.checkCollisions = false;
+
+        // 死骸では、目が胴体から Z- ではなく正面の Y- へ伸びるように回転する。
+        const eyes = new Mesh(`${appearance.name}.eyes`, this.game.scene);
+        eyes.parent = appearance;
+        eyes.rotation.x = Math.PI / 4;
+        for (const child of appearance.getChildMeshes()) {
+            if (child.name.includes(".eye.")) child.parent = eyes;
+        }
+
         this.mesh.material = null;
         this.mesh.isVisible = false;
 

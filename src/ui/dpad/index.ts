@@ -49,6 +49,7 @@ export class Dpad {
         rightContainer.append(
             this.createButton("hold", "Hold", onPressed, { start: 2, end: 3 }, { start: 2, end: 4 }).element,
             this.createButton("whistle", "Whistle", onPressed, 1, 1).element,
+            this.createCameraButtonStack(onPressed),
         );
         this.container.append(rightContainer);
 
@@ -82,6 +83,28 @@ export class Dpad {
             zIndex: "10",
         } satisfies Partial<CSSStyleDeclaration>);
         return container;
+    }
+
+    private createCameraButtonStack(onPressed: OnPressed): HTMLDivElement {
+        const stack = document.createElement("div");
+        Object.assign(stack.style, {
+            position: "absolute",
+            left: "0",
+            top: "var(--dpad-button-size)",
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "stretch",
+            justifyContent: "flex-start",
+            gap: "0",
+            width: "var(--dpad-button-size)",
+            height: "calc(var(--dpad-button-size) * 2)",
+            pointerEvents: "auto",
+        } satisfies Partial<CSSStyleDeclaration>);
+        stack.append(
+            this.createButton("cameraAngle", "Camera angle", onPressed, 1, 1).element,
+            this.createButton("cameraZoom", "Camera zoom", onPressed, 1, 1).element,
+        );
+        return stack;
     }
 
     private createDebugControls(

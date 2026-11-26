@@ -67,6 +67,9 @@ export class PlayerInput {
         if (!action) {
             return;
         }
+        if (pressed && event.repeat && (action === "cameraAngle" || action === "cameraZoom")) {
+            return;
+        }
         if (isMoveAction(action)) {
             this.setInput("keyboard", action, pressed);
         }

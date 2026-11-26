@@ -3,6 +3,8 @@ import { normalizeAngle } from "../core/math";
 
 const CAMERA_RADIUS = 9;
 const CAMERA_FOV = Math.PI / 3;
+const CAMERA_ZOOM_RADII = [6, CAMERA_RADIUS, 12] as const;
+const CAMERA_TRANSITION_SMOOTHING = 8;
 
 export class MainCamera {
     private readonly camera: ArcRotateCamera;
@@ -12,6 +14,10 @@ export class MainCamera {
 
     public rotates: boolean = false;
     private targetTheta: number = 0;
+    private angleState: 1 | 2 = 1;
+    private zoomState: 1 | 2 | 3 = 2;
+    private targetBeta = Math.PI / 4;
+    private targetRadius = CAMERA_RADIUS;
     private static readonly ROTATION_SPEED = 5.0;
 
     constructor(scene: Scene) {
@@ -34,8 +40,8 @@ export class MainCamera {
         this.camera.upVector = new Vector3(0, 0, 1);
         this.camera.fov = CAMERA_FOV;
         this.camera.inputs.clear();
-        this.camera.lowerRadiusLimit = CAMERA_RADIUS;
-        this.camera.upperRadiusLimit = CAMERA_RADIUS;
+        this.camera.lowerRadiusLimit = CAMERA_ZOOM_RADII[0];
+        this.camera.upperRadiusLimit = CAMERA_ZOOM_RADII[2];
 
         scene.onDisposeObservable.add(() => {
             if (!this.canvas) {
@@ -60,8 +66,22 @@ export class MainCamera {
         this.rotates = true;
         this.targetTheta = targetTheta;
     }
+
+    public cycleAngle(): void {
+        this.angleState = this.angleState === 1 ? 2 : 1;
+        this.targetBeta = this.angleState === 1 ? Math.PI / 4 : Math.PI / 8;
+    }
+
+    public cycleZoom(): void {
+        this.zoomState = this.zoomState === 3 ? 1 : (this.zoomState + 1) as 1 | 2 | 3;
+        this.targetRadius = CAMERA_ZOOM_RADII[this.zoomState - 1];
+    }
+
     public update(deltaSeconds: number, target: Vector3) {
         this.target = target;
+        const transitionProgress = 1 - Math.exp(-CAMERA_TRANSITION_SMOOTHING * deltaSeconds);
+        this.camera.beta += (this.targetBeta - this.camera.beta) * transitionProgress;
+        this.camera.radius += (this.targetRadius - this.camera.radius) * transitionProgress;
         if(this.rotates){
             const currentTheta = this.rotation;
             const diffThera = normalizeAngle(
