@@ -101,19 +101,27 @@ export class Kochappy extends Enemy {
     private findMinionInFront(): Minion | null {
         // Kochappy が向いている向き
         const facing = new Vector3(Math.sin(this.rotation.z), -Math.cos(this.rotation.z), 0);
-        
-        return this.getNearbyEntities(
+
+        let bestMinion: Minion | null = null;
+        let bestSimilarity = Math.SQRT1_2;
+        for (const minion of this.getNearbyEntities(
             Kochappy.MINION_SEARCH_MIN_DISTANCE,
             (entity): entity is Minion =>
                 entity instanceof Minion
                 && entity.state !== MinionState.seed
                 && entity.state !== MinionState.buried,
-        ).find(minion => {
+        )) {
             const toMinion = minion.groundingPosition.subtract(this.groundingPosition);
             toMinion.z = 0;
-            return toMinion.lengthSquared() > 0
-                && Vector3.Dot(facing, toMinion.normalize()) >= Math.SQRT1_2;
-        }) ?? null;
+            if (toMinion.lengthSquared() === 0) continue;
+
+            const similarity = Vector3.Dot(facing, toMinion.normalize());
+            if (similarity >= bestSimilarity) {
+                bestMinion = minion;
+                bestSimilarity = similarity;
+            }
+        }
+        return bestMinion;
     }
 
     private startFeeding(): void {
