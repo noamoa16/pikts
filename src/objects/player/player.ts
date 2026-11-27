@@ -20,7 +20,12 @@ import type { Action } from "../../actions/action";
 export class Player extends Entity {
     public static readonly SPEED = 4.0;
     public static readonly HOLDABLE_DISTANCE = 1.5;
+    public static readonly MAX_HP = 20;
     private readonly input = new PlayerInput();
+
+    private _hp = Player.MAX_HP;
+    public get hp(): number { return this._hp; }
+    public get maxHp(): number { return Player.MAX_HP; }
 
     public readonly cursor: Cursor;
     public readonly whistle: Whistle;
@@ -188,6 +193,14 @@ export class Player extends Entity {
 
     public setKeyboardActionHandler(handler: (action: Action, pressed: boolean) => void): void {
         this.input.setActionHandler(handler);
+    }
+
+    public damage(amount: number): void {
+        this._hp = Math.max(0, this._hp - amount);
+    }
+
+    public heal(amount: number): void {
+        this._hp = Math.min(this.maxHp, this._hp + amount);
     }
 
     public removeEvents(){

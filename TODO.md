@@ -1,7 +1,4 @@
 - プロンプト：
-  - Kochappy が捕食しているときに、「rot.zをθ小さくする→rot.zを2θ大きくする→rot.zをθ小さくする」という処理も順に行うようにしてください。
-  - PlayerにHPを搭載し、heldMinionIndicatorの左側(円2個くらい左)に、PlayerのHPをsrc/objects/enemy/hpMeter.tsと同じ形式の円で示すようにして。hpMeterの定義場所は変えた方が良いかもしれない。
-    - heldMinionIndicator と見た目が似ているので、PlayerのHPであることを示すために、円の上に"Player"と文字を書くようにするとよさそう。
   - MinionCountDisplay に heldMinionIndicator があるが、MinionCountDisplayに置いているのは適切と言えるか？
     - また、heldMinionIndicatorはholdしているMinionの色を示すものであるが、holdしていない場合でも、Playerの近く(hold可能な距離)にMinionが存在する場合は、最も距離の近い(holdの候補になる)Minionの色を表示するように変更してください。そうなれば"held"という名前は適切でなくなるため、必要に応じて名前も変更すること。
   - ゲームに効果音とBGMを搭載することを考えています。特定の処理が行われた際に鳴らします。複数の効果音は同時になることができ、BGMとも共存可能です。
