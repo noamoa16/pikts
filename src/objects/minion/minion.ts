@@ -15,7 +15,7 @@ import {
 import { Random } from "../../core/random";
 import { Carriable } from "../carriable/carriable";
 import { Enemy } from "../enemy/enemy";
-import { MinionColor } from "./color";
+import { MinionColor, minionColorToColor3 } from "./color";
 import { Plant } from "./parts/plant";
 import { SeedMotion } from "./seedMotion";
 import { MinionAppearance } from "./appearance";
@@ -238,11 +238,17 @@ export abstract class Minion extends Entity {
         this.checkCollisions = false;
     }
 
+    /** 捕食中の Minion を指定した接地位置へ移動する。 */
+    public moveToEatenPosition(position: Vector3): void {
+        if (this.state !== MinionState.eaten) return;
+        this.groundingPosition = position.clone();
+    }
+
     /** 捕食者が捕食中に倒された場合に呼ぶ。 */
     public dieFromEating(): void {
         const deathPosition = this.position.clone();
         this.remove();
-        new SoulEffect(this.game, deathPosition);
+        new SoulEffect(this.game, deathPosition, minionColorToColor3(this.minionColor));
     }
 
     public becomeDisbanded(target: Vector3): void {

@@ -11,16 +11,16 @@ import { Effect } from "./effect";
 export class SoulEffect extends Effect {
     private static readonly DURATION_SECONDS = 3;
     private static readonly RISE_DISTANCE = 3;
-    private static readonly INIT_ALPHA = 0.3;
+    private static readonly INIT_ALPHA = 0.4;
     private readonly startPosition: Vector3;
     private readonly material: StandardMaterial;
 
-    constructor(game: Game, position: Vector3) {
+    constructor(game: Game, position: Vector3, color: Color3 = new Color3(0, 0, 1)) {
         const mesh = CreateSphere("soul-effect", { diameter: 1 / 8, segments: 16 }, game.scene);
         super(game, mesh);
         this.material = new StandardMaterial("soul-effect.material", game.scene);
-        this.material.diffuseColor = new Color3(0, 0, 1);
-        this.material.emissiveColor = new Color3(0, 0, 1);
+        this.material.diffuseColor = color.clone();
+        this.material.emissiveColor = color.clone();
         this.material.alpha = SoulEffect.INIT_ALPHA;
         this.material.backFaceCulling = false;
         mesh.material = this.material;

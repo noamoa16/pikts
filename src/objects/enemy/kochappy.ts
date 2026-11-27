@@ -182,6 +182,7 @@ export class Kochappy extends Enemy {
             this.rotation.x = this.feedingStartRotationX;
             this.rotation.y = this.feedingStartRotationY;
             this.currentState = KochappyState.eating;
+            this.moveEatenMinionInFront();
             this.setEatingPose();
         }
         if (this.predationElapsedSeconds >= Kochappy.PREDATION_DURATION_SECONDS) {
@@ -212,6 +213,22 @@ export class Kochappy extends Enemy {
             + Math.cos(this.feedingStartFacingAngle) * tilt;
         this.rotation.y = this.feedingStartRotationY
             + Math.sin(this.feedingStartFacingAngle) * tilt;
+    }
+
+    /** Minion を Kochappy の正面に移動する。 */
+    private moveEatenMinionInFront(): void {
+        const minion = this.eatenMinion;
+        if (!minion) return;
+
+        const facing = new Vector3(
+            Math.sin(this.feedingStartFacingAngle),
+            -Math.cos(this.feedingStartFacingAngle),
+            0,
+        );
+        const distance = (this.size + minion.size) / 2;
+        minion.moveToEatenPosition(
+            this.groundingPosition.add(facing.scale(distance)),
+        );
     }
 
     /**
