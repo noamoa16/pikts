@@ -23,8 +23,8 @@ export class GameInput {
             engine,
             (action, pressed) => this.handleAction(action, pressed),
             game.isDevelopment ? {
-                onCarrySpeed2xChange: enabled => {
-                    game.debugCarrySpeed2x = enabled;
+                onGameSpeed2xChange: enabled => {
+                    game.debugGameSpeed2x = enabled;
                 },
                 onAddMinions: () => this.addMinions(),
             } : undefined,

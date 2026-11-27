@@ -15,8 +15,8 @@ import { Effect } from "./effects/effect";
 
 export class Game {
     public readonly isDevelopment = import.meta.env.DEV;
-    /** 開発時の運搬速度チート */
-    public debugCarrySpeed2x = false;
+    /** 開発時のゲーム速度切替 */
+    public debugGameSpeed2x = false;
     public readonly objects: Entity[] = [];
     public readonly effects: Effect[] = [];
     public readonly camera: MainCamera;
@@ -42,10 +42,25 @@ export class Game {
 
     public static readonly TARGET_FPS = 60;
 
+    private frame = 0;
+    private readonly frameWaiters: { targetFrame: number; resolve: () => void }[] = [];
+
     private _time = 0;
     /** ゲーム内時間 */
     public get time(){ return this._time; }
     private set time(value: number){ this._time = value; }
+
+    /** ゲーム内フレーム数を基準に待機する。 */
+    public waitFrames(frames: number): Promise<void> {
+        const targetFrame = this.frame + Math.max(0, Math.ceil(frames));
+        if (targetFrame <= this.frame) return Promise.resolve();
+        return new Promise(resolve => this.frameWaiters.push({ targetFrame, resolve }));
+    }
+
+    /** 秒数をゲームフレーム数に換算して待機する。 */
+    public waitSeconds(seconds: number): Promise<void> {
+        return this.waitFrames(seconds * Game.TARGET_FPS);
+    }
 
     constructor(public readonly scene: Scene){
         this.camera = new MainCamera(this.scene);
@@ -109,7 +124,14 @@ export class Game {
         });
     }
 
-    public update(deltaSeconds: number): void {
+    public update(): void {
+        const deltaSeconds = 1 / Game.TARGET_FPS;
+        this.frame++;
+        for (let i = this.frameWaiters.length - 1; i >= 0; i--) {
+            if (this.frameWaiters[i].targetFrame <= this.frame) {
+                this.frameWaiters.splice(i, 1)[0].resolve();
+            }
+        }
         this.time += deltaSeconds;
         this.updateObjects(deltaSeconds);
         for (const effect of [...this.effects]) {

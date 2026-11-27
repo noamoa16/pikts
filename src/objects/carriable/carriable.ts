@@ -159,7 +159,7 @@ export abstract class Carriable extends Entity {
         const count = this.carriers.length;
         if(count >= this.minCarriers){
             const baseSpeed = 1.0 * ((count - this.minCarriers + 1) / this.maxCarriers + 1);
-            return baseSpeed * (this.game.isDevelopment && this.game.debugCarrySpeed2x ? 2 : 1);
+            return baseSpeed;
         }
         else{
             return 0;

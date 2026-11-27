@@ -71,7 +71,7 @@ export class CarriableAbsorption {
         const onion = this.onion;
         if(!onion) return;
 
-        await this.sleep(1_000);
+        await this.game.waitSeconds(1);
 
         const startPoint = onion.absorbingStartPoint;
         const endPoint = onion.absorbingEndPoint;
@@ -85,12 +85,8 @@ export class CarriableAbsorption {
             minion.becomeSeed(startPoint, endPoint, radius);
 
             if(i < this.nutrition - 1){
-                await this.sleep(100);
+                await this.game.waitSeconds(0.1);
             }
         }
-    }
-
-    private sleep(milliseconds: number): Promise<void> {
-        return new Promise(resolve => setTimeout(resolve, milliseconds));
     }
 }

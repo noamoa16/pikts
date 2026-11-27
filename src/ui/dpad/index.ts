@@ -1,13 +1,13 @@
 import type { Engine } from "#vendor/babylon";
 import type { Action } from "../../actions/action";
-import { CarrySpeedControl } from "../carrySpeedControl";
+import { GameSpeedControl } from "../gameSpeedControl";
 import { RecordingControl } from "../recordingControl";
 import { getViewportUiScale } from "../viewportScale";
 import { DpadButton } from "./button";
 
 type OnPressed = (action: Action, pressed: boolean) => void;
 type DebugControls = {
-    onCarrySpeed2xChange: (enabled: boolean) => void;
+    onGameSpeed2xChange: (enabled: boolean) => void;
     onAddMinions: () => void;
 };
 
@@ -19,7 +19,7 @@ export class Dpad {
     private readonly buttons = new Map<Action, DpadButton>();
     private holdDescription: HTMLSpanElement | null = null;
     private whistleDescription: HTMLSpanElement | null = null;
-    private carrySpeedControl: CarrySpeedControl | null = null;
+    private gameSpeedControl: GameSpeedControl | null = null;
     private recordingControl: RecordingControl | null = null;
 
     constructor(
@@ -129,9 +129,9 @@ export class Dpad {
             touchAction: "manipulation",
         } satisfies Partial<CSSStyleDeclaration>);
 
-        this.carrySpeedControl = new CarrySpeedControl(controls.onCarrySpeed2xChange);
+        this.gameSpeedControl = new GameSpeedControl(controls.onGameSpeed2xChange);
         this.recordingControl = new RecordingControl(canvas, drawRecordingOverlay);
-        panel.append(this.carrySpeedControl.element, this.recordingControl.element);
+        panel.append(this.gameSpeedControl.element, this.recordingControl.element);
         return panel;
     }
 
@@ -177,7 +177,7 @@ export class Dpad {
     }
 
     public remove(): void {
-        this.carrySpeedControl?.dispose();
+        this.gameSpeedControl?.dispose();
         this.recordingControl?.dispose();
         this.container.remove();
     }

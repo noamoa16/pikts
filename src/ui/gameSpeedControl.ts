@@ -1,7 +1,7 @@
 import { getViewportUiScale } from "./viewportScale";
 
-/** Development toggle for changing the speed of carried objects. */
-export class CarrySpeedControl {
+/** Development toggle for changing game speed. */
+export class GameSpeedControl {
     private static readonly SIZE = 96;
     private static readonly MIN_SIZE = 30;
 
@@ -23,7 +23,7 @@ export class CarrySpeedControl {
         } satisfies Partial<CSSStyleDeclaration>);
 
         const text = document.createElement("span");
-        text.textContent = "Carry Speed 2x";
+        text.textContent = "Game Speed 2x";
 
         const status = document.createElement("span");
         status.textContent = "OFF";
@@ -34,7 +34,7 @@ export class CarrySpeedControl {
         toggle.checked = false;
         toggle.setAttribute("role", "switch");
         toggle.setAttribute("aria-checked", "false");
-        toggle.setAttribute("aria-label", "Carry Speed 2x");
+        toggle.setAttribute("aria-label", "Game Speed 2x");
         Object.assign(toggle.style, {
             width: "16px",
             height: "16px",
@@ -56,8 +56,8 @@ export class CarrySpeedControl {
 
     private readonly adjustLayout = (): void => {
         this.element.style.zoom = getViewportUiScale(
-            CarrySpeedControl.SIZE,
-            CarrySpeedControl.MIN_SIZE,
+            GameSpeedControl.SIZE,
+            GameSpeedControl.MIN_SIZE,
         ).toString();
     };
 

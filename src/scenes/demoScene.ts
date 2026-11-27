@@ -98,8 +98,8 @@ export function createDemoScene(engine: Engine): Scene {
 
     // 定期実行
     game.scene.onBeforeRenderObservable.add(() => {
-        const deltaSeconds = Math.min(engine.getDeltaTime() / 1000, 1 / Game.TARGET_FPS);
-        game.update(deltaSeconds);
+        const frameCount = game.debugGameSpeed2x ? 2 : 1;
+        for (let frame = 0; frame < frameCount; frame++) game.update();
         playerDebugOverlay.update();
     });
 
