@@ -92,7 +92,6 @@ export function createDemoScene(engine: Engine): Scene {
     new YellowPellet20(game, new Vector3(-9, 3, 0));
     new BluePellet20(game, new Vector3(-11, 3, 0));
 
-    // shadowGen =
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
     const playerDebugOverlay = new PlayerDebugOverlay(game, player, game.isDevelopment ? engine : null);
     new GameInput(game, player, engine);

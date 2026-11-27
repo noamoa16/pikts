@@ -21,7 +21,7 @@ export class Kochappy extends Enemy {
     private static readonly FEEDING_RETURN_SECONDS = 0.4;
     private static readonly FEEDING_COOLDOWN_SECONDS = 1;
     private static readonly FEEDING_TURN_RADIANS = Math.PI / 4;
-    private static readonly PREDATION_DURATION_SECONDS = 3;
+    private static readonly PREDATION_DURATION_SECONDS = 4;
     private static readonly EATING_TILT_RADIANS = Math.PI / 8;
     private static readonly CHASE_SPEED = 0.5;
     private currentState = KochappyState.free;
@@ -44,7 +44,7 @@ export class Kochappy extends Enemy {
     }
 
     constructor(game: Game, position: Vector3) {
-        super(game, position, 0.5, 20, undefined, Shape.Sphere);
+        super(game, position, 0.5, 15, undefined, Shape.Sphere);
         this.speed = Kochappy.CHASE_SPEED;
         new KochappyAppearance(this.mesh, this.size, `${this.name}.${this.id}`, game);
     }
@@ -136,6 +136,7 @@ export class Kochappy extends Enemy {
         return bestMinion;
     }
 
+    /** 捕食処理を開始 */
     private startFeeding(minion: Minion): void {
         this.eatenMinion = minion;
         minion.becomeEaten();
@@ -147,6 +148,10 @@ export class Kochappy extends Enemy {
         this.feedingStartFacingAngle = this.rotation.z;
     }
 
+    /**
+     * 捕食しようとする際のアクション
+     * 実際に捕食している場合とそうでない場合の両方で実行する
+     */
     private updateFeeding(deltaSeconds: number): void {
         const duration = Kochappy.FEEDING_TURN_SECONDS + Kochappy.FEEDING_RETURN_SECONDS;
         this.feedingElapsedSeconds = Math.min(this.feedingElapsedSeconds + deltaSeconds, duration);
@@ -155,15 +160,17 @@ export class Kochappy extends Enemy {
             Kochappy.PREDATION_DURATION_SECONDS,
         );
 
-        const turnProgress = Math.min(
+        const turnProgress = Math.min( // [0, 1]
             this.feedingElapsedSeconds / Kochappy.FEEDING_TURN_SECONDS,
             1,
         );
-        const returnProgress = Math.max(
+        const returnProgress = Math.max( // [0, 1]
             0,
             (this.feedingElapsedSeconds - Kochappy.FEEDING_TURN_SECONDS)
                 / Kochappy.FEEDING_RETURN_SECONDS,
         );
+
+        // 動作の進捗に応じて前に回転させる
         const clockwiseTurn = Kochappy.FEEDING_TURN_RADIANS * (turnProgress - returnProgress);
         this.rotation.x = this.feedingStartRotationX
             + Math.cos(this.feedingStartFacingAngle) * clockwiseTurn;
@@ -171,6 +178,7 @@ export class Kochappy extends Enemy {
             + Math.sin(this.feedingStartFacingAngle) * clockwiseTurn;
 
         if (this.feedingElapsedSeconds >= duration) {
+            /** 捕食中であることを示す動作に切り替える */
             this.rotation.x = this.feedingStartRotationX;
             this.rotation.y = this.feedingStartRotationY;
             this.currentState = KochappyState.eating;
@@ -181,6 +189,9 @@ export class Kochappy extends Enemy {
         }
     }
 
+    /**
+     * 実際に捕食しているときのアクション
+     */
     private updateEating(deltaSeconds: number): void {
         this.predationElapsedSeconds = Math.min(
             this.predationElapsedSeconds + deltaSeconds,
@@ -192,6 +203,9 @@ export class Kochappy extends Enemy {
         }
     }
 
+    /**
+     * 実際に捕食しているときに、体を前方に傾けて固定する
+     */
     private setEatingPose(): void {
         const tilt = Kochappy.EATING_TILT_RADIANS;
         this.rotation.x = this.feedingStartRotationX
@@ -200,6 +214,9 @@ export class Kochappy extends Enemy {
             + Math.sin(this.feedingStartFacingAngle) * tilt;
     }
 
+    /**
+     * Minion を完全に捕食しきったときに実行
+     */
     private finishPredation(): void {
         const minion = this.eatenMinion;
         this.eatenMinion = null;
@@ -210,6 +227,9 @@ export class Kochappy extends Enemy {
         this.feedingCooldownRemainingSeconds = Kochappy.FEEDING_COOLDOWN_SECONDS;
     }
 
+    /**
+     * 捕食処理を中断
+     */
     private releaseEatenMinion(): void {
         const minion = this.eatenMinion;
         this.eatenMinion = null;

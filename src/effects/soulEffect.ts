@@ -11,17 +11,19 @@ import { Effect } from "./effect";
 export class SoulEffect extends Effect {
     private static readonly DURATION_SECONDS = 3;
     private static readonly RISE_DISTANCE = 3;
+    private static readonly INIT_ALPHA = 0.3;
     private readonly startPosition: Vector3;
+    private readonly material: StandardMaterial;
 
     constructor(game: Game, position: Vector3) {
         const mesh = CreateSphere("soul-effect", { diameter: 1 / 8, segments: 16 }, game.scene);
-        const material = new StandardMaterial("soul-effect.material", game.scene);
-        material.diffuseColor = new Color3(0, 0, 1);
-        material.emissiveColor = new Color3(0, 0, 1);
-        material.alpha = 0.15;
-        material.backFaceCulling = false;
-        mesh.material = material;
         super(game, mesh);
+        this.material = new StandardMaterial("soul-effect.material", game.scene);
+        this.material.diffuseColor = new Color3(0, 0, 1);
+        this.material.emissiveColor = new Color3(0, 0, 1);
+        this.material.alpha = SoulEffect.INIT_ALPHA;
+        this.material.backFaceCulling = false;
+        mesh.material = this.material;
         this.startPosition = position.clone();
         this.setPosition(this.startPosition);
     }
@@ -37,6 +39,7 @@ export class SoulEffect extends Effect {
             this.startPosition.y,
             this.startPosition.z + SoulEffect.RISE_DISTANCE * progress,
         );
+        this.material.alpha = (1 - progress) * SoulEffect.INIT_ALPHA;
         if (progress >= 1) this.game.removeEffect(this);
     }
 }
