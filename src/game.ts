@@ -12,6 +12,7 @@ import { Onion } from "./objects/onion/onion";
 import { EntityInspector } from "./ui/debug/entityInspector";
 import { GameHudDisplay } from "./ui/gameHudDisplay";
 import { Effect } from "./effects/effect";
+import { AudioManager } from "./audio/audioManager";
 
 export class Game {
     public readonly isDevelopment = import.meta.env.DEV;
@@ -24,6 +25,7 @@ export class Game {
     public readonly entityInspector: EntityInspector | null;
     public readonly frameTimerUpdate = new FrameTimer(30);
     public readonly frameTimerCollision = new FrameTimer(30);
+    private readonly audio = new AudioManager();
 
     private _cachedFigure: Figure[] = [];
     public get cachedFigure() { return this._cachedFigure; }
@@ -69,7 +71,25 @@ export class Game {
         this.entityInspector = this.isDevelopment
             ? new EntityInspector(this, canvas)
             : null;
-        this.scene.onDisposeObservable.add(() => this.gameHudDisplay.remove());
+        this.scene.onDisposeObservable.add(() => {
+            this.gameHudDisplay.remove();
+            this.audio.dispose();
+        });
+    }
+
+    /** 効果音を再生する。name は public/audio/sfx からの相対パス（拡張子省略可）。 */
+    public playSoundEffect(name: string): void {
+        this.audio.playSoundEffect(name);
+    }
+
+    /** BGM をループ再生する。name は public/audio/bgm からの相対パス（拡張子省略可）。 */
+    public playBgm(name: string): void {
+        this.audio.playBgm(name);
+    }
+
+    /** 再生中の BGM を停止する。 */
+    public stopBgm(): void {
+        this.audio.stopBgm();
     }
 
     private cacheFigure(){
