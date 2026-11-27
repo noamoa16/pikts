@@ -28,7 +28,7 @@ export class GameInput {
                 },
                 onAddMinions: () => this.addMinions(),
             } : undefined,
-            context => game.minionCountDisplay.drawRecordingOverlay(context),
+            context => game.gameHudDisplay.drawRecordingOverlay(context),
         );
 
         player.setKeyboardActionHandler((action, pressed) => {
