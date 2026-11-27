@@ -248,7 +248,10 @@ export abstract class Minion extends Entity {
     public dieFromEating(): void {
         const deathPosition = this.position.clone();
         this.remove();
-        new SoulEffect(this.game, deathPosition, minionColorToColor3(this.minionColor));
+        new SoulEffect(this.game, deathPosition, {
+            color: minionColorToColor3(this.minionColor),
+            zScale: 2,
+        });
     }
 
     public becomeDisbanded(target: Vector3): void {
