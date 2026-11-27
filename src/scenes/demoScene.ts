@@ -5,7 +5,6 @@ import {
     Scene,
     Vector3,
 } from "#vendor/babylon";
-import { PlayerDebugOverlay } from "../ui/debug/playerDebugOverlay";
 import { createFillLight, createShadowMap, createSunLight } from "../rendering/light";
 import { Block } from "../objects/block";
 import { Player } from "../objects/player/player";
@@ -37,7 +36,6 @@ import {
     YellowRedPelletPlant1,
 } from "../objects/enemy/pelletPlant/pelletPlants";
 import { Kochappy } from "../objects/enemy/kochappy";
-import { GameInput } from "../game/input";
 
 // let shadowGen: ShadowGenerator;
 
@@ -93,20 +91,7 @@ export function createDemoScene(engine: Engine): Scene {
     new BluePellet20(game, new Vector3(-11, 3, 0));
 
     createShadowMap(sunLight, game.objects.map(o => o.mesh));
-    const playerDebugOverlay = new PlayerDebugOverlay(game, player, game.isDevelopment ? engine : null);
-    new GameInput(game, player, engine);
-
-    // 定期実行
-    game.scene.onBeforeRenderObservable.add(() => {
-        const frameCount = game.debugGameSpeed2x ? 2 : 1;
-        for (let frame = 0; frame < frameCount; frame++) game.update();
-        playerDebugOverlay.update();
-    });
-
-    // Sceneが破棄されたらイベントを無効化
-    game.scene.onDisposeObservable.add(() => {
-        playerDebugOverlay.remove();
-    });
+    game.start({ player, engine });
 
     return game.scene;
 }

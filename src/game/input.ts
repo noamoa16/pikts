@@ -1,6 +1,6 @@
 import { Vector3, type Engine } from "#vendor/babylon";
 import { isMoveAction, type Action } from "../actions/action";
-import { Game } from "../game";
+import type { Game } from "../game";
 import { Minion } from "../objects/minion/minion";
 import { MinionColor } from "../objects/minion/color";
 import { MinionState } from "../objects/minion/state";

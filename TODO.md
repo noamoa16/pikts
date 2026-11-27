@@ -1,5 +1,4 @@
 - プロンプト：
-  - demoSceneで、game.scene.onBeforeRenderObservable.add と game.scene.onDisposeObservable.add を game.start関数で簡単に実行できるようにして。playerDebugOverlay と new GameInput(...) もその中に含められそうなら含めて。
   - MinionがBlockの角に引っかかって動けなくなってしまうことがあるようです。Blockの角に引っかかっていそうなら、Blockから少しだけMinionが動いて引っかからないようにする処理を入れて。
   - PelletPlant1およびKochappyについて、投げたMinionがそのEnemyの上部にヒットした場合に10ダメージを与えるようにして。この処理は今後他の一部のEnemyにも導入したいので、Enemy側で実装し、この仕様を採用するかどうかをEnemyを継承する各クラスがboolean定数をoverrideする形で決められるようにして。
   - 炎オブジェクトを実装して。

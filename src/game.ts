@@ -1,4 +1,4 @@
-import { Scene } from "#vendor/babylon";
+import { Scene, type Engine } from "#vendor/babylon";
 import { FrameTimer } from "./core/frameTimer";
 import { buildGridMap } from "./core/gridMapBuilder";
 import { Entity } from "./objects/entity";
@@ -13,6 +13,8 @@ import { EntityInspector } from "./ui/debug/entityInspector";
 import { GameHudDisplay } from "./ui/gameHudDisplay";
 import { Effect } from "./effects/effect";
 import { AudioManager } from "./audio/audioManager";
+import { GameInput } from "./game/input";
+import { PlayerDebugOverlay } from "./ui/debug/playerDebugOverlay";
 
 export class Game {
     public readonly isDevelopment = import.meta.env.DEV;
@@ -45,6 +47,7 @@ export class Game {
     public static readonly TARGET_FPS = 60;
 
     private frame = 0;
+    private started = false;
     private readonly frameWaiters: { targetFrame: number; resolve: () => void }[] = [];
 
     private _time = 0;
@@ -90,6 +93,38 @@ export class Game {
     /** 再生中の BGM を停止する。 */
     public stopBgm(): void {
         this.audio.stopBgm();
+    }
+
+    /** ゲームを開始し、フレーム更新と任意のシーンイベント処理を登録する。 */
+    public start(options: {
+        player?: Player;
+        engine?: Engine;
+        onBeforeRender?: () => void;
+        onDispose?: () => void;
+    } = {}): void {
+        if (this.started) return;
+
+        const { player, engine, onBeforeRender, onDispose } = options;
+        if (player && !engine) {
+            throw new Error("Game.start requires an engine when a player is provided.");
+        }
+        this.started = true;
+        const playerDebugOverlay = player
+            ? new PlayerDebugOverlay(this, player, this.isDevelopment ? engine! : null)
+            : null;
+        if (player) new GameInput(this, player, engine!);
+
+        this.scene.onBeforeRenderObservable.add(() => {
+            const frameCount = this.debugGameSpeed2x ? 2 : 1;
+            for (let frame = 0; frame < frameCount; frame++) this.update();
+            playerDebugOverlay?.update();
+            onBeforeRender?.();
+        });
+
+        this.scene.onDisposeObservable.add(() => {
+            playerDebugOverlay?.remove();
+            onDispose?.();
+        });
     }
 
     private cacheFigure(){
