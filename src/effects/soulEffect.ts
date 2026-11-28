@@ -13,6 +13,8 @@ type SoulEffectOptions = {
     radiusScale?: number;
     /** 球の z 軸方向の倍率 */
     zScale?: number;
+    /** 上昇中にカメラ角度に沿った XY 軌道を描く */
+    moveInXY?: boolean;
 };
 
 /** 敵や Minion が倒れたときに上昇して消える魂。 */
@@ -22,9 +24,16 @@ export class SoulEffect extends Effect {
     private static readonly INIT_ALPHA = 0.4;
     private readonly startPosition: Vector3;
     private readonly material: StandardMaterial;
+    private readonly xyDirection: number;
+    private readonly cameraAngle: number;
 
     constructor(game: Game, position: Vector3, options: SoulEffectOptions = {}) {
-        const { color = new Color3(0, 0, 1), radiusScale = 1, zScale = 1 } = options;
+        const {
+            color = new Color3(0, 0, 1),
+            radiusScale = 1,
+            zScale = 1,
+            moveInXY = false,
+        } = options;
         const mesh = CreateSphere("soul-effect", {
             diameter: (1 / 8) * radiusScale,
             segments: 16,
@@ -38,8 +47,15 @@ export class SoulEffect extends Effect {
         this.material.backFaceCulling = false;
         mesh.material = this.material;
         this.startPosition = position.clone();
+        this.xyDirection = Math.random() < 0.5 ? -1 : 1;
+        // MainCamera.rotation is π/2 at its default view; subtract it so that
+        // the default camera angle is treated as θ = 0.
+        this.cameraAngle = moveInXY ? game.camera.rotation - Math.PI / 2 : 0;
+        this.moveInXY = moveInXY;
         this.setPosition(this.startPosition);
     }
+
+    private readonly moveInXY: boolean;
 
     public override update(deltaSeconds: number): void {
         this.elapsedSeconds = Math.min(
@@ -47,9 +63,12 @@ export class SoulEffect extends Effect {
             SoulEffect.DURATION_SECONDS,
         );
         const progress = this.elapsedSeconds / SoulEffect.DURATION_SECONDS;
+        const radialOffset = this.moveInXY
+            ? this.xyDirection * Math.sin(2 * Math.PI * progress) / 2
+            : 0;
         this.mesh.position.set(
-            this.startPosition.x,
-            this.startPosition.y,
+            this.startPosition.x + radialOffset * Math.cos(this.cameraAngle),
+            this.startPosition.y + radialOffset * Math.sin(this.cameraAngle),
             this.startPosition.z + SoulEffect.RISE_DISTANCE * progress,
         );
         this.material.alpha = (1 - progress) * SoulEffect.INIT_ALPHA;

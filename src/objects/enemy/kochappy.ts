@@ -46,7 +46,7 @@ export class Kochappy extends Enemy {
         const deathPosition = this.position.clone();
         this.disposeHpMeter();
         new KochappyCarcass(this.game, deathPosition, this.mesh, this.size);
-        new SoulEffect(this.game, deathPosition, { radiusScale: 2 });
+        new SoulEffect(this.game, deathPosition, { radiusScale: 2, moveInXY: true });
         super.die();
     }
 
