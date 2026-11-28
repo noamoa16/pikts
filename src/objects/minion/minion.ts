@@ -63,6 +63,9 @@ export abstract class Minion extends Entity {
     public carried: Carriable | null = null;
     public attackTarget: Enemy | null = null;
     private attackElapsedSeconds = 0;
+    private lastThrownPreviousPosition: Vector3 | null = null;
+    private lastThrownCurrentPosition: Vector3 | null = null;
+    private lastThrownWasDescending = false;
     private disbandTarget: Vector3 | null = null;
     private disbandRemainingSeconds = 0;
     private readonly seedMotion = new SeedMotion();
@@ -119,6 +122,10 @@ export abstract class Minion extends Entity {
     }
 
     override update(deltaSeconds: number): void {
+        this.lastThrownPreviousPosition = null;
+        this.lastThrownCurrentPosition = null;
+        this.lastThrownWasDescending = false;
+
         if (this.state === MinionState.eaten) {
             this.updateColor();
             return;
@@ -134,6 +141,11 @@ export abstract class Minion extends Entity {
 
         const positionBeforePhysicsUpdate = this.position.clone();
         super.update(deltaSeconds);
+        if (this.state === MinionState.thrown) {
+            this.lastThrownPreviousPosition = positionBeforePhysicsUpdate;
+            this.lastThrownCurrentPosition = this.position.clone();
+            this.lastThrownWasDescending = this.prevVelocity.z < 0;
+        }
         const positionBeforeStateUpdate = this.position.clone();
         updateMinionState(this, deltaSeconds, this.stateUpdateActions);
         if ([
@@ -157,6 +169,24 @@ export abstract class Minion extends Entity {
 
     private updateColor(): void {
         this.appearance.update(this.minionColor, this.state);
+    }
+
+    /** Whether the most recent thrown update ended in a downward landing on an Enemy's top. */
+    public wasThrownOntoTopOf(enemy: Enemy): boolean {
+        const previousPosition = this.lastThrownPreviousPosition;
+        const currentPosition = this.lastThrownCurrentPosition;
+        if (!previousPosition || !currentPosition || !this.lastThrownWasDescending) return false;
+
+        if (enemy.shape === Shape.Sphere) {
+            return currentPosition.z >= enemy.position.z;
+        }
+
+        const enemyTop = enemy.topPosition.z;
+        const previousBottom = previousPosition.z - this.size / 2;
+        const currentBottom = currentPosition.z - this.size / 2;
+        const tolerance = 1e-4;
+        return previousBottom >= enemyTop - tolerance
+            && currentBottom <= enemyTop + tolerance;
     }
 
     /** Onion から生まれた直後の軌道を設定する */

@@ -15,6 +15,7 @@ import { Enemy } from "../enemy";
 const FLOWER_PETAL_COUNT = 8;
 
 export abstract class PelletPlant1 extends Enemy {
+    protected static override readonly TAKES_THROWN_MINION_TOP_HIT_DAMAGE = true;
     private pelletMaterial!: StandardMaterial;
 
     constructor(game: Game, position: Vector3){

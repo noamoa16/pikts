@@ -15,6 +15,7 @@ export enum KochappyState {
 }
 
 export class Kochappy extends Enemy {
+    protected static override readonly TAKES_THROWN_MINION_TOP_HIT_DAMAGE = true;
     private static readonly MINION_SEARCH_MIN_DISTANCE = 0.5;
     private static readonly MINION_SEARCH_MAX_DISTANCE = 1.5;
     private static readonly FEEDING_TURN_SECONDS = 0.4;

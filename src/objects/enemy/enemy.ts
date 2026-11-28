@@ -3,6 +3,7 @@ import { Game } from "../../game";
 import { Shape } from "../../physics/figure";
 import { Entity } from "../entity";
 import { HpMeter } from "./hpMeter";
+import { Minion } from "../minion/minion";
 
 export abstract class Enemy extends Entity {
     private readonly hpMeter: HpMeter;
@@ -19,6 +20,12 @@ export abstract class Enemy extends Entity {
 
     protected static readonly MAX_HP: number = 1;
 
+    /** 上に Minion を当てた際に10ダメージを与える */
+    protected static readonly TAKES_THROWN_MINION_TOP_HIT_DAMAGE: boolean = false;
+    private get takesThrownMinionTopHitDamage(): boolean {
+        return (this.constructor as typeof Enemy).TAKES_THROWN_MINION_TOP_HIT_DAMAGE;
+    }
+
     constructor(
         game: Game,
         position: Vector3,
@@ -30,6 +37,17 @@ export abstract class Enemy extends Entity {
         super(game, "enemy", shape, size, position, { fall: true, height });
         this.hp = this.maxHp = hp;
         this.hpMeter = new HpMeter(this.mesh, this.scene, this.height);
+        this.collisionEventsEnabled = this.takesThrownMinionTopHitDamage;
+    }
+
+    public override onCollisionEnter(entity: Entity): void {
+        if (
+            this.takesThrownMinionTopHitDamage
+            && entity instanceof Minion
+            && entity.wasThrownOntoTopOf(this)
+        ) {
+            this.damage(10);
+        }
     }
 
     public damage(damage: number){
