@@ -135,8 +135,12 @@ export abstract class Entity {
     ) {
         this.id = Entity.count++;
         this.size = size;
-        if (options.height !== undefined && this.shape !== Shape.Cylinder) {
-            throw new Error("height can only be specified for Cylinder entities");
+        if (
+            options.height !== undefined
+            && this.shape !== Shape.Cylinder
+            && this.shape !== Shape.RectangularPrism
+        ) {
+            throw new Error("height can only be specified for Cylinder or RectangularPrism entities");
         }
         this._height = options.height ?? (
             this.shape === Shape.Cylinder ?

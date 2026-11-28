@@ -37,6 +37,7 @@ import {
 } from "../objects/enemy/pelletPlant/pelletPlants";
 import { Kochappy } from "../objects/enemy/kochappy";
 import { Flame } from "../objects/flame";
+import { Water } from "../objects/water";
 
 // let shadowGen: ShadowGenerator;
 
@@ -80,6 +81,7 @@ export function createDemoScene(engine: Engine): Scene {
     new RandomPelletPlant1(game, new Vector3(-5, -1, 0));
     new Kochappy(game, new Vector3(4, 3, 0));
     new Flame(game, new Vector3(3, -2, 0));
+    new Water(game, new Vector3(-8, -2, 0));
 
     new Block(game, new Vector3(-6, -1, 0));
     new RedPellet1(game, new Vector3(-6, -1, 1));

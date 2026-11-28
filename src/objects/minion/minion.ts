@@ -31,7 +31,7 @@ import {
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
-    public static readonly FIRE_RESISTANT = false;
+    public static readonly FIRE_RESISTANT: boolean = false;
     public static readonly BURNING_DURATION_SECONDS = 2;
     private static readonly BLOCK_WALL_NUDGE = 0.01;
     private static readonly BLOCK_WALL_CONTACT_TOLERANCE = 0.02;

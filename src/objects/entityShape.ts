@@ -16,6 +16,7 @@ import {
     Figure,
     Shape,
     shapeToString,
+    RectangularPrism as RectangularPrismFigure,
     Sphere,
     Slope,
 } from "../physics/figure";
@@ -63,7 +64,18 @@ const ENTITY_SHAPES: Record<Shape, EntityShapeDefinition> = {
         createFigure: (center, size, height) => new Cylinder(center, size / 2, height),
         getInitialRotation: () => new Vector3(Math.PI / 2, 0, 0),
     },
-    [Shape.RectangularPrism]: unsupportedShapeDefinition(Shape.RectangularPrism),
+    [Shape.RectangularPrism]: {
+        createMesh: ({ scene, name, size, height }) => CreateBox(
+            name,
+            { width: size, height: size, depth: height },
+            scene,
+        ),
+        createFigure: (center, size, height) => new RectangularPrismFigure(
+            center,
+            new Vector3(size, size, height),
+        ),
+        getInitialRotation: () => Vector3.Zero(),
+    },
     [Shape.Slope]: {
         createMesh: ({ scene, position, size, upward }) => createSlopeMesh(
             scene,
@@ -76,15 +88,6 @@ const ENTITY_SHAPES: Record<Shape, EntityShapeDefinition> = {
         ),
     },
 };
-
-function unsupportedShapeDefinition(shape: Shape): EntityShapeDefinition {
-    return {
-        createMesh: () => {
-            throw new Error(`Entity() not implemented for ${shapeToString(shape)}`);
-        },
-        getInitialRotation: () => Vector3.Zero(),
-    };
-}
 
 export function createEntityShape(
     shape: Shape,
