@@ -2,6 +2,7 @@ import { Vector3 } from "#vendor/babylon";
 import { Shape } from "../../physics/figure";
 import { Game } from "../../game";
 import { Entity } from "../entity";
+import { Block } from "../block";
 import { Player } from "../player/player";
 import { Cursor } from "../player/parts/cursor";
 import { MinionState } from "./state";
@@ -30,6 +31,8 @@ import {
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
+    private static readonly BLOCK_WALL_NUDGE = 0.01;
+    private static readonly BLOCK_WALL_CONTACT_TOLERANCE = 0.02;
     public static readonly COLOR_ORDER: readonly MinionColor[] = [
         MinionColor.red,
         MinionColor.yellow,
@@ -205,10 +208,88 @@ export abstract class Minion extends Entity {
         options: { ignoredEntities?: readonly Entity[]; strict?: boolean } = {}
     ): Vector3 {
         // 投げ状態のときはスロープに触れたときに移動を止めるようにする
-        return super.moveFor(dir, {
+        const actual = super.moveFor(dir, {
             ...options,
             strict: this.state == MinionState.thrown,
         });
+        if (this.wasMovementBlocked(dir, actual)) {
+            const escape = this.getBlockWallEscape(dir, options.ignoredEntities);
+            if (escape) {
+                if (escape.overlapping) {
+                    // Collision movement cannot escape an existing overlap, so resolve it directly.
+                    this.position.addInPlace(escape.displacement);
+                } else {
+                    super.moveFor(escape.displacement, options);
+                }
+            }
+        }
+        return actual;
+    }
+
+    private wasMovementBlocked(requested: Vector3, actual: Vector3): boolean {
+        const requestedLength = Math.hypot(requested.x, requested.y);
+        if (requestedLength <= Number.EPSILON) return false;
+        const actualAlongRequest = (actual.x * requested.x + actual.y * requested.y) / requestedLength;
+        return actualAlongRequest < requestedLength - this.size * 0.05;
+    }
+
+    private getBlockWallEscape(
+        requested: Vector3,
+        ignoredEntities: readonly Entity[] = [],
+    ): { displacement: Vector3; overlapping: boolean } | null {
+        const radius = this.size / 2;
+        for (const entity of this.game.objects) {
+            if (!(entity instanceof Block) || !entity.checkCollisions || ignoredEntities.includes(entity)) {
+                continue;
+            }
+            const half = entity.size / 2;
+            const dx = this.position.x - entity.position.x;
+            const dy = this.position.y - entity.position.y;
+            if (Math.abs(this.position.z - entity.position.z) >= radius + half) continue;
+
+            let awayX = 0;
+            let awayY = 0;
+            let penetration: number;
+            const outsideX = Math.abs(dx) > half;
+            const outsideY = Math.abs(dy) > half;
+            if (!outsideX && !outsideY) {
+                // The center is over the block footprint. Exit through its nearest side.
+                const clearX = half - Math.abs(dx);
+                const clearY = half - Math.abs(dy);
+                if (clearX <= clearY) {
+                    awayX = dx === 0 ? -Math.sign(requested.x || 1) : Math.sign(dx);
+                    penetration = clearX + radius;
+                } else {
+                    awayY = dy === 0 ? -Math.sign(requested.y || 1) : Math.sign(dy);
+                    penetration = clearY + radius;
+                }
+            } else {
+                const closestX = Math.max(-half, Math.min(half, dx));
+                const closestY = Math.max(-half, Math.min(half, dy));
+                awayX = dx - closestX;
+                awayY = dy - closestY;
+                const distance = Math.hypot(awayX, awayY);
+                if (distance <= Number.EPSILON) continue;
+                penetration = radius - distance;
+                awayX /= distance;
+                awayY /= distance;
+            }
+
+            const overlapping = penetration >= 0;
+            if (!overlapping) {
+                const gap = -penetration;
+                if (gap > Minion.BLOCK_WALL_CONTACT_TOLERANCE) continue;
+                if (requested.x * awayX + requested.y * awayY >= 0) continue;
+            }
+            const distance = overlapping
+                ? penetration + Minion.BLOCK_WALL_NUDGE
+                : Minion.BLOCK_WALL_NUDGE;
+            return {
+                displacement: new Vector3(awayX * distance, awayY * distance, 0),
+                overlapping,
+            };
+        }
+        return null;
     }
 
     override onCollisionEnter(entity: Entity): void {
