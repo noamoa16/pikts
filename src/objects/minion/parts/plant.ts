@@ -12,6 +12,8 @@ import { Minion } from "../minion";
 /** Minion の頭頂部に付ける、当たり判定のない植物パーツ */
 export class Plant {
     private readonly leafMaterial: StandardMaterial;
+    private readonly stemMaterial: StandardMaterial;
+    private readonly veinMaterial: StandardMaterial;
     private readonly glowMaterial: StandardMaterial;
 
     constructor(scene: Scene, minion: Minion) {
@@ -33,11 +35,12 @@ export class Plant {
         stem.rotation.x = Math.PI / 2;
         stem.isPickable = false;
         stem.checkCollisions = false;
-        stem.material = this.createMaterial(
+        this.stemMaterial = this.createMaterial(
             scene,
             `${minion.name}.plant.stem.material`,
             new Color3(0.12, 0.55, 0.12),
         );
+        stem.material = this.stemMaterial;
 
         // x-z 平面に広がる楕円形の葉を、球体を薄くして表現する。
         const leaf = CreateSphere(
@@ -89,11 +92,12 @@ export class Plant {
         vein.rotation.x = Math.PI / 2;
         vein.isPickable = false;
         vein.checkCollisions = false;
-        vein.material = this.createMaterial(
+        this.veinMaterial = this.createMaterial(
             scene,
             `${minion.name}.plant.vein.material`,
             new Color3(0.02, 0.25, 0.04),
         );
+        vein.material = this.veinMaterial;
     }
 
     public setBuriedGlow(color: Color3 | null): void {
@@ -103,6 +107,18 @@ export class Plant {
         this.glowMaterial.diffuseColor = color ?? new Color3(0, 0, 0);
         this.glowMaterial.emissiveColor = color ?? new Color3(0, 0, 0);
         this.glowMaterial.alpha = color ? 0.18 : 0;
+    }
+
+    public setBurning(burning: boolean): void {
+        this.leafMaterial.diffuseColor = burning
+            ? new Color3(1, 0, 0)
+            : new Color3(0.2, 0.75, 0.2);
+        this.stemMaterial.diffuseColor = burning
+            ? new Color3(0.65, 0.04, 0.04)
+            : new Color3(0.12, 0.55, 0.12);
+        this.veinMaterial.diffuseColor = burning
+            ? new Color3(0.35, 0.02, 0.02)
+            : new Color3(0.02, 0.25, 0.04);
     }
 
     private createMaterial(scene: Scene, name: string, color: Color3): StandardMaterial {

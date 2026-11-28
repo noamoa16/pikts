@@ -21,6 +21,7 @@ export class MinionAppearance {
             ? minionColorToColor3(color)
             : null;
         this.plant.setBuriedGlow(glowColor);
+        this.plant.setBurning(state === MinionState.burning);
 
         const material = this.mesh.material;
         if (material) {

@@ -8,4 +8,5 @@ export enum MinionState {
     seed,
     buried,
     eaten,
+    burning,
 }

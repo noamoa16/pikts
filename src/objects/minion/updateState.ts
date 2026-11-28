@@ -32,6 +32,7 @@ export type MinionStateUpdateActions = {
     stopCarrying(): void;
     stopSelfMovement(): void;
     stopMovement(): void;
+    updateBurning(deltaSeconds: number): void;
 };
 
 export function updateMinionState(
@@ -57,6 +58,10 @@ export function updateMinionState(
             return;
         case MinionState.attack:
             updateAttack(minion, deltaSeconds, actions);
+            return;
+        case MinionState.burning:
+            actions.updateBurning(deltaSeconds);
+            actions.setCollisionsEnabled(true);
             return;
         default:
             actions.setCollisionsEnabled(true);

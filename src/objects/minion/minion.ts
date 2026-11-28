@@ -31,6 +31,8 @@ import {
 export { MinionState } from "./state";
 
 export abstract class Minion extends Entity {
+    public static readonly FIRE_RESISTANT = false;
+    public static readonly BURNING_DURATION_SECONDS = 2;
     private static readonly BLOCK_WALL_NUDGE = 0.01;
     private static readonly BLOCK_WALL_CONTACT_TOLERANCE = 0.02;
     public static readonly COLOR_ORDER: readonly MinionColor[] = [
@@ -48,6 +50,9 @@ export abstract class Minion extends Entity {
     protected static readonly _MINION_COLOR: MinionColor = MinionColor.red;
     public get minionColor(){ return (this.constructor as typeof Minion)._MINION_COLOR; }
     private currentState: MinionState = MinionState.free;
+    private burningElapsedSeconds = 0;
+    private burningDirection = Vector3.Zero();
+    private burningDirectionRemainingSeconds = 0;
     public get state(): MinionState { return this.currentState; }
     public set state(state: MinionState) {
         const previousState = this.currentState;
@@ -55,6 +60,13 @@ export abstract class Minion extends Entity {
             this.rotationEffects.beginThrow(this.rotation);
         }
         this.currentState = state;
+        if (state === MinionState.burning && previousState !== MinionState.burning) {
+            this.burningElapsedSeconds = 0;
+            this.burningDirectionRemainingSeconds = 0;
+        } else if (state !== MinionState.burning) {
+            this.burningElapsedSeconds = 0;
+            this.burningDirectionRemainingSeconds = 0;
+        }
         if (previousState === MinionState.thrown && state !== MinionState.thrown) {
             this.rotationEffects.finishThrow(this.rotation);
         }
@@ -104,6 +116,7 @@ export abstract class Minion extends Entity {
             this.becomeFree();
         },
         setCollisionsEnabled: enabled => { this.checkCollisions = enabled; },
+        updateBurning: deltaSeconds => this.updateBurning(deltaSeconds),
     };
 
     // 掴み/投げ
@@ -165,6 +178,39 @@ export abstract class Minion extends Entity {
         }
 
         this.updateColor();
+    }
+
+    /** 炎に触れたとき、耐性がなければ燃焼状態にする。 */
+    public becomeBurning(): void {
+        if (this.fireResistant || this.state === MinionState.eaten) return;
+        this.carried?.removeCarrier(this);
+        this.follower = null;
+        this.carried = null;
+        this.attackTarget = null;
+        this.clearDisbandMovement();
+        this.state = MinionState.burning;
+        this.velocity = Vector3.Zero();
+    }
+
+    public get fireResistant(): boolean {
+        return (this.constructor as typeof Minion).FIRE_RESISTANT;
+    }
+
+    /** 燃焼中は歩き回り、一定時間経過後に死亡 */
+    public updateBurning(deltaSeconds: number): void {
+        this.burningElapsedSeconds += deltaSeconds;
+        if (this.burningElapsedSeconds >= Minion.BURNING_DURATION_SECONDS) {
+            this.dieFromEating();
+            return;
+        }
+
+        this.burningDirectionRemainingSeconds -= deltaSeconds;
+        if (this.burningDirectionRemainingSeconds <= 0) {
+            const angle = Random.uniform(0, Math.PI * 2);
+            this.burningDirection = new Vector3(Math.cos(angle), Math.sin(angle), 0);
+            this.burningDirectionRemainingSeconds = Random.uniform(0.25, 0.75);
+        }
+        this.moveFor(this.burningDirection.scale(this.speed * deltaSeconds));
     }
 
     private updateColor(): void {
@@ -417,7 +463,7 @@ export abstract class Minion extends Entity {
     }
 
     public becomeFollowing(player: Player, src?: string){
-        if(this.state == MinionState.free || this.state == MinionState.carrying || this.state === MinionState.attack){
+        if(this.state == MinionState.free || this.state == MinionState.carrying || this.state === MinionState.attack || this.state === MinionState.burning){
             this.carried = null;
             this.attackTarget = null;
             this.attackElapsedSeconds = 0;

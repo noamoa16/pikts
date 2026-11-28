@@ -36,6 +36,7 @@ import {
     YellowRedPelletPlant1,
 } from "../objects/enemy/pelletPlant/pelletPlants";
 import { Kochappy } from "../objects/enemy/kochappy";
+import { Flame } from "../objects/flame";
 
 // let shadowGen: ShadowGenerator;
 
@@ -70,7 +71,7 @@ export function createDemoScene(engine: Engine): Scene {
     new BlueOnion(game, new Vector3(1, 3, 0));
     new RedPellet5(game, new Vector3(-3, 1, 0));
     new YellowPellet1(game, new Vector3(3, 1, 1));
-    new YellowPellet5(game, new Vector3(3, -2, 0));
+    new YellowPellet5(game, new Vector3(1, -2, 0));
     new BluePellet1(game, new Vector3(3, 0, 1));
 
     new RedPelletPlant1(game, new Vector3(-2, -1, 0));
@@ -78,6 +79,7 @@ export function createDemoScene(engine: Engine): Scene {
     new BlueRedPelletPlant1(game, new Vector3(-4, -1, 0));
     new RandomPelletPlant1(game, new Vector3(-5, -1, 0));
     new Kochappy(game, new Vector3(4, 3, 0));
+    new Flame(game, new Vector3(3, -2, 0));
 
     new Block(game, new Vector3(-6, -1, 0));
     new RedPellet1(game, new Vector3(-6, -1, 1));
